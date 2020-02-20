@@ -1,9 +1,9 @@
-import ApplyContest from './applyContest';
-import ApplyStudy from './applyStudy';
-import Contest from './contest';
-import Member from './member';
-import Note from './note';
-import Study from './study';
+import { ApplyContest } from './applyContest';
+import { ApplyStudy } from './applyStudy';
+import { Contest } from './contest';
+import { Member } from './member';
+import { Note } from './note';
+import { Study } from './study';
 
 const models = {
   ApplyContest,

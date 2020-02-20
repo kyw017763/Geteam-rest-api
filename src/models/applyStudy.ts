@@ -4,6 +4,19 @@ import db from './Connection';
 
 autoIncrement.initialize(mongoose.connection);
 
+export interface IStudyApply extends mongoose.Document {
+  num: number;
+  kind: string;
+  itemNum: number;
+  memApply: string;
+  memRecv: string;
+  topic: string;
+  title: string;
+  portfolio: string;
+  want: string;
+  applyChk: number;
+};
+
 const applyStudySchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
@@ -88,4 +101,4 @@ applyStudySchema.statics = {
   },
 };
 
-export default mongoose.model<any>('studyApplies', applyStudySchema);
+export const ApplyStudy: mongoose.Model<IStudyApply> = mongoose.model<IStudyApply>('studyApplies', applyStudySchema);

@@ -4,6 +4,20 @@ import db from './Connection';
 
 autoIncrement.initialize(mongoose.connection);
 
+export interface IContestApply extends mongoose.Document {
+  num: number;
+  kind: string;
+  itemNum: number;
+  memApply: string;
+  memRecv: string;
+  topic: string;
+  title: string;
+  part: string;
+  portfolio: string;
+  want: string;
+  applyChk: number;
+};
+
 const applyContestSchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
@@ -90,4 +104,4 @@ applyContestSchema.statics = {
   },
 };
 
-export default mongoose.model<any>('contestApplies', applyContestSchema);
+export const ApplyContest: mongoose.Model<IContestApply> = mongoose.model<IContestApply>('contestApplies', applyContestSchema);

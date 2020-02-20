@@ -1,6 +1,25 @@
 import mongoose from 'mongoose';
 import connection from './Connection';
 
+export interface IMember extends mongoose.Document {
+  id: string;
+  name: string;
+  pwd: string;
+  sNum: number;
+  interest1: string;
+  interest2: string;
+  interest3: string;
+  profile: string;
+  listNum: number;
+  notiApply: number;
+  notiRecv: number;
+  notiVol: number;
+  active: boolean;
+  isVerified: boolean;
+  verifyKey: string;
+  imageUrl: string;
+}
+
 const memberSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -25,7 +44,7 @@ const memberSchema = new mongoose.Schema({
     required: true,
     default: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), new Date().getHours() + 24),
   },
-  image: { type: String },
+  imageUrl: { type: String },
 }, { minimize: false, timestamps: true });
 
 memberSchema.statics = {
@@ -79,4 +98,4 @@ memberSchema.statics = {
   },
 };
 
-export default mongoose.model<any>('members', memberSchema);
+export const Member: mongoose.Model<IMember> = mongoose.model<IMember>('members', memberSchema);

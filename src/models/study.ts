@@ -4,6 +4,20 @@ import db from './Connection';
 
 autoIncrement.initialize(mongoose.connection);
 
+export interface IStudy extends mongoose.Document {
+  num: number;
+  kind: string;
+  mem: string;
+  topic: string;
+  title: string;
+  content: string;
+  wantNum: number;
+  applyNum: number;
+  endDay: Date;
+  hit: number;
+  teamChk: number;
+}
+
 const studySchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
@@ -151,4 +165,4 @@ studySchema.query.sortByTitle = function (order: string) {
   return this.sort({ title: order });
 };
 
-export default mongoose.model<any>('studies', studySchema);
+export const Study: mongoose.Model<IStudy> = mongoose.model<IStudy>('studies', studySchema);

@@ -1,6 +1,14 @@
 import mongoose from 'mongoose';
 import connection from './Connection';
 
+export interface INote extends mongoose.Document {
+  memRecv: string;
+  memSend: string;
+  content: string;
+  recvChk: string;
+  reChk: number;
+}
+
 const noteSchema = new mongoose.Schema({
   // idx 는 createdAt 으로 sort 해서 대체함
   memRecv: { type: String, required: true },
@@ -49,4 +57,4 @@ noteSchema.statics = {
   },
 };
 
-export default mongoose.model<any>('notes', noteSchema);
+export const Note: mongoose.Model<INote> = mongoose.model<INote>('notes', noteSchema);
