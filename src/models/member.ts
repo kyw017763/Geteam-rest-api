@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import connection from './Connection';
+import { connection } from './Database';
 
 export interface IMember extends mongoose.Document {
   _id: string;
@@ -25,7 +25,7 @@ const memberSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   pwd: { type: String, required: true },
-  sNum: { type: Number, required: true },
+  sNum: { type: Number, required: true, validate:[ (sNum) => sNum && sNum.toString().length === 4, `sNum's length is 4` ] },
   interest1: { type: String, required: true },
   interest2: { type: String, required: true },
   interest3: { type: String, required: true },
@@ -99,4 +99,4 @@ memberSchema.statics = {
   },
 };
 
-export const Member: mongoose.Model<IMember> = mongoose.model<IMember>('members', memberSchema);
+export const Member: mongoose.Model<IMember> = connection.model<IMember>('members', memberSchema);

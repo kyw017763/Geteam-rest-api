@@ -14,25 +14,33 @@ export default router;
 router.post('/signup/email', async (req, res) => {
   try {
     const { userEmail } = req.body;
-    await sendAuthEmail(userEmail, createKey());
-    
+    const verifyKey = createKey();
+    await sendAuthEmail(userEmail, verifyKey);
+
     await models.Member.findOneAndDelete({
       id: req.body.signup_email,
       isVerified: false,
+    }).then(() => {
+    }).catch((err: any) => {
+      console.log(err);
+      throw new Error(err);
+    });
+    
+    await models.Member.create({
+      id: req.body.signup_email,
+      name: req.body.signup_name,
+      pwd: req.body.signup_pwd,
+      sNum: req.body.signup_num,
+      interest1: req.body.signup_inter1,
+      interest2: req.body.signup_inter2,
+      interest3: req.body.signup_inter3,
+      profile: req.body.signup_profile,
+      verifyKey
+    }).then(() => {
+    }).catch((err: any) => {
+      throw new Error(err);
     });
   
-    await models.Member.createMember(
-      req.body.signup_email,
-      req.body.signup_name,
-      req.body.signup_pwd,
-      req.body.signup_num,
-      req.body.signup_inter1,
-      req.body.signup_inter2,
-      req.body.signup_inter3,
-      req.body.signup_profile,
-      createKey(),
-    );
-    
     res.json(responseForm(true));
   } catch (err) {
     res.json(responseForm(false, err));
@@ -56,7 +64,7 @@ router.post('/signup/verify/:key', async (req, res) => {
     }, {
       returnOriginal: true,
     }).then(() => {
-      return true;
+
     }).catch((err: any) => {
       throw new Error(err);
     });
@@ -83,7 +91,7 @@ router.post('/signup/verify/new/:key', async (req, res) => {
     }, {
       returnOriginal: true,
     }).then(() => {
-      return true;
+      
     }).catch((err: any) => {
       throw new Error(err);
     })

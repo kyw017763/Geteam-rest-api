@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
-import db from './Connection';
 import { IMember } from './member';
+import { connection } from './Database';
 
 autoIncrement.initialize(mongoose.connection);
 
@@ -167,4 +167,4 @@ studySchema.query.sortByTitle = function (order: string) {
   return this.sort({ title: order });
 };
 
-export const Study: mongoose.Model<IStudy> = mongoose.model<IStudy>('studies', studySchema);
+export const Study: mongoose.Model<IStudy> = connection.model<IStudy>('studies', studySchema);

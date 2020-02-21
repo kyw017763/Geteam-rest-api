@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
-import db from './Connection';
 import { IMember } from './member';
+import { connect } from 'mongoose';
+import { connection } from './Database';
 
 autoIncrement.initialize(mongoose.connection);
 
@@ -170,4 +171,4 @@ contestSchema.query.sortByTitle = function (order: string) {
   return this.sort({ title: order });
 };
 
-export const Contest: mongoose.Model<IContest> = mongoose.model<IContest>('contests', contestSchema);
+export const Contest: mongoose.Model<IContest> = connection.model<IContest>('contests', contestSchema);

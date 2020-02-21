@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
-import db from './Connection';
 import { IMember } from './member';
+import { connection } from './Database';
 
 autoIncrement.initialize(mongoose.connection);
 
@@ -103,4 +103,4 @@ applyStudySchema.statics = {
   },
 };
 
-export const ApplyStudy: mongoose.Model<IStudyApply> = mongoose.model<IStudyApply>('studyApplies', applyStudySchema);
+export const ApplyStudy: mongoose.Model<IStudyApply> = connection.model<IStudyApply>('studyApplies', applyStudySchema);

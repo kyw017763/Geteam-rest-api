@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import connection from './Connection';
 import { IMember } from './member';
+import { connection } from './Database';
 
 export interface INote extends mongoose.Document {
   _id: IMember['_id'];
@@ -59,4 +59,4 @@ noteSchema.statics = {
   },
 };
 
-export const Note: mongoose.Model<INote> = mongoose.model<INote>('notes', noteSchema);
+export const Note: mongoose.Model<INote> = connection.model<INote>('notes', noteSchema);

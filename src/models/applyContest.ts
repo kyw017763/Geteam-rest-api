@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
-import db from './Connection';
 import { IMember } from './member'
+import { connection } from './Database';
 
 autoIncrement.initialize(mongoose.connection);
 
@@ -106,4 +106,4 @@ applyContestSchema.statics = {
   },
 };
 
-export const ApplyContest: mongoose.Model<IContestApply> = mongoose.model<IContestApply>('contestApplies', applyContestSchema);
+export const ApplyContest: mongoose.Model<IContestApply> = connection.model<IContestApply>('contestApplies', applyContestSchema);
