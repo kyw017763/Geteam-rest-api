@@ -13,16 +13,14 @@ export default router;
 
 router.post('/signup/email', async (req, res) => {
   try {
-    const { userEmail } = req.body;
     const verifyKey = createKey();
-    await sendAuthEmail(userEmail, verifyKey);
+    await sendAuthEmail(req.body.signup_email, verifyKey);
 
     await models.Member.findOneAndDelete({
       id: req.body.signup_email,
       isVerified: false,
     }).then(() => {
     }).catch((err: any) => {
-      console.log(err);
       throw new Error(err);
     });
     
@@ -47,11 +45,11 @@ router.post('/signup/email', async (req, res) => {
   }
 });
 
-router.post('/signup/verify/:key', async (req, res) => {
+router.get('/signup/verify/:key', async (req, res) => {
   try {
     const { key } = req.params;
 
-    await models.Member.update({
+    await models.Member.findOneAndUpdate({
       verifyKey: key,
       verifyExpireAt: {
         $gte: new Date(),
@@ -61,10 +59,10 @@ router.post('/signup/verify/:key', async (req, res) => {
       $set: {
         isVerified: true,
       },
-    }, {
-      returnOriginal: true,
-    }).then(() => {
-
+    }).then((result) => {
+      if (!result) {
+        throw new Error('unvalid authentification!');
+      }
     }).catch((err: any) => {
       throw new Error(err);
     });
@@ -75,28 +73,31 @@ router.post('/signup/verify/:key', async (req, res) => {
   }
 });
 
-router.post('/signup/verify/new/:key', async (req, res) => {
+router.get('/signup/verify/new/:key', async (req, res) => {
   try {
     const { key } = req.params;
     const { email } = req.query;
 
-    await models.Member.update({
+    const verifyKey = createKey();
+    await models.Member.findOneAndUpdate({
       id: email,
       verifyKey: key,
       isVerified: false,
     }, {
       $set: {
-        verifyKey: createKey(),
+        verifyKey,
       },
-    }, {
-      returnOriginal: true,
-    }).then(() => {
-      
+    }).then((result) => {
+      if (!result) {
+        throw new Error('unvalid authentification!');
+      }
     }).catch((err: any) => {
       throw new Error(err);
-    })
+    });
+
+    await sendAuthEmail(email, verifyKey);
   
-    res.json(responseForm(true)); 
+    res.json(responseForm(true));
   } catch (err) {
     res.json(responseForm(false, err));
   }
