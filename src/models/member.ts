@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import connection from './Connection';
 
 export interface IMember extends mongoose.Document {
+  _id: string;
   id: string;
   name: string;
   pwd: string;

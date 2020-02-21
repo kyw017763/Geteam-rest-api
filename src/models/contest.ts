@@ -1,10 +1,12 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
 import db from './Connection';
+import { IMember } from './member';
 
 autoIncrement.initialize(mongoose.connection);
 
 export interface IContest extends mongoose.Document {
+  _id: IMember['_id'];
   num: number;
   kind: string;
   mem: string;
@@ -22,7 +24,7 @@ export interface IContest extends mongoose.Document {
 const contestSchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
-  mem: { type: String, required: true },
+  mem: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true },
   part: { type: String, required: true },
   title: { type: String, required: true },

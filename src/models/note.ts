@@ -1,7 +1,9 @@
 import mongoose from 'mongoose';
 import connection from './Connection';
+import { IMember } from './member';
 
 export interface INote extends mongoose.Document {
+  _id: IMember['_id'];
   memRecv: string;
   memSend: string;
   content: string;
@@ -11,8 +13,8 @@ export interface INote extends mongoose.Document {
 
 const noteSchema = new mongoose.Schema({
   // idx 는 createdAt 으로 sort 해서 대체함
-  memRecv: { type: String, required: true },
-  memSend: { type: String, required: true },
+  memRecv: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  memSend: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   content: { type: String, required: true },
   recvChk: { type: Number, default: 0 }, // 읽음 체크
   reChk: { type: Number, required: true }, // 대답인지

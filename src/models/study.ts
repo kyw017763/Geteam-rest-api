@@ -1,10 +1,12 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
 import db from './Connection';
+import { IMember } from './member';
 
 autoIncrement.initialize(mongoose.connection);
 
 export interface IStudy extends mongoose.Document {
+  _id: IMember['_id'];
   num: number;
   kind: string;
   mem: string;
@@ -21,7 +23,7 @@ export interface IStudy extends mongoose.Document {
 const studySchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
-  mem: { type: String, required: true },
+  mem: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true },
   title: { type: String, required: true },
   content: { type: String, required: true },
