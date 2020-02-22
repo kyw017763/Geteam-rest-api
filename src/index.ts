@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import config from './config';
 dotenv.config();
 
-import { auth } from './routes';
+import { auth, counting } from './routes';
 
 const app = express();
 
@@ -17,6 +17,7 @@ app.use(passport.session());
 passportConfig();
 
 app.use('/', auth);
+app.use('/', counting);
 
 app.listen(process.env.PORT || config.PORT, () => {
   
