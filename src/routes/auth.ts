@@ -1,17 +1,26 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import decodeJWT from 'jwt-decode';
 import passport from 'passport';
-import passportJWT from 'passport-jwt';
-import nodemailer from 'nodemailer';
 import config from './../config';
 import responseForm from './../lib/responseForm';
 import createKey from './../lib/createKey';
+import createHash from './../lib/createHash';
+import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from './../lib/sendEmail'
+import redisClient from './redis';
 import models from './../models';
+
+interface IDecodedAccessToken {
+  _id: string;
+  name: string;
+  sNum: string;
+  exp: number;
+}
 
 const router = express.Router();
 export default router;
 
-router.post('/signup/email', async (req, res) => {
+router.post('/register/email', async (req, res) => {
   try {
     const verifyKey = createKey();
     await sendAuthEmail(req.body.signup_email, verifyKey);
@@ -19,6 +28,7 @@ router.post('/signup/email', async (req, res) => {
     await models.Member.findOneAndDelete({
       id: req.body.signup_email,
       isVerified: false,
+      active: true,
     }).then(() => {
     }).catch((err: any) => {
       throw new Error(err);
@@ -41,11 +51,11 @@ router.post('/signup/email', async (req, res) => {
   
     res.json(responseForm(true));
   } catch (err) {
-    res.json(responseForm(false, err));
+    res.json(responseForm(false, err.toString()));
   }
 });
 
-router.get('/signup/verify/:key', async (req, res) => {
+router.get('/register/verify/:key', async (req, res) => {
   try {
     const { key } = req.params;
 
@@ -55,13 +65,14 @@ router.get('/signup/verify/:key', async (req, res) => {
         $gte: new Date(),
       },
       isVerified: false,
+      active: true,
     }, {
       $set: {
         isVerified: true,
       },
     }).then((result) => {
       if (!result) {
-        throw new Error('unvalid authentification!');
+        throw new Error('unvalid authentication!');
       }
     }).catch((err: any) => {
       throw new Error(err);
@@ -69,11 +80,11 @@ router.get('/signup/verify/:key', async (req, res) => {
     
     res.json(responseForm(true));
   } catch (err) {
-    res.json(responseForm(false, err));
+    res.json(responseForm(false, err.toString()));
   }
 });
 
-router.get('/signup/verify/new/:key', async (req, res) => {
+router.get('/register/verify/new/:key', async (req, res) => {
   try {
     const { key } = req.params;
     const { email } = req.query;
@@ -83,13 +94,14 @@ router.get('/signup/verify/new/:key', async (req, res) => {
       id: email,
       verifyKey: key,
       isVerified: false,
+      active: true,
     }, {
       $set: {
         verifyKey,
       },
     }).then((result) => {
       if (!result) {
-        throw new Error('unvalid authentification!');
+        throw new Error('unvalid authentication!');
       }
     }).catch((err: any) => {
       throw new Error(err);
@@ -99,41 +111,221 @@ router.get('/signup/verify/new/:key', async (req, res) => {
   
     res.json(responseForm(true));
   } catch (err) {
-    res.json(responseForm(false, err));
+    res.json(responseForm(false, err.toString()));
   }
 });
 
-async function sendAuthEmail(userEmail: string, key: string) {
+// Access Token, Refresh Token 발급
+router.post('/signin', async (req, res, next) => {
   try {
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      host :'smtp.gmlail.com',
-      secure: false,
-      auth: {
-        user: process.env.EMAIL || config.EMAIL,
-        pass: process.env.PWD || config.PWD,
-      },
-    });
-  
-    const mailOptions = {
-      from: process.env.EMAIL || config.EMAIL,
-      to: userEmail,
-      subject: 'Geteam 이메일 인증',
-      html: `<h3>Geteam 이메일 인증용 링크</h3>
-      Geteam 계정에 등록하신 이메일 주소(${userEmail})가 올바른지 확인하기 위한 인증 링크입니다.
-      이 <a href="http://127.0.0.1:3000/signup/verify/${key}" style="color: #efdc05;">인증 링크</a>를 클릭하여 이메일 인증을 완료해 주세요!
-      <br>
-      개인정보 보호를 위해 인증 링크는 하루동안만 유효합니다.
-      <br>
-      만약 인증 메일의 재발송을 원하신다면 <a href="http://127.0.0.1:3000/signup/verify/new/${key}?email=${userEmail}" style="color: #efdc05;">이 링크</a>를 클릭해주세요!
-      `,
+    let { signin_email: id, signin_pwd: pwd } = req.body;
+    pwd = createHash(pwd);
+    const member = await models.Member.findOne({ id, isVerified: true, active: true })
+      .then((result) => {
+        if (!result) {
+          throw new Error('잘못된 이메일입니다');
+        } else {
+          if (!(result.compareHash(pwd))) {
+            return result;
+          } else {
+            throw new Error('잘못된 비밀번호입니다');
+          }
+        }
+      }).catch((err) => {
+        throw new Error(err);
+      });
+
+    const payload = {
+      _id: member._id,
+      name: member.name,
+      sNum: member.sNum,
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`Message sent : ${info.response}`);
-    transporter.close();
-    return true;
+    const accessOptions = {
+      issuer: 'geteam',
+      expiresIn: Number(process.env.ACCESS_EXPIRE || config.ACCESS_EXPIRE),
+    };
+
+    const refreshOptions = {
+      issuer: 'geteam',
+      expiresIn: process.env.REFRESH_EXPIRE || config.REFRESH_EXPIRE, 
+    };
+
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET || config.JWT_SECRET, accessOptions);
+    const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRET || config.REFRESH_SECRET, refreshOptions);
+    
+    await models.Member.findOneAndUpdate({ id, isVerified: true, active: true }, {
+      $set: { refreshToken },
+    }).then((result) => {
+      if (!result) {
+        throw new Error('Refresh Token 저장에 실패했습니다');
+      }
+    }).catch((err) => {
+      throw new Error(err);
+    });
+
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
+    
+    res.json(responseForm(true, '', {
+      accessToken,
+      expiresIn: decodedAccessToken.exp * 1000,
+    }));
   } catch (err) {
-    throw new Error(err);
+    res.json(responseForm(false, err.toString()));
   }
-}
+});
+
+// Refresh Token을 이용(DB에서 Get)하여 Access Token 재발급 (실패시 false, /signin으로 redirect)
+// Access Token이 만료되었을 것이므로 passport는 사용할 수 없음
+router.post('/signin/refresh', async (req, res, next) => {
+  try {
+    const oldAccessToken = req.header('Authorization')?.replace(/^Bearer\s/, '');
+    let decodedOldAccessToken: IDecodedAccessToken;
+    if (oldAccessToken) {
+      decodedOldAccessToken = decodeJWT(oldAccessToken);
+      if (decodedOldAccessToken.exp * 1000 > new Date().getTime()) {
+        throw new Error('아직 만료되지 않은 Access Token이 전달되었습니다');
+      }
+    } else {
+      throw new Error('Access Token이 전달되지 않았습니다');
+    }
+
+    const member = await models.Member.findOne({ _id: decodedOldAccessToken._id, active: true, }).select('_id name sNum refreshToken')
+      .then((member) => {
+        if (member) {
+          return member;
+        } else {
+          throw new Error('인증 정보가 잘못되었습니다');
+        }
+      })
+      .catch((err) => {
+        throw new Error('인증 정보로 회원 정보를 조회하던 중 에러가 발생했습니다');
+      });
+    
+    // Verify refresh token
+    try {
+      jwt.verify(member.refreshToken, process.env.REFRESH_SECRET || config.REFRESH_SECRET);
+    } catch (err) {
+      throw new Error(err);
+    }
+
+    const payload = {
+      _id: member._id,
+      name: member.name,
+      sNum: member.sNum,
+    };
+    
+    const accessOptions = {
+      issuer: 'geteam',
+      expiresIn: Number(process.env.ACCESS_EXPIRE || config.ACCESS_EXPIRE),
+    };
+
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET || config.JWT_SECRET, accessOptions);
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
+
+    res.json(responseForm(true, '', {
+      accessToken,
+      expiresIn: decodedAccessToken.exp * 1000,
+    }));
+  } catch (err) {
+    res.json(responseForm(false, err.toString()));
+  }
+});
+
+// Blacklisting Token, Set null RefreshToken in DB
+// 정상적인 Access Token이 있어야 Signout이 진행된다
+router.post('/signout', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
+  try {
+    const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '');
+    if (!accessToken) {
+      throw new Error('잘못된 Access Token이 전달되었습니다');
+    }
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
+
+    await models.Member.findOneAndUpdate({ _id: decodedAccessToken._id, active: true, }, { $set: { refreshToken: '' }})
+      .then((member) => {
+        if (member) {
+          return member;
+        } else {
+          throw new Error('인증 정보가 잘못되었습니다');
+        }
+      })
+      .catch((err) => {
+        throw new Error('인증 정보로 회원 정보를 변경하던 중 에러가 발생했습니다');
+      });
+
+    // Blacklisting Token
+    redisClient.set(`jwt-blacklist-${accessToken}`, Number(0).toString());
+    redisClient.expire(`jwt-blacklist-${accessToken}`, decodedAccessToken.exp - (new Date().getTime() / 1000));
+    
+    res.json(responseForm(true));
+  } catch (err) {
+    res.json(responseForm(false, err.toString()));
+  }
+});
+
+// Reset Password (Check Interests, Create Hash)
+router.patch('/signin/reset', async (req, res, next) => {
+  try {
+    const { find_email: email, find_hint: hint } = req.body;
+
+    const member = await models.Member.findOne({ id: email, active: true }).select('id name interest1 interest2 interest3')
+      .then((member) => {
+        if (member) {
+          return member;
+        } else {
+          throw new Error('인증 정보가 잘못되었습니다');
+        }
+      }).catch((err) => {
+        throw new Error('인증 정보로 새로운 비밀번호를 설정하던 중 에러가 발생했습니다');
+      });
+    
+    const interestsArr = [member.interest1, member.interest2, member.interest3];
+    
+    const memberDoc = await models.Member.findOne({ id: email, active: true })
+      .then((member) => {
+        if (member) {
+          return member;
+        } else {
+          throw new Error('인증 정보가 잘못되었습니다');
+        }
+      }).catch((err) => {
+        throw new Error('인증 정보로 새로운 비밀번호를 설정하던 중 에러가 발생했습니다');
+      });
+
+    if (interestsArr.includes(hint)) {
+      const newPwd = createHash(interestsArr.join('') + new Date().toISOString());
+      memberDoc.pwd = newPwd;
+      memberDoc.save();
+      sendPwdEmail('Geteam 비밀번호 초기화', member.id, member.name, newPwd);
+    } else {
+      throw new Error('입력하신 정보가 잘못되었습니다');
+    }
+
+    res.json(responseForm(true));
+  } catch (err) {
+    res.json(responseForm(false, err.toString()));
+  }
+});
+
+router.delete('/unregister', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
+  try {
+    const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '');
+    if (!accessToken) {
+      throw new Error('잘못된 Access Token이 전달되었습니다');
+    }
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
+    await models.Member.findOneAndUpdate({ _id: decodedAccessToken._id }, { active: false })
+      .then((member) => {
+        if (!member) {
+          throw new Error('인증 정보가 잘못되었습니다');
+        }
+      }).catch((err) => {
+        throw new Error('인증 정보로 새로운 비밀번호를 설정하던 중 에러가 발생했습니다');
+      });
+    
+    res.json(responseForm(true));
+  } catch (err) {
+    res.json(responseForm(false, err.toString()));
+  }
+});

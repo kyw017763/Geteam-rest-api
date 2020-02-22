@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 import { connection } from './Database';
+import bcrypt from 'bcryptjs';
+import config from '../config';
 
 export interface IMember extends mongoose.Document {
+  [x: string]: any;
   _id: string;
   id: string;
   name: string;
@@ -16,6 +19,7 @@ export interface IMember extends mongoose.Document {
   notiRecv: number;
   notiVol: number;
   active: boolean;
+  refreshToken: string;
   isVerified: boolean;
   verifyKey: string;
   imageUrl: string;
@@ -36,6 +40,7 @@ const memberSchema = new mongoose.Schema({
   notiRecv: { type: Number, default: 1 },
   notiVol: { type: Number, default: 1 },
   active: { type: Boolean, default: true },
+  refreshToken: { type: String },
   // 인증여부
   isVerified: { type: Boolean, required: true, default: false },
   // 인증코드
@@ -47,6 +52,15 @@ const memberSchema = new mongoose.Schema({
   },
   imageUrl: { type: String },
 }, { minimize: false, timestamps: true });
+
+memberSchema.pre<IMember>('save', function (next) {
+  this.pwd = bcrypt.hashSync(this.pwd, 8);
+  next();
+});
+
+memberSchema.methods.compareHash = function (pwd: string) {
+  return bcrypt.compareSync(pwd, this.pwd);
+}
 
 memberSchema.statics = {
   createMember: function (id: string, name: string, pwd: string, sNum: number, interest1: string, interest2: string, interest3: string, profile: string, verifyKey: string) {
