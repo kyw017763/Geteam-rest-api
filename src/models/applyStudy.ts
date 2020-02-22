@@ -1,15 +1,30 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
-import db from './Connection';
+import { IMember } from './member';
+import { connection } from './Database';
 
 autoIncrement.initialize(mongoose.connection);
+
+export interface IStudyApply extends mongoose.Document {
+  _id: IMember['_id'];
+  num: number;
+  kind: string;
+  itemNum: number;
+  memApply: string;
+  memRecv: string;
+  topic: string;
+  title: string;
+  portfolio: string;
+  want: string;
+  applyChk: number;
+};
 
 const applyStudySchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
   itemNum: { type: Number, required: true },
-  memApply: { type: String, required: true },
-  memRecv: { type: String, required: true },
+  memApply: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  memRecv: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true, trim: true },
   title: { type: String, required: true, trim: true },
   portfolio: { type: String, required: true, trim: true },
@@ -88,4 +103,4 @@ applyStudySchema.statics = {
   },
 };
 
-export default mongoose.model<any>('studyApplies', applyStudySchema);
+export const ApplyStudy: mongoose.Model<IStudyApply> = connection.model<IStudyApply>('studyApplies', applyStudySchema);

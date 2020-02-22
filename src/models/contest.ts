@@ -1,13 +1,31 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
-import db from './Connection';
+import { IMember } from './member';
+import { connect } from 'mongoose';
+import { connection } from './Database';
 
 autoIncrement.initialize(mongoose.connection);
+
+export interface IContest extends mongoose.Document {
+  _id: IMember['_id'];
+  num: number;
+  kind: string;
+  mem: string;
+  topic: string;
+  part: string;
+  title: string;
+  content: string;
+  wantNum: number;
+  applyNum: number;
+  endDay: Date;
+  hit: number;
+  teamChk: number;
+}
 
 const contestSchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
-  mem: { type: String, required: true },
+  mem: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true },
   part: { type: String, required: true },
   title: { type: String, required: true },
@@ -153,4 +171,4 @@ contestSchema.query.sortByTitle = function (order: string) {
   return this.sort({ title: order });
 };
 
-export default mongoose.model<any>('contests', contestSchema);
+export const Contest: mongoose.Model<IContest> = connection.model<IContest>('contests', contestSchema);

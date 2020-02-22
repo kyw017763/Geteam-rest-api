@@ -1,13 +1,29 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
-import db from './Connection';
+import { IMember } from './member';
+import { connection } from './Database';
 
 autoIncrement.initialize(mongoose.connection);
+
+export interface IStudy extends mongoose.Document {
+  _id: IMember['_id'];
+  num: number;
+  kind: string;
+  mem: string;
+  topic: string;
+  title: string;
+  content: string;
+  wantNum: number;
+  applyNum: number;
+  endDay: Date;
+  hit: number;
+  teamChk: number;
+}
 
 const studySchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
-  mem: { type: String, required: true },
+  mem: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true },
   title: { type: String, required: true },
   content: { type: String, required: true },
@@ -151,4 +167,4 @@ studySchema.query.sortByTitle = function (order: string) {
   return this.sort({ title: order });
 };
 
-export default mongoose.model<any>('studies', studySchema);
+export const Study: mongoose.Model<IStudy> = connection.model<IStudy>('studies', studySchema);
