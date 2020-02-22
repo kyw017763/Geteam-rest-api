@@ -54,7 +54,7 @@ const memberSchema = new mongoose.Schema({
 }, { minimize: false, timestamps: true });
 
 memberSchema.pre<IMember>('save', function (next) {
-  this.pwd = bcrypt.hashSync(this.pwd, 8);
+  this.pwd = bcrypt.hashSync(this.pwd);
   next();
 });
 

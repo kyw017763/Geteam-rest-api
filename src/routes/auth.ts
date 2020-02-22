@@ -49,9 +49,9 @@ router.post('/register/email', async (req, res) => {
       throw new Error(err);
     });
   
-    res.json(responseForm(true));
+    res.status(200).json(responseForm(true));
   } catch (err) {
-    res.json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()));
   }
 });
 
@@ -78,9 +78,9 @@ router.get('/register/verify/:key', async (req, res) => {
       throw new Error(err);
     });
     
-    res.json(responseForm(true));
+    res.status(200).json(responseForm(true));
   } catch (err) {
-    res.json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()));
   }
 });
 
@@ -109,9 +109,9 @@ router.get('/register/verify/new/:key', async (req, res) => {
 
     await sendAuthEmail(email, verifyKey);
   
-    res.json(responseForm(true));
+    res.status(200).json(responseForm(true));
   } catch (err) {
-    res.json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()));
   }
 });
 
@@ -119,13 +119,12 @@ router.get('/register/verify/new/:key', async (req, res) => {
 router.post('/signin', async (req, res, next) => {
   try {
     let { signin_email: id, signin_pwd: pwd } = req.body;
-    pwd = createHash(pwd);
     const member = await models.Member.findOne({ id, isVerified: true, active: true })
       .then((result) => {
         if (!result) {
           throw new Error('잘못된 이메일입니다');
         } else {
-          if (!(result.compareHash(pwd))) {
+          if (result.compareHash(pwd)) {
             return result;
           } else {
             throw new Error('잘못된 비밀번호입니다');
@@ -166,12 +165,12 @@ router.post('/signin', async (req, res, next) => {
 
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
     
-    res.json(responseForm(true, '', {
+    res.status(200).json(responseForm(true, '', {
       accessToken,
       expiresIn: decodedAccessToken.exp * 1000,
     }));
   } catch (err) {
-    res.json(responseForm(false, err.toString()));
+    res.status(401).json(responseForm(false, err.toString()));
   }
 });
 
@@ -223,12 +222,12 @@ router.post('/signin/refresh', async (req, res, next) => {
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET || config.JWT_SECRET, accessOptions);
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
 
-    res.json(responseForm(true, '', {
+    res.status(200).json(responseForm(true, '', {
       accessToken,
       expiresIn: decodedAccessToken.exp * 1000,
     }));
   } catch (err) {
-    res.json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()));
   }
 });
 
@@ -258,9 +257,9 @@ router.post('/signout', passport.authenticate('jwt', { session: false }), async 
     redisClient.set(`jwt-blacklist-${accessToken}`, Number(0).toString());
     redisClient.expire(`jwt-blacklist-${accessToken}`, decodedAccessToken.exp - (new Date().getTime() / 1000));
     
-    res.json(responseForm(true));
+    res.status(200).json(responseForm(true));
   } catch (err) {
-    res.json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()));
   }
 });
 
@@ -302,9 +301,9 @@ router.patch('/signin/reset', async (req, res, next) => {
       throw new Error('입력하신 정보가 잘못되었습니다');
     }
 
-    res.json(responseForm(true));
+    res.status(200).json(responseForm(true));
   } catch (err) {
-    res.json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()));
   }
 });
 
@@ -324,8 +323,8 @@ router.delete('/unregister', passport.authenticate('jwt', { session: false }), a
         throw new Error('인증 정보로 새로운 비밀번호를 설정하던 중 에러가 발생했습니다');
       });
     
-    res.json(responseForm(true));
+    res.status(200).json(responseForm(true));
   } catch (err) {
-    res.json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()));
   }
 });
