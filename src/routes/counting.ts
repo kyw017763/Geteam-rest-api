@@ -1,71 +1,10 @@
 import express from 'express';
-import redisClient from './redis';
+import redisClient from './../redis';
 import responseForm from './../lib/responseForm';
+import { incVisitCnt } from './../lib/increaseCnt';
 
 const router = express.Router();
 export default router;
-
-// GET 했는데 없다면 0
-
-export const incVisitCnt = () => {
-  if (redisClient.EXISTS('visitCnt')) {
-    let cnt = redisClient.GET('visitCnt');
-    let cntNum = Number(cnt) + 1;
-    redisClient.SET('visitCnt', cntNum.toString());
-    return cnt;
-  } else {
-    redisClient.SET('visitCnt', '1');
-    return 1;
-  }
-};
-
-export const incMemberCnt = () => {
-  if (redisClient.EXISTS('memberCnt')) {
-    let cnt = redisClient.GET('memberCnt');
-    let cntNum = Number(cnt) + 1;
-    redisClient.SET('memberCnt', cntNum.toString());
-    return cnt;
-  } else {
-    redisClient.SET('memberCnt', '1');
-    return 1;
-  }
-};
-
-export const incListCnt = async () => {
-  if (redisClient.EXISTS('listCnt')) {
-    let cnt = redisClient.GET('listCnt');
-    let cntNum = Number(cnt) + 1;
-    redisClient.SET('listCnt', cntNum.toString());
-    return cnt;
-  } else {
-    redisClient.SET('listCnt', '1');
-    return 1;
-  }
-};
-
-export const incApplyCnt = async () => {
-  if (redisClient.EXISTS('applyCnt')) {
-    let cnt = redisClient.GET('applyCnt');
-    let cntNum = Number(cnt) + 1;
-    redisClient.SET('applyCnt', cntNum.toString());
-    return cnt;
-  } else {
-    redisClient.SET('applyCnt', '1');
-    return 1;
-  }
-};
-
-export const incTeamCnt = async () => {
-  if (redisClient.EXISTS('teamCnt')) {
-    let cnt = redisClient.GET('teamCnt');
-    let cntNum = Number(cnt) + 1;
-    redisClient.SET('teamCnt', cntNum.toString());
-    return cnt;
-  } else {
-    redisClient.SET('teamCnt', '1');
-    return 1;
-  }
-};
 
 router.get('/counting', async (req, res, next) => {
   try {
@@ -115,6 +54,7 @@ router.get('/counting', async (req, res, next) => {
       counting.team = 0;
     }
 
+    incVisitCnt();
     res.status(200).json(responseForm(true, '', counting));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
