@@ -1,6 +1,5 @@
 import passport from 'passport';
 import passportJWT from 'passport-jwt';
-import jwt, { TokenExpiredError } from 'jsonwebtoken';
 import config from './../config';
 import models from './../models';
 
@@ -32,7 +31,6 @@ export default () => {
         }
       })
       .catch((err) => {
-        console.log(err);
         return done(err);
       });
   })));

@@ -7,8 +7,9 @@ import responseForm from './../lib/responseForm';
 import createKey from './../lib/createKey';
 import createHash from './../lib/createHash';
 import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from './../lib/sendEmail'
-import redisClient from './redis';
+import redisClient from './../redis';
 import models from './../models';
+import { incMemberCnt } from './../lib/increaseCnt';
 
 interface IDecodedAccessToken {
   _id: string;
@@ -78,6 +79,7 @@ router.get('/register/verify/:key', async (req, res) => {
       throw new Error(err);
     });
     
+    incMemberCnt();
     res.status(200).json(responseForm(true));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));

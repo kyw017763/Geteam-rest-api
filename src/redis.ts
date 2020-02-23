@@ -1,5 +1,5 @@
 import redis from 'redis';
-import config from './../config';
+import config from './config';
 
 const redisClient = redis.createClient({
   host: '127.0.0.1',

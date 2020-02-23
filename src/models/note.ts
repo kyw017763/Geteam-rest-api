@@ -8,7 +8,7 @@ export interface INote extends mongoose.Document {
   memSend: string;
   content: string;
   recvChk: string;
-  reChk: number;
+  reChk: INote['_id'];
 }
 
 const noteSchema = new mongoose.Schema({
@@ -17,7 +17,7 @@ const noteSchema = new mongoose.Schema({
   memSend: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   content: { type: String, required: true },
   recvChk: { type: Number, default: 0 }, // 읽음 체크
-  reChk: { type: Number, required: true }, // 대답인지
+  reChk: { type: mongoose.Schema.Types.ObjectId, ref: 'Note' }, // 대답인지
 }, {
   timestamps: true,
 });
