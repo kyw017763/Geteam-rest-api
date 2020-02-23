@@ -1,6 +1,7 @@
 import express from 'express';
 import passport from 'passport';
 import passportConfig from './routes/passport';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import config from './config';
 dotenv.config();
@@ -15,6 +16,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(passport.session());
 passportConfig();
+
+app.use(cors());
+
+app.all('/*', function(req, res, next) {
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE');
+  next();
+});
 
 app.use('/', auth);
 

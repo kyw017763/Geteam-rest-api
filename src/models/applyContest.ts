@@ -22,7 +22,7 @@ export interface IContestApply extends mongoose.Document {
 
 const applyContestSchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
-  kind: { type: String, required: true },
+  kind: { type: String, required: true, enum: ['develop', 'design', 'idea', 'etc'] },
   itemNum: { type: Number, required: true },
   memApply: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   memRecv: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },

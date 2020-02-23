@@ -22,7 +22,7 @@ export interface IStudy extends mongoose.Document {
 
 const studySchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
-  kind: { type: String, required: true },
+  kind: { type: String, required: true, enum: ['develop', 'design', 'etc'] },
   mem: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true },
   title: { type: String, required: true },

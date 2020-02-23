@@ -19,6 +19,7 @@
   "homepage": "https://github.com/kyw017763/Geteam-rest-api#readme",
   "dependencies": {
     "@types/bcryptjs": "^2.4.2",
+    "@types/cors": "^2.8.6",
     "@types/express": "^4.17.2",
     "@types/jsonwebtoken": "^8.3.7",
     "@types/jwt-decode": "^2.2.1",
@@ -30,6 +31,7 @@
     "@types/redis": "^2.8.16",
     "bcryptjs": "^2.4.3",
     "cor": "0.0.0",
+    "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^8.0.0",
     "express": "^4.17.1",

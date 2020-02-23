@@ -24,7 +24,7 @@ export interface IContest extends mongoose.Document {
 
 const contestSchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
-  kind: { type: String, required: true },
+  kind: { type: String, required: true, enum: ['develop', 'design', 'idea', 'etc'] },
   mem: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true },
   part: { type: String, required: true },
