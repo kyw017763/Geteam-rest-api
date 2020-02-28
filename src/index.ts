@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import config from './config';
 dotenv.config();
 
-import { auth, counting } from './routes';
+import { auth, counting, board } from './routes';
 
 const app = express();
 
@@ -18,6 +18,7 @@ passportConfig();
 
 app.use('/', auth);
 app.use('/', counting);
+app.use('/board', passport.authenticate('jwt', { session: false }), board);
 
 app.listen(process.env.PORT || config.PORT, () => {
   

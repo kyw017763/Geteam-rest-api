@@ -3,7 +3,7 @@ import { connection } from './Database';
 import bcrypt from 'bcryptjs';
 import config from '../config';
 
-export interface IMember extends mongoose.Document {
+export interface IAccount extends mongoose.Document {
   [x: string]: any;
   _id: string;
   id: string;
@@ -25,7 +25,7 @@ export interface IMember extends mongoose.Document {
   imageUrl: string;
 }
 
-const memberSchema = new mongoose.Schema({
+const accountSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   pwd: { type: String, required: true },
@@ -53,25 +53,25 @@ const memberSchema = new mongoose.Schema({
   imageUrl: { type: String },
 }, { minimize: false, timestamps: true });
 
-memberSchema.pre<IMember>('save', function (next) {
+accountSchema.pre<IAccount>('save', function (next) {
   this.pwd = bcrypt.hashSync(this.pwd);
   next();
 });
 
-memberSchema.methods.compareHash = function (pwd: string) {
+accountSchema.methods.compareHash = function (pwd: string) {
   return bcrypt.compareSync(pwd, this.pwd);
 }
 
-memberSchema.statics = {
-  createMember: function (id: string, name: string, pwd: string, sNum: number, interest1: string, interest2: string, interest3: string, profile: string, verifyKey: string) {
+accountSchema.statics = {
+  createAccount: function (id: string, name: string, pwd: string, sNum: number, interest1: string, interest2: string, interest3: string, profile: string, verifyKey: string) {
     return this.create({
       id, name, pwd, sNum, interest1, interest2, interest3, profile, verifyKey,
     });
   },
-  getMemberById: function (userId: string) {
+  getAccountById: function (userId: string) {
     return this.find({ id: userId });
   },
-  updateMember: function (userId: string, name: string, sNum: number, interest1: string, interest2: string, interest3: string, profile: string) {
+  updateAccount: function (userId: string, name: string, sNum: number, interest1: string, interest2: string, interest3: string, profile: string) {
     return this.findOneAndUpdate({ id: userId }, {
       $set: {
         name, sNum, interest1, interest2, interest3, profile,
@@ -105,7 +105,7 @@ memberSchema.statics = {
   secession: function (userId: string) {
     return this.findOneAndUpdate({ id: userId }, { active: false });
   },
-  getMemberListNumById: function (userId: string) {
+  getAccountListNumById: function (userId: string) {
     return this.findOne({ id: userId }).select('listNum').lean().exec()
       .then((user: { listNum: string; }) => {
         return user.listNum;
@@ -113,4 +113,4 @@ memberSchema.statics = {
   },
 };
 
-export const Member: mongoose.Model<IMember> = connection.model<IMember>('members', memberSchema);
+export const Account: mongoose.Model<IAccount> = connection.model<IAccount>('accounts', accountSchema);

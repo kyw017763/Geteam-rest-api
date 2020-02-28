@@ -1,7 +1,7 @@
 import { ApplyContest } from './applyContest';
 import { ApplyStudy } from './applyStudy';
 import { Contest } from './contest';
-import { Member } from './member';
+import { Account } from './account';
 import { Note } from './note';
 import { Study } from './study';
 
@@ -9,7 +9,7 @@ const models = {
   ApplyContest,
   ApplyStudy,
   Contest,
-  Member,
+  Account,
   Note,
   Study,
 };

@@ -7,27 +7,27 @@ const JWTStrategy = passportJWT.Strategy;
 const extractJWT = passportJWT.ExtractJwt;
 
 export default () => {
-  passport.serializeUser((member, done) => {
+  passport.serializeUser((account, done) => {
     // Strategy 성공 시 호출됨
-    done(null, member);
+    done(null, account);
   });
 
-  passport.deserializeUser((user, done) => {
-    // 매개변수 user는 serializeUser의 done의 두 번째 인자를 받은 것
+  passport.deserializeUser((account, done) => {
+    // 매개변수 account는 serializeaccount의 done의 두 번째 인자를 받은 것
     // 두 번째 인자는 req.{second argument's name} 로 저장된다
-    done(null, user);
+    done(null, account);
   });
 
   passport.use('jwt', new JWTStrategy({
     jwtFromRequest: extractJWT.fromAuthHeaderAsBearerToken(),
     secretOrKey: process.env.JWT_SECRET || config.JWT_SECRET,
   }, ((payload, done) => {
-    models.Member.findOne({ _id: payload._id })
-      .then((user) => {
-        if (user) {
-          return done(null, user);
+    models.Account.findOne({ _id: payload._id })
+      .then((account) => {
+        if (account) {
+          return done(null, account);
         } else {
-          return done(true, user);
+          return done(true, account);
         }
       })
       .catch((err) => {

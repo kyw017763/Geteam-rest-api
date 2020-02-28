@@ -1,15 +1,15 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
-import { IMember } from './member';
+import { IAccount } from './account'
 import { connection } from './Database';
 
 autoIncrement.initialize(mongoose.connection);
 
 export interface IStudy extends mongoose.Document {
-  _id: IMember['_id'];
+  _id: IAccount['_id'];
   num: number;
   kind: string;
-  mem: string;
+  account: string;
   topic: string;
   title: string;
   content: string;
@@ -23,7 +23,7 @@ export interface IStudy extends mongoose.Document {
 const studySchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
-  mem: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true },
   title: { type: String, required: true },
   content: { type: String, required: true },
@@ -47,9 +47,9 @@ studySchema.plugin(autoIncrement.plugin, {
 
 studySchema.statics = {
   // study 등록
-  createStudy: function (mem: any, kind: any, topic: any, title: any, content: any, wantNum: any, endDay: any) {
+  createStudy: function (account: any, kind: any, topic: any, title: any, content: any, wantNum: any, endDay: any) {
     return this.create({
-      mem, kind, topic, title, content, wantNum, endDay,
+      account, kind, topic, title, content, wantNum, endDay,
     });
   },
   // 모든 study 받아오기
@@ -66,11 +66,11 @@ studySchema.statics = {
   },
   // 내가 작성한 모든 study 받아오기 - listNum과 연결
   getStudyById: function (userId: any) {
-    return this.find({ mem: userId });
+    return this.find({ account: userId });
   },
   // 내가 작성한 study 종류별로 받아오기
   getSutydByKind: function (userId: any, kind: any) {
-    return this.find({ mem: userId, kind });
+    return this.find({ account: userId, kind });
   },
   // 현재 study 받아오기'
   getStudyByNum: function (num: any) {
@@ -96,7 +96,7 @@ studySchema.statics = {
   },
   // 내가 작성한 study 변경하기
   updateStudy: function (userId: any, num: any, part: any, title: any, content: any, wantNum: any, endDay: any) {
-    return this.findOneAndUpdate({ mem: userId, num }, {
+    return this.findOneAndUpdate({ account: userId, num }, {
       part, title, content, wantNum, endDay,
     }, { returnNewDocument: true });
   },

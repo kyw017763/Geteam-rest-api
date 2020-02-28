@@ -12,14 +12,14 @@ export const incVisitCnt = () => {
   }
 };
 
-export const incMemberCnt = () => {
-  if (redisClient.EXISTS('memberCnt')) {
-    let cnt = redisClient.GET('memberCnt');
+export const incAccountCnt = () => {
+  if (redisClient.EXISTS('accountCnt')) {
+    let cnt = redisClient.GET('accountCnt');
     let cntNum = Number(cnt) + 1;
-    redisClient.SET('memberCnt', cntNum.toString());
+    redisClient.SET('accountCnt', cntNum.toString());
     return cnt;
   } else {
-    redisClient.SET('memberCnt', '1');
+    redisClient.SET('accountCnt', '1');
     return 1;
   }
 };

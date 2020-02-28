@@ -1,17 +1,17 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
-import { IMember } from './member';
+import { IAccount } from './account'
 import { connection } from './Database';
 
 autoIncrement.initialize(mongoose.connection);
 
 export interface IStudyApply extends mongoose.Document {
-  _id: IMember['_id'];
+  _id: IAccount['_id'];
   num: number;
   kind: string;
   itemNum: number;
-  memApply: string;
-  memRecv: string;
+  accountApply: string;
+  accountRecv: string;
   topic: string;
   title: string;
   portfolio: string;
@@ -23,8 +23,8 @@ const applyStudySchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
   itemNum: { type: Number, required: true },
-  memApply: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
-  memRecv: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  accountApply: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  accountRecv: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true, trim: true },
   title: { type: String, required: true, trim: true },
   portfolio: { type: String, required: true, trim: true },
@@ -43,9 +43,9 @@ applyStudySchema.plugin(autoIncrement.plugin, {
 
 applyStudySchema.statics = {
   createApplyStudy:
-  function (kind: string, itemNum: number, memApply: string, memRecv: string, topic: string, title: string, portfolio: string, want: string) {
+  function (kind: string, itemNum: number, accountApply: string, accountRecv: string, topic: string, title: string, portfolio: string, want: string) {
     return this.create({
-      kind, itemNum, memApply, memRecv, topic, title, portfolio, want,
+      kind, itemNum, accountApply, accountRecv, topic, title, portfolio, want,
     });
   },
   // 모든 신청 받아오기
@@ -54,28 +54,28 @@ applyStudySchema.statics = {
   },
   // 내가 한 모든 신청 받아오기
   getApplyStudyById: function (userId: string) {
-    return this.find({ memApply: userId });
+    return this.find({ accountApply: userId });
   },
   // 내가 한 신청 종류별로 받아오기
   getApplyStudyByIdAndKind: function (userId: string, kind: string) {
-    return this.find({ memApply: userId, kind });
+    return this.find({ accountApply: userId, kind });
   },
   // 내가 한 신청 변경하기
   updateApplyStudy: function (userId: string, itemNum: number, topic: string, title: string, portfolio: string, want: string) {
-    return this.findOneAndUpdate({ memApply: userId, itemNum }, {
+    return this.findOneAndUpdate({ accountApply: userId, itemNum }, {
       topic, title, portfolio, want,
     }, { returnNewDocument: true });
   },
   // 내가 한 신청 삭제하기
   removeApplyContest: function (userId: string, itemNum: number) {
-    return this.findOneAndDelete({ memApply: userId, itemNum });
+    return this.findOneAndDelete({ accountApply: userId, itemNum });
   },
   // 신청 한 게시물인지 확인
   isApplied: function (userId: string, kind: string, itemNum: number) {
     this.find({
       kind,
       itemNum,
-      memApply: userId,
+      accountApply: userId,
     }, (err: any, result: string | string[]) => {
       if (err) {
         return false;
@@ -90,7 +90,7 @@ applyStudySchema.statics = {
     this.find({
       kind,
       itemNum,
-      memApply: userId,
+      accountApply: userId,
       applyChk: 1,
     }, (err: any, result: string | string[]) => {
       if (err) {

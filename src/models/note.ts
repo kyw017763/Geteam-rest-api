@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
-import { IMember } from './member';
+import { IAccount } from './account'
 import { connection } from './Database';
 
 export interface INote extends mongoose.Document {
-  _id: IMember['_id'];
-  memRecv: string;
-  memSend: string;
+  _id: IAccount['_id'];
+  accountRecv: string;
+  accountSend: string;
   content: string;
   recvChk: string;
   reChk: INote['_id'];
@@ -13,8 +13,8 @@ export interface INote extends mongoose.Document {
 
 const noteSchema = new mongoose.Schema({
   // idx 는 createdAt 으로 sort 해서 대체함
-  memRecv: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
-  memSend: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  accountRecv: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  accountSend: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   content: { type: String, required: true },
   recvChk: { type: Number, default: 0 }, // 읽음 체크
   reChk: { type: mongoose.Schema.Types.ObjectId, ref: 'Note' }, // 대답인지
@@ -25,25 +25,25 @@ const noteSchema = new mongoose.Schema({
 noteSchema.statics = {
   getNotesByRecvId: function (userId: string) {
     return this.find({
-      memRecv: userId,
+      accountRecv: userId,
     });
   },
   getNotesBySendId: function (userId: string) {
     return this.find({
-      memSend: userId,
+      accountSend: userId,
     });
   },
   createNote: function (recvId: string, sendId: string, content: string) {
     return this.create({
-      memRecv: recvId,
-      memSend: sendId,
+      accountRecv: recvId,
+      accountSend: sendId,
       content,
     });
   },
   createNoteReturned: function (recvId: string, sendId: string, content: string, returnedId: string) {
     return this.create({
-      memRecv: recvId,
-      memSend: sendId,
+      accountRecv: recvId,
+      accountSend: sendId,
       content,
       reChk: returnedId,
     });
