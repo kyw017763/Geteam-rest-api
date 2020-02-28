@@ -8,7 +8,7 @@ export default router;
 
 router.get('/study', async (req, res, next) => {
   try {
-    const result = await models.Study.find()
+    const result = await models.Study.find({})
     .then((result) => {
       return result;
     })
@@ -16,7 +16,11 @@ router.get('/study', async (req, res, next) => {
       throw new err;
     });
 
-    res.json(responseForm(true, '', result));
+    if (result.length) {
+      res.json(responseForm(true, '', result));
+    } else {
+      res.status(204).json(responseForm(true));
+    }
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }
@@ -39,13 +43,17 @@ router.get('/study/:category', async (req, res, next) => {
       throw new err;
     });
 
-    res.json(responseForm(true, '', result));
+    if (result.length) {
+      res.json(responseForm(true, '', result));
+    } else {
+      res.status(204).json(responseForm(true));
+    }
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }
 });
 
-router.get('/study/:id', async (req, res, next) => {
+router.get('/study/:category/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -97,7 +105,7 @@ router.patch('/study/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const { modify_author, modify_want_num, modify_end_day, modifyTopic, modifyTitle, modifyContent } = req.body;
+    const { modifyAuthor, modifyWantNum, modifyEndDay, modifyTopic, modifyTitle, modifyContent } = req.body;
     
     const updateObj = { 
       $set: 
@@ -105,8 +113,8 @@ router.patch('/study/:id', async (req, res, next) => {
         topic: modifyTopic,
         title: modifyTitle,
         content: modifyContent,
-        wantNum: modify_want_num,
-        endDay: modify_end_day,
+        wantNum: modifyWantNum,
+        endDay: modifyEndDay,
       }
     };
     
