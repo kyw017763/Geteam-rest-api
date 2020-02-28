@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
 import { IAccount } from './account'
-import { connect } from 'mongoose';
 import { connection } from './Database';
 
 autoIncrement.initialize(mongoose.connection);
@@ -22,12 +21,17 @@ export interface IContest extends mongoose.Document {
   teamChk: number;
 }
 
+const partSchema = new mongoose.Schema({
+  name: { type: [String] },
+  num: { type: Number },
+});
+
 const contestSchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
   account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true },
-  part: { type: String, required: true },
+  part: { type: partSchema, required: true },
   title: { type: String, required: true },
   content: { type: String, required: true },
   wantNum: { type: Number, required: true },
@@ -49,24 +53,6 @@ contestSchema.plugin(autoIncrement.plugin, {
 });
 
 contestSchema.statics = {
-  // contest 등록
-  createContest: function (userId: string, kind: string, topic: string, part: string, title: string, content: string, wantNum: number, applyNum: number, endDay: string) {
-    return this.create({
-      kind, account: userId, topic, part, title, content, wantNum, applyNum, endDay,
-    });
-  },
-  // 모든 contest 받아오기
-  getContests: function () {
-    return this.find({});
-  },
-  getContestsByCategory: function (kind: string, page: number, listOrder: string) {
-    return this.find({ kind }).sort(listOrder).skip(page * 10)
-      .lean()
-      .exec()
-      .then((contests: string) => {
-        return contests;
-      });
-  },
   // 내가 작성한 모든 contest 받아오기 - listNum과 연결
   getContestById: function (userId: string) {
     return this.find({ account: userId });
@@ -74,15 +60,6 @@ contestSchema.statics = {
   // 내가 작성한 conteset 종류별로 받아오기
   getContestByKind: function (userId: string, kind: string) {
     return this.find({ account: userId, kind });
-  },
-  // 현재 contest 받아오기'
-  getContestByNum: function (num: number) {
-    return this.find({
-      num,
-    });
-  },
-  getContestByItemId: function (id: string) {
-    return this.findById(id);
   },
   // 검색
   searchContest: function (keyword: string) {
@@ -96,26 +73,6 @@ contestSchema.statics = {
         { title: { $regex: keyword } },
         { content: { $regex: keyword } },
       ],
-    );
-  },
-  // 내가 작성한 contest 변경하기
-  updateContest: function (userId: string, num: number, part: string, title: string, content: string, wantNum: number, endDay: string) {
-    return this.findOneAndUpdate({ account: userId, num }, {
-      part, title, content, wantNum, endDay,
-    }, { returnNewDocument: true });
-  },
-  // 내거 작성한 contest 삭제하기
-  removeContest: function (itemId: string) {
-    return this.findByIdAndRemove(itemId)
-      .then((result: string) => {
-        return result;
-      });
-  },
-  // 조회수 하나 올리기
-  updateHit: function (num: number) {
-    return this.findOneAndUpdate(
-      { num },
-      { $inc: { hit: 1 } },
     );
   },
   // applyNum 하나 올리기

@@ -46,24 +46,6 @@ studySchema.plugin(autoIncrement.plugin, {
 });
 
 studySchema.statics = {
-  // study 등록
-  createStudy: function (account: any, kind: any, topic: any, title: any, content: any, wantNum: any, endDay: any) {
-    return this.create({
-      account, kind, topic, title, content, wantNum, endDay,
-    });
-  },
-  // 모든 study 받아오기
-  getStydies: function () {
-    return this.find({});
-  },
-  getStudiesByCategory: function (kind: any, page: number, listOrder: any) {
-    return this.find({ kind }).sort(listOrder).skip(page * 10)
-      .lean()
-      .exec()
-      .then((studies: any) => {
-        return studies;
-      });
-  },
   // 내가 작성한 모든 study 받아오기 - listNum과 연결
   getStudyById: function (userId: any) {
     return this.find({ account: userId });
@@ -71,15 +53,6 @@ studySchema.statics = {
   // 내가 작성한 study 종류별로 받아오기
   getSutydByKind: function (userId: any, kind: any) {
     return this.find({ account: userId, kind });
-  },
-  // 현재 study 받아오기'
-  getStudyByNum: function (num: any) {
-    return this.find({
-      num,
-    });
-  },
-  getStudyByItemId: function (id: any) {
-    return this.findById(id);
   },
   // 검색
   searchStudy: function (keyword: any) {
@@ -92,26 +65,6 @@ studySchema.statics = {
         { title: { $regex: keyword } },
         { content: { $regex: keyword } },
       ],
-    );
-  },
-  // 내가 작성한 study 변경하기
-  updateStudy: function (userId: any, num: any, part: any, title: any, content: any, wantNum: any, endDay: any) {
-    return this.findOneAndUpdate({ account: userId, num }, {
-      part, title, content, wantNum, endDay,
-    }, { returnNewDocument: true });
-  },
-  // 내거 작성한 study 삭제하기
-  removeStudy: function (itemId: any) {
-    return this.findByIdAndRemove(itemId)
-      .then((result: any) => {
-        return result;
-      });
-  },
-  // 조회수 하나 올리기
-  updateHit: function (num: any) {
-    return this.findOneAndUpdate(
-      { num },
-      { $inc: { hit: 1 } },
     );
   },
   // applyNum 하나 올리기
