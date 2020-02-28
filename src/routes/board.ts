@@ -80,6 +80,10 @@ router.get('/study/:category/:id/view', async (req, res, next) => {
 
 router.post('/study/:category', async (req, res, next) => {
   try {
+    if (req!.session!.passport.user.toString() !== req.body.writeMem) {
+      throw new Error('옳지 않은 권한입니다!');
+    }
+
     const { category } = req.params;
 
     switch (category) {
@@ -102,7 +106,7 @@ router.post('/study/:category', async (req, res, next) => {
       throw new err;
     });
 
-    res.json(responseForm(true, '', result));
+    res.status(201).json(responseForm(true, '', result));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }
@@ -110,6 +114,10 @@ router.post('/study/:category', async (req, res, next) => {
 
 router.patch('/study/:id', async (req, res, next) => {
   try {
+    if (req!.session!.passport.user.toString() !== req.body.modifyAuthor) {
+      throw new Error('옳지 않은 권한입니다!');
+    }
+
     const { id } = req.params;
 
     const { modifyAuthor, modifyWantNum, modifyEndDay, modifyTopic, modifyTitle, modifyContent } = req.body;
@@ -141,6 +149,10 @@ router.patch('/study/:id', async (req, res, next) => {
 
 router.delete('/study/:id', async (req, res, next) => {
   try {
+    if (req!.session!.passport.user.toString() !== req.body.writeMem) {
+      throw new Error('옳지 않은 권한입니다!');
+    }
+
     const { id } = req.params;
     
     const result = await models.Study.findByIdAndDelete(id)
@@ -232,6 +244,10 @@ router.get('/contest/:category/:id/view', async (req, res, next) => {
 
 router.post('/contest/:category', async (req, res, next) => {
   try {
+    if (req!.session!.passport.user.toString() !== req.body.writeMem) {
+      throw new Error('옳지 않은 권한입니다!');
+    }
+
     const { category } = req.params;
 
     switch (category) {
@@ -261,7 +277,7 @@ router.post('/contest/:category', async (req, res, next) => {
       throw new err;
     });
 
-    res.json(responseForm(true, '', result));
+    res.status(201).json(responseForm(true, '', result));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }
@@ -269,6 +285,10 @@ router.post('/contest/:category', async (req, res, next) => {
 
 router.patch('/contest/:id', async (req, res, next) => {
   try {
+    if (req!.session!.passport.user.toString() !== req.body.modifyAuthor) {
+      throw new Error('옳지 않은 권한입니다!');
+    }
+
     const { id } = req.params;
 
     const { modifyAuthor, modifyWantNum, modifyEndDay, modifyTopic, modifyTitle, modifyContent } = req.body;
@@ -300,6 +320,10 @@ router.patch('/contest/:id', async (req, res, next) => {
 
 router.delete('/contest/:id', async (req, res, next) => {
   try {
+    if (req!.session!.passport.user.toString() !== req.body.writeMem) {
+      throw new Error('옳지 않은 권한입니다!');
+    }
+
     const { id } = req.params;
     
     const result = await models.Contest.findByIdAndDelete(id)
