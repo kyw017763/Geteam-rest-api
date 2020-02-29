@@ -110,7 +110,7 @@ router.get('/boards/study/:category/:page/:order', async (req, res, next) => {
   }
 });
 
-router.get('/board/study/:category/:id', async (req, res, next) => {
+router.get('/board/study/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     
@@ -137,15 +137,13 @@ router.get('/board/study/:category/:id', async (req, res, next) => {
   }
 });
 
-router.post('/board/study/:category', async (req, res, next) => {
+router.post('/board/study', async (req, res, next) => {
   try {
     if (req!.session!.passport.user.toString() !== req.body.writeMem) {
       throw new Error('옳지 않은 권한입니다!');
     }
 
-    const { category } = req.params;
-
-    switch (category) {
+    switch (req.body.writeKind) {
       case 'develop': case 'design': case 'etc': break;
       default: throw new Error('유효한 카테고리가 아닙니다');
     }
@@ -341,7 +339,7 @@ router.get('/boards/contest/:category/:page/:order', async (req, res, next) => {
   }
 });
 
-router.get('/board/contest/:category/:id', async (req, res, next) => {
+router.get('/board/contest/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -368,15 +366,13 @@ router.get('/board/contest/:category/:id', async (req, res, next) => {
   }
 });
 
-router.post('/board/contest/:category', async (req, res, next) => {
+router.post('/board/contest', async (req, res, next) => {
   try {
     if (req!.session!.passport.user.toString() !== req.body.writeMem) {
       throw new Error('옳지 않은 권한입니다!');
     }
 
-    const { category } = req.params;
-
-    switch (category) {
+    switch (req.body.writeKind) {
       case 'develop': case 'design': case 'idea': case 'etc': break;
       default: throw new Error('유효한 카테고리가 아닙니다');
     }
