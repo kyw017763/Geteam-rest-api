@@ -1,15 +1,11 @@
 import mongoose from 'mongoose';
-import autoIncrement from 'mongoose-auto-increment';
-import { IMember } from './member';
+import { IAccount } from './account'
 import { connection } from './Database';
 
-autoIncrement.initialize(mongoose.connection);
-
 export interface IStudy extends mongoose.Document {
-  _id: IMember['_id'];
-  num: number;
+  _id: string;
   kind: string;
-  mem: string;
+  account: IAccount['_id'];
   topic: string;
   title: string;
   content: string;
@@ -18,12 +14,12 @@ export interface IStudy extends mongoose.Document {
   endDay: Date;
   hit: number;
   teamChk: number;
+  active: boolean;
 }
 
 const studySchema = new mongoose.Schema({
-  num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
-  mem: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true },
   title: { type: String, required: true },
   content: { type: String, required: true },
@@ -33,53 +29,19 @@ const studySchema = new mongoose.Schema({
   endDay: { type: Date, required: true },
   hit: { type: Number, default: 0 },
   teamChk: { type: Number, default: 0 },
+  active: { type: Boolean, default: true },
 }, {
   timestamps: true,
 });
 
-
-studySchema.plugin(autoIncrement.plugin, {
-  model: 'Study',
-  field: 'num',
-  startAt: 1,
-  incrementBy: 1,
-});
-
 studySchema.statics = {
-  // study 등록
-  createStudy: function (mem: any, kind: any, topic: any, title: any, content: any, wantNum: any, endDay: any) {
-    return this.create({
-      mem, kind, topic, title, content, wantNum, endDay,
-    });
-  },
-  // 모든 study 받아오기
-  getStydies: function () {
-    return this.find({});
-  },
-  getStudiesByCategory: function (kind: any, page: number, listOrder: any) {
-    return this.find({ kind }).sort(listOrder).skip(page * 10)
-      .lean()
-      .exec()
-      .then((studies: any) => {
-        return studies;
-      });
-  },
   // 내가 작성한 모든 study 받아오기 - listNum과 연결
   getStudyById: function (userId: any) {
-    return this.find({ mem: userId });
+    return this.find({ account: userId });
   },
   // 내가 작성한 study 종류별로 받아오기
   getSutydByKind: function (userId: any, kind: any) {
-    return this.find({ mem: userId, kind });
-  },
-  // 현재 study 받아오기'
-  getStudyByNum: function (num: any) {
-    return this.find({
-      num,
-    });
-  },
-  getStudyByItemId: function (id: any) {
-    return this.findById(id);
+    return this.find({ account: userId, kind });
   },
   // 검색
   searchStudy: function (keyword: any) {
@@ -92,26 +54,6 @@ studySchema.statics = {
         { title: { $regex: keyword } },
         { content: { $regex: keyword } },
       ],
-    );
-  },
-  // 내가 작성한 study 변경하기
-  updateStudy: function (userId: any, num: any, part: any, title: any, content: any, wantNum: any, endDay: any) {
-    return this.findOneAndUpdate({ mem: userId, num }, {
-      part, title, content, wantNum, endDay,
-    }, { returnNewDocument: true });
-  },
-  // 내거 작성한 study 삭제하기
-  removeStudy: function (itemId: any) {
-    return this.findByIdAndRemove(itemId)
-      .then((result: any) => {
-        return result;
-      });
-  },
-  // 조회수 하나 올리기
-  updateHit: function (num: any) {
-    return this.findOneAndUpdate(
-      { num },
-      { $inc: { hit: 1 } },
     );
   },
   // applyNum 하나 올리기
@@ -167,4 +109,4 @@ studySchema.query.sortByTitle = function (order: string) {
   return this.sort({ title: order });
 };
 
-export const Study: mongoose.Model<IStudy> = connection.model<IStudy>('studies', studySchema);
+export const Study: mongoose.Model<IStudy> = connection.model<IStudy>('Study', studySchema);

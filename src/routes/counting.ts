@@ -11,7 +11,7 @@ router.get('/counting', async (req, res, next) => {
 
     interface ICounting {
       visit?: number;
-      member?: number;
+      account?: number;
       list?: number;
       apply?: number;
       team?: number;
@@ -26,11 +26,11 @@ router.get('/counting', async (req, res, next) => {
       counting.visit = 0;
     }
 
-    if (redisClient.EXISTS('memberCnt')) {
-      counting.member = Number(redisClient.GET('memberCnt'));
+    if (redisClient.EXISTS('accountCnt')) {
+      counting.account = Number(redisClient.GET('accountCnt'));
     } else {
-      redisClient.SET('memberCnt', '0');
-      counting.member = 0;
+      redisClient.SET('accountCnt', '0');
+      counting.account = 0;
     }
 
     if (redisClient.EXISTS('listCnt')) {
