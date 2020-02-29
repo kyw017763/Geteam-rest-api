@@ -42,10 +42,10 @@ router.get('/boards/study/:page/:order', async (req, res, next) => {
         return result;
       })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
-    if (result.length) {
+    if ((<any>result).length) {
       res.json(responseForm(true, '', result));
     } else {
       res.status(204).json(responseForm(true));
@@ -97,10 +97,10 @@ router.get('/boards/study/:category/:page/:order', async (req, res, next) => {
         return result;
       })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
-    if (result.length) {
+    if ((<any>result).length) {
       res.json(responseForm(true, '', result));
     } else {
       res.status(204).json(responseForm(true));
@@ -116,7 +116,7 @@ router.get('/board/study/:id', async (req, res, next) => {
     
     await models.Study.findOneAndUpdate(id, { $inc: { hit: 1 } })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
     const result = await models.Study.findById(id)
@@ -128,7 +128,7 @@ router.get('/board/study/:id', async (req, res, next) => {
         return result;
       })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
     res.json(responseForm(true, '', result));
@@ -161,12 +161,12 @@ router.post('/board/study', async (req, res, next) => {
       .then((result) => {
         return result._id;
       }).catch((err) => {
-        throw new err;
+        new Error(err);
       });
     
     await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
     res.status(201).json(responseForm(true, '', result));
@@ -201,7 +201,7 @@ router.patch('/board/study/:id', async (req, res, next) => {
         return result ? result._id : result; 
       })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
     res.json(responseForm(true, '', result));
@@ -223,12 +223,12 @@ router.delete('/board/study/:id', async (req, res, next) => {
         return true;
       })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
     await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
     
     res.json(responseForm(true, '', result));
@@ -273,10 +273,10 @@ router.get('/boards/contest/:page/:order', async (req, res, next) => {
         return result;
       })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
-    if (result.length) {
+    if ((<any>result).length) {
       res.json(responseForm(true, '', result));
     } else {
       res.status(204).json(responseForm(true));
@@ -326,10 +326,10 @@ router.get('/boards/contest/:category/:page/:order', async (req, res, next) => {
         return result;
       })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
-    if (result.length) {
+    if ((<any>result).length) {
       res.json(responseForm(true, '', result));
     } else {
       res.status(204).json(responseForm(true));
@@ -345,7 +345,7 @@ router.get('/board/contest/:id', async (req, res, next) => {
 
     await models.Contest.findOneAndUpdate(id, { $inc: { hit: 1 } })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
     const result = await models.Contest.findById(id)
@@ -357,7 +357,7 @@ router.get('/board/contest/:id', async (req, res, next) => {
         return result;
       })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
     res.json(responseForm(true, '', result));
@@ -397,12 +397,12 @@ router.post('/board/contest', async (req, res, next) => {
       .then((result) => {
         return result._id;
       }).catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
     await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
     res.status(201).json(responseForm(true, '', result));
@@ -436,7 +436,7 @@ router.patch('/board/contest/:id', async (req, res, next) => {
         return result ? result._id : result;
       })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
     res.json(responseForm(true, '', result));
@@ -458,12 +458,12 @@ router.delete('/board/contest/:id', async (req, res, next) => {
         return true;
       })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
     
     await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } })
       .catch((err) => {
-        throw new err;
+        new Error(err);
       });
 
     res.json(responseForm(true, '', result));
