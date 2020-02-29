@@ -6,10 +6,10 @@ import { connection } from './Database';
 autoIncrement.initialize(mongoose.connection);
 
 export interface IStudy extends mongoose.Document {
-  _id: IAccount['_id'];
+  _id: string;
   num: number;
   kind: string;
-  account: string;
+  account: IAccount['_id'];
   topic: string;
   title: string;
   content: string;
@@ -18,6 +18,7 @@ export interface IStudy extends mongoose.Document {
   endDay: Date;
   hit: number;
   teamChk: number;
+  active: boolean;
 }
 
 const studySchema = new mongoose.Schema({
@@ -33,6 +34,7 @@ const studySchema = new mongoose.Schema({
   endDay: { type: Date, required: true },
   hit: { type: Number, default: 0 },
   teamChk: { type: Number, default: 0 },
+  active: { type: Boolean, default: true },
 }, {
   timestamps: true,
 });
@@ -120,4 +122,4 @@ studySchema.query.sortByTitle = function (order: string) {
   return this.sort({ title: order });
 };
 
-export const Study: mongoose.Model<IStudy> = connection.model<IStudy>('studies', studySchema);
+export const Study: mongoose.Model<IStudy> = connection.model<IStudy>('Study', studySchema);

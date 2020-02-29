@@ -5,7 +5,7 @@ import { connection } from './Database';
 
 autoIncrement.initialize(mongoose.connection);
 
-export interface IContestApply extends mongoose.Document {
+export interface IStudyApply extends mongoose.Document {
   _id: IAccount['_id'];
   num: number;
   kind: string;
@@ -14,13 +14,13 @@ export interface IContestApply extends mongoose.Document {
   accountRecv: string;
   topic: string;
   title: string;
-  part: string;
   portfolio: string;
   want: string;
   applyChk: number;
+  active: boolean;
 };
 
-const applyContestSchema = new mongoose.Schema({
+const applyStudySchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
   itemNum: { type: Number, required: true },
@@ -28,45 +28,44 @@ const applyContestSchema = new mongoose.Schema({
   accountRecv: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true, trim: true },
   title: { type: String, required: true, trim: true },
-  part: { type: String, required: true, trim: true },
   portfolio: { type: String, required: true, trim: true },
   want: { type: String, required: true, trim: true },
   applyChk: { type: Number, default: 0 },
+  active: { type: Boolean, default: true },
 }, {
   timestamps: true,
 });
 
-applyContestSchema.plugin(autoIncrement.plugin, {
-  model: 'ApplyContest',
+applyStudySchema.plugin(autoIncrement.plugin, {
+  model: 'ApplyStudy',
   field: 'num',
   startAt: 1,
   incrementBy: 1,
 });
 
-applyContestSchema.statics = {
-  // 신청하기
-  createApplyContest:
-  function (kind: string, itemNum: number, accountApply: string, accountRecv: string, topic: string, title: string, part: string, portfolio: string, want: string) {
+applyStudySchema.statics = {
+  createApplyStudy:
+  function (kind: string, itemNum: number, accountApply: string, accountRecv: string, topic: string, title: string, portfolio: string, want: string) {
     return this.create({
-      kind, itemNum, accountApply, accountRecv, topic, title, part, portfolio, want,
+      kind, itemNum, accountApply, accountRecv, topic, title, portfolio, want,
     });
   },
   // 모든 신청 받아오기
-  getApplyContests: function () {
+  getApplyStudies: function () {
     return this.find({});
   },
   // 내가 한 모든 신청 받아오기
-  getApplyContestById: function (userId: string) {
+  getApplyStudyById: function (userId: string) {
     return this.find({ accountApply: userId });
   },
   // 내가 한 신청 종류별로 받아오기
-  getApplyContestByIdAndKind: function (userId: string, kind: string) {
+  getApplyStudyByIdAndKind: function (userId: string, kind: string) {
     return this.find({ accountApply: userId, kind });
   },
   // 내가 한 신청 변경하기
-  updateApplyContest: function (userId: string, itemNum: number, topic: string, title: string, part: string, portfolio: string, want: string) {
+  updateApplyStudy: function (userId: string, itemNum: number, topic: string, title: string, portfolio: string, want: string) {
     return this.findOneAndUpdate({ accountApply: userId, itemNum }, {
-      topic, title, part, portfolio, want,
+      topic, title, portfolio, want,
     }, { returnNewDocument: true });
   },
   // 내가 한 신청 삭제하기
@@ -88,8 +87,8 @@ applyContestSchema.statics = {
       }
     });
   },
-  // 신청 한 게시물이 받아들여졌는지 확인
-  isConfirmed: function (userId: string, kind: string, itemNum: string) {
+  // 신청한 게시물이 받아들여졌는지 확인
+  isConfirmed: function (userId: string, kind: string, itemNum: number) {
     this.find({
       kind,
       itemNum,
@@ -106,4 +105,4 @@ applyContestSchema.statics = {
   },
 };
 
-export const ApplyContest: mongoose.Model<IContestApply> = connection.model<IContestApply>('contestApplies', applyContestSchema);
+export const StudyApply: mongoose.Model<IStudyApply> = connection.model<IStudyApply>('StudyApply', applyStudySchema);

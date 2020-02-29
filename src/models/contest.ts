@@ -6,10 +6,10 @@ import { connection } from './Database';
 autoIncrement.initialize(mongoose.connection);
 
 export interface IContest extends mongoose.Document {
-  _id: IAccount['_id'];
+  _id: string;
   num: number;
   kind: string;
-  account: string;
+  account: IAccount['_id'];
   topic: string;
   part: string;
   title: string;
@@ -19,12 +19,13 @@ export interface IContest extends mongoose.Document {
   endDay: Date;
   hit: number;
   teamChk: number;
+  active: boolean;
 }
 
 const partSchema = new mongoose.Schema({
   name: { type: [String] },
   num: { type: Number },
-});
+}, { _id : false });
 
 const contestSchema = new mongoose.Schema({
   num: { type: Number, required: true, unique: true }, // A.I
@@ -40,6 +41,7 @@ const contestSchema = new mongoose.Schema({
   endDay: { type: Date, required: true },
   hit: { type: Number, default: 0 },
   teamChk: { type: Number, default: 0 },
+  active: { type: Boolean, default: true },
 }, {
   timestamps: true,
 });
@@ -128,4 +130,4 @@ contestSchema.query.sortByTitle = function (order: string) {
   return this.sort({ title: order });
 };
 
-export const Contest: mongoose.Model<IContest> = connection.model<IContest>('contests', contestSchema);
+export const Contest: mongoose.Model<IContest> = connection.model<IContest>('Contest', contestSchema);

@@ -59,4 +59,4 @@ noteSchema.statics = {
   },
 };
 
-export const Note: mongoose.Model<INote> = connection.model<INote>('notes', noteSchema);
+export const Note: mongoose.Model<INote> = connection.model<INote>('Note', noteSchema);
