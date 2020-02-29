@@ -40,7 +40,7 @@ passportConfig();
 
 app.use('/', auth);
 app.use('/', counting);
-app.use('/board', passport.authenticate('jwt', { session: true }), board);
+app.use('/', passport.authenticate('jwt', { session: true }), board);
 
 app.listen(process.env.PORT || config.PORT, () => {
   

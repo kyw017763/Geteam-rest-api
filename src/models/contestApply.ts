@@ -1,13 +1,9 @@
 import mongoose from 'mongoose';
-import autoIncrement from 'mongoose-auto-increment';
 import { IAccount } from './account'
 import { connection } from './Database';
 
-autoIncrement.initialize(mongoose.connection);
-
 export interface IContestApply extends mongoose.Document {
   _id: IAccount['_id'];
-  num: number;
   kind: string;
   itemNum: number;
   accountApply: string;
@@ -22,7 +18,6 @@ export interface IContestApply extends mongoose.Document {
 };
 
 const applyContestSchema = new mongoose.Schema({
-  num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
   itemNum: { type: Number, required: true },
   accountApply: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
@@ -36,13 +31,6 @@ const applyContestSchema = new mongoose.Schema({
   active: { type: Boolean, default: true },
 }, {
   timestamps: true,
-});
-
-applyContestSchema.plugin(autoIncrement.plugin, {
-  model: 'ApplyContest',
-  field: 'num',
-  startAt: 1,
-  incrementBy: 1,
 });
 
 applyContestSchema.statics = {

@@ -105,12 +105,6 @@ accountSchema.statics = {
   secession: function (userId: string) {
     return this.findOneAndUpdate({ id: userId }, { active: false });
   },
-  getListNumById: function (id: string) {
-    return this.findOne(id).select('listNum').lean().exec()
-      .then((user: { listNum: number; }) => {
-        return user.listNum;
-      });
-  },
 };
 
 export const Account: mongoose.Model<IAccount> = connection.model<IAccount>('Account', accountSchema);

@@ -1,13 +1,9 @@
 import mongoose from 'mongoose';
-import autoIncrement from 'mongoose-auto-increment';
 import { IAccount } from './account'
 import { connection } from './Database';
 
-autoIncrement.initialize(mongoose.connection);
-
 export interface IStudy extends mongoose.Document {
   _id: string;
-  num: number;
   kind: string;
   account: IAccount['_id'];
   topic: string;
@@ -22,7 +18,6 @@ export interface IStudy extends mongoose.Document {
 }
 
 const studySchema = new mongoose.Schema({
-  num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
   account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true },
@@ -37,14 +32,6 @@ const studySchema = new mongoose.Schema({
   active: { type: Boolean, default: true },
 }, {
   timestamps: true,
-});
-
-
-studySchema.plugin(autoIncrement.plugin, {
-  model: 'Study',
-  field: 'num',
-  startAt: 1,
-  incrementBy: 1,
 });
 
 studySchema.statics = {
