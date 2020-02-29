@@ -1,15 +1,15 @@
-import { ApplyContest } from './applyContest';
-import { ApplyStudy } from './applyStudy';
+import { ContestApply } from './contestApply';
+import { StudyApply } from './studyApply';
 import { Contest } from './contest';
-import { Member } from './member';
+import { Account } from './account';
 import { Note } from './note';
 import { Study } from './study';
 
 const models = {
-  ApplyContest,
-  ApplyStudy,
+  ContestApply,
+  StudyApply,
   Contest,
-  Member,
+  Account,
   Note,
   Study,
 };

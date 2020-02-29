@@ -1,16 +1,11 @@
 import mongoose from 'mongoose';
-import autoIncrement from 'mongoose-auto-increment';
-import { IMember } from './member';
-import { connect } from 'mongoose';
+import { IAccount } from './account'
 import { connection } from './Database';
 
-autoIncrement.initialize(mongoose.connection);
-
 export interface IContest extends mongoose.Document {
-  _id: IMember['_id'];
-  num: number;
+  _id: string;
   kind: string;
-  mem: string;
+  account: IAccount['_id'];
   topic: string;
   part: string;
   title: string;
@@ -20,14 +15,19 @@ export interface IContest extends mongoose.Document {
   endDay: Date;
   hit: number;
   teamChk: number;
+  active: boolean;
 }
 
+const partSchema = new mongoose.Schema({
+  name: { type: [String] },
+  num: { type: Number },
+}, { _id : false });
+
 const contestSchema = new mongoose.Schema({
-  num: { type: Number, required: true, unique: true }, // A.I
-  kind: { type: String, required: true, enum: ['develop', 'design', 'idea', 'etc'] },
-  mem: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  kind: { type: String, required: true },
+  account: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true },
-  part: { type: String, required: true },
+  part: { type: partSchema, required: true },
   title: { type: String, required: true },
   content: { type: String, required: true },
   wantNum: { type: Number, required: true },
@@ -36,53 +36,19 @@ const contestSchema = new mongoose.Schema({
   endDay: { type: Date, required: true },
   hit: { type: Number, default: 0 },
   teamChk: { type: Number, default: 0 },
+  active: { type: Boolean, default: true },
 }, {
   timestamps: true,
 });
 
-
-contestSchema.plugin(autoIncrement.plugin, {
-  model: 'Contest',
-  field: 'num',
-  startAt: 1,
-  incrementBy: 1,
-});
-
 contestSchema.statics = {
-  // contest 등록
-  createContest: function (userId: string, kind: string, topic: string, part: string, title: string, content: string, wantNum: number, applyNum: number, endDay: string) {
-    return this.create({
-      kind, mem: userId, topic, part, title, content, wantNum, applyNum, endDay,
-    });
-  },
-  // 모든 contest 받아오기
-  getContests: function () {
-    return this.find({});
-  },
-  getContestsByCategory: function (kind: string, page: number, listOrder: string) {
-    return this.find({ kind }).sort(listOrder).skip(page * 10)
-      .lean()
-      .exec()
-      .then((contests: string) => {
-        return contests;
-      });
-  },
   // 내가 작성한 모든 contest 받아오기 - listNum과 연결
   getContestById: function (userId: string) {
-    return this.find({ mem: userId });
+    return this.find({ account: userId });
   },
   // 내가 작성한 conteset 종류별로 받아오기
   getContestByKind: function (userId: string, kind: string) {
-    return this.find({ mem: userId, kind });
-  },
-  // 현재 contest 받아오기'
-  getContestByNum: function (num: number) {
-    return this.find({
-      num,
-    });
-  },
-  getContestByItemId: function (id: string) {
-    return this.findById(id);
+    return this.find({ account: userId, kind });
   },
   // 검색
   searchContest: function (keyword: string) {
@@ -96,26 +62,6 @@ contestSchema.statics = {
         { title: { $regex: keyword } },
         { content: { $regex: keyword } },
       ],
-    );
-  },
-  // 내가 작성한 contest 변경하기
-  updateContest: function (userId: string, num: number, part: string, title: string, content: string, wantNum: number, endDay: string) {
-    return this.findOneAndUpdate({ mem: userId, num }, {
-      part, title, content, wantNum, endDay,
-    }, { returnNewDocument: true });
-  },
-  // 내거 작성한 contest 삭제하기
-  removeContest: function (itemId: string) {
-    return this.findByIdAndRemove(itemId)
-      .then((result: string) => {
-        return result;
-      });
-  },
-  // 조회수 하나 올리기
-  updateHit: function (num: number) {
-    return this.findOneAndUpdate(
-      { num },
-      { $inc: { hit: 1 } },
     );
   },
   // applyNum 하나 올리기
@@ -171,4 +117,4 @@ contestSchema.query.sortByTitle = function (order: string) {
   return this.sort({ title: order });
 };
 
-export const Contest: mongoose.Model<IContest> = connection.model<IContest>('contests', contestSchema);
+export const Contest: mongoose.Model<IContest> = connection.model<IContest>('Contest', contestSchema);
