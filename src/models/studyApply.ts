@@ -1,31 +1,32 @@
 import mongoose from 'mongoose';
-import { IAccount } from './account'
+import { IAccount } from './account';
+import { IStudy } from './study';
 import { connection } from './Database';
 
 export interface IStudyApply extends mongoose.Document {
   _id: IAccount['_id'];
   kind: string;
-  itemNum: number;
-  accountApply: string;
-  accountRecv: string;
+  item: IStudy['_id'];
+  applyAccount: IAccount['_id'];
+  recvAccount: IAccount['_id'];
   topic: string;
   title: string;
   portfolio: string;
   want: string;
-  applyChk: number;
+  accept: boolean;
   active: boolean;
 };
 
 const applyStudySchema = new mongoose.Schema({
   kind: { type: String, required: true },
-  itemNum: { type: Number, required: true },
-  accountApply: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
-  accountRecv: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  item: { type: mongoose.Schema.Types.ObjectId, ref: 'Study', required: true },
+  applyAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  recvAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true, trim: true },
   title: { type: String, required: true, trim: true },
   portfolio: { type: String, required: true, trim: true },
   want: { type: String, required: true, trim: true },
-  applyChk: { type: Number, default: 0 },
+  accept: { type: Boolean, default: false },
   active: { type: Boolean, default: true },
 }, {
   timestamps: true,
@@ -33,9 +34,9 @@ const applyStudySchema = new mongoose.Schema({
 
 applyStudySchema.statics = {
   createApplyStudy:
-  function (kind: string, itemNum: number, accountApply: string, accountRecv: string, topic: string, title: string, portfolio: string, want: string) {
+  function (kind: string, itemNum: number, applyAccount: string, recvAccount: string, topic: string, title: string, portfolio: string, want: string) {
     return this.create({
-      kind, itemNum, accountApply, accountRecv, topic, title, portfolio, want,
+      kind, itemNum, applyAccount, recvAccount, topic, title, portfolio, want,
     });
   },
   // 모든 신청 받아오기
@@ -44,28 +45,28 @@ applyStudySchema.statics = {
   },
   // 내가 한 모든 신청 받아오기
   getApplyStudyById: function (userId: string) {
-    return this.find({ accountApply: userId });
+    return this.find({ applyAccount: userId });
   },
   // 내가 한 신청 종류별로 받아오기
   getApplyStudyByIdAndKind: function (userId: string, kind: string) {
-    return this.find({ accountApply: userId, kind });
+    return this.find({ applyAccount: userId, kind });
   },
   // 내가 한 신청 변경하기
   updateApplyStudy: function (userId: string, itemNum: number, topic: string, title: string, portfolio: string, want: string) {
-    return this.findOneAndUpdate({ accountApply: userId, itemNum }, {
+    return this.findOneAndUpdate({ applyAccount: userId, itemNum }, {
       topic, title, portfolio, want,
     }, { returnNewDocument: true });
   },
   // 내가 한 신청 삭제하기
   removeApplyContest: function (userId: string, itemNum: number) {
-    return this.findOneAndDelete({ accountApply: userId, itemNum });
+    return this.findOneAndDelete({ applyAccount: userId, itemNum });
   },
   // 신청 한 게시물인지 확인
   isApplied: function (userId: string, kind: string, itemNum: number) {
     this.find({
       kind,
       itemNum,
-      accountApply: userId,
+      applyAccount: userId,
     }, (err: any, result: string | string[]) => {
       if (err) {
         return false;
@@ -80,7 +81,7 @@ applyStudySchema.statics = {
     this.find({
       kind,
       itemNum,
-      accountApply: userId,
+      applyAccount: userId,
       applyChk: 1,
     }, (err: any, result: string | string[]) => {
       if (err) {

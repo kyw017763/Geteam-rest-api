@@ -11,6 +11,7 @@ export interface IStudy extends mongoose.Document {
   content: string;
   wantNum: number;
   applyNum: number;
+  acceptNum: number;
   endDay: Date;
   hit: number;
   teamChk: number;
@@ -25,6 +26,7 @@ const studySchema = new mongoose.Schema({
   content: { type: String, required: true },
   wantNum: {  type: Number, required: true },
   applyNum: { type: Number, default: 0 },
+  acceptNum: { type: Number, default: 0 },
   // startDay는 createdAt 으로 대신한다
   endDay: { type: Date, required: true },
   hit: { type: Number, default: 0 },
