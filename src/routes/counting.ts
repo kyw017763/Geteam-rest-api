@@ -17,13 +17,13 @@ router.get('/counting', async (req, res, next) => {
 
     let counting: ICounting = {};
 
-    redisClient.incCnt('visitCnt');
+    await redisClient.incCnt('visitCnt');
 
-    counting.visit = redisClient.getCnt('visitCnt');
-    counting.account = redisClient.getCnt('accountCnt');
-    counting.list = redisClient.getCnt('listCnt');
-    counting.apply = redisClient.getCnt('applyCnt');
-    counting.team = redisClient.getCnt('teamCnt');
+    counting.visit = await redisClient.getCnt('visitCnt');
+    counting.account = await redisClient.getCnt('accountCnt');
+    counting.list = await redisClient.getCnt('listCnt');
+    counting.apply = await redisClient.getCnt('applyCnt');
+    counting.team = await redisClient.getCnt('teamCnt');
     
     res.status(200).json(responseForm(true, '', counting));
   } catch (err) {

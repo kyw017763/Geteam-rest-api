@@ -1,5 +1,4 @@
 import express from 'express';
-import config from './../config';
 import responseForm from './../lib/responseForm';
 import models from './../models';
 

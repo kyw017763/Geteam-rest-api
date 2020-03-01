@@ -1,4 +1,5 @@
 import redis from 'redis';
+import { promisify } from 'util';
 import config from './config';
 
 // 'visitCnt'
@@ -9,7 +10,11 @@ import config from './config';
 
 class RedisClient {
   public client: redis.RedisClient;
-	private pwd: string;
+  private pwd: string;
+  private existsAsync: any;
+  private getAsync: any;
+  private setAsync: any;
+  private expireAsync: any;
 
 	constructor (pwd: string) {
     this.pwd = pwd;
@@ -30,38 +35,43 @@ class RedisClient {
         throw new Error(err);
       }
     });
+
+    this.existsAsync = promisify(this.client.EXISTS).bind(this.client);
+    this.getAsync= promisify(this.client.GET).bind(this.client);
+    this.setAsync = promisify(this.client.SET).bind(this.client);
+    this.expireAsync = promisify(this.client.EXPIRE).bind(this.client);
   }
 
-  blacklistToken(accessToken: string, exp: number): void {
-    this.client.set(`jwt-blacklist-${accessToken}`, Number(0).toString());
-    this.client.expire(`jwt-blacklist-${accessToken}`, exp - (new Date().getTime() / 1000));
+  async blacklistToken(accessToken: string, exp: number): Promise<void> {
+    await this.setAsync(`jwt-blacklist-${accessToken}`, Number(0).toString());
+    await this.expireAsync(`jwt-blacklist-${accessToken}`, exp - (new Date().getTime() / 1000));
   }
 
-  checkToken(accessToken: string): boolean {
-    if (this.client.EXISTS(`jwt-blacklist-${accessToken}`)) {
+  async checkToken(accessToken: string): Promise<boolean> {
+    if (await this.existsAsync(`jwt-blacklist-${accessToken}`)) {
       return true;
     } else {
       return false;
     }
   }
 
-  getCnt(key: string): number {
-    if (this.client.EXISTS(key)) {
-      return Number(this.client.GET(key));
+  async getCnt(key: string): Promise<number> {
+    if (await this.existsAsync(key)) {
+      return Number(this.getAsync(key));
     } else {
-      this.client.SET(key, '0');
+      await this.setAsync(key, '0');
       return 0;
     }
   }
 
-  incCnt(key: string): number {
-    if (this.client.EXISTS(key)) {
-      let cnt = Number(this.client.GET(key));
+  async incCnt(key: string): Promise<number> {
+    if (await this.existsAsync(key)) {
+      let cnt = Number(this.getAsync(key));
       let cntNum = Number(cnt) + 1;
-      this.client.SET(key, cntNum.toString());
+      await this.setAsync(key, cntNum.toString());
       return cnt;
     } else {
-      this.client.SET(key, '1');
+      await this.setAsync(key, '1');
       return 1;
     }
   }

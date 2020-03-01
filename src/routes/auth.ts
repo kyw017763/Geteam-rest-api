@@ -70,7 +70,7 @@ router.post('/register/verify/:key', async (req, res) => {
       }
     });
 
-    redisClient.incCnt('accountCnt');
+    await redisClient.incCnt('accountCnt');
 
     res.json(responseForm(true));
   } catch (err) {
@@ -128,6 +128,7 @@ router.post('/signin', async (req, res, next) => {
       _id: member._id,
       name: member.name,
       sNum: member.sNum,
+      listNum: member.listNum,
     };
 
     const accessOptions = {
@@ -202,6 +203,7 @@ router.post('/signin/refresh', async (req, res, next) => {
       _id: member._id,
       name: member.name,
       sNum: member.sNum,
+      listNum: member.listNum,
     };
     
     const accessOptions = {
@@ -244,7 +246,7 @@ router.post('/signout', passport.authenticate('jwt', { session: false }), async 
       });
 
     // Blacklisting Token
-    redisClient.blacklistToken(accessToken, decodedAccessToken.exp);
+    await redisClient.blacklistToken(accessToken, decodedAccessToken.exp);
     
     res.json(responseForm(true));
   } catch (err) {
@@ -313,7 +315,7 @@ router.delete('/unregister', passport.authenticate('jwt', { session: false }), a
       });
     
     // Blacklisting Token
-    redisClient.blacklistToken(accessToken, decodedAccessToken.exp);
+    await redisClient.blacklistToken(accessToken, decodedAccessToken.exp);
     
     res.json(responseForm(true));
   } catch (err) {
@@ -323,19 +325,20 @@ router.delete('/unregister', passport.authenticate('jwt', { session: false }), a
 
 router.post('/verify', async (req, res, next) => {
   try {
-    // TODO: expire check
-    // TODO: blacklisting
-
     const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '');
     
     if (!accessToken) {
       throw new Error('잘못된 Access Token이 전달되었습니다');
     }
-    if (redisClient.checkToken(accessToken)) {
+    if (await redisClient.checkToken(accessToken)) {
       throw new Error('Signout 처리된 Access Token입니다');
     }
     
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
+
+    if ((decodedAccessToken.exp * 1000) <= new Date().getTime()) {
+      throw new Error('만료된 Access Token입니다');
+    }
 
     res.status(200).json(responseForm(true, '', decodedAccessToken));
   } catch (err) {
