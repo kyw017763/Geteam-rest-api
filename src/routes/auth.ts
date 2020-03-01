@@ -29,9 +29,6 @@ router.post('/register', async (req, res) => {
       id: req.body.signup_email,
       isVerified: false,
       active: true,
-    }).then(() => {
-    }).catch((err: any) => {
-      throw new Error(err);
     });
     
     await models.Account.create({
@@ -44,9 +41,6 @@ router.post('/register', async (req, res) => {
       interest3: req.body.signup_inter3,
       profile: req.body.signup_profile,
       verifyKey
-    }).then(() => {
-    }).catch((err: any) => {
-      throw new Error(err);
     });
   
     res.json(responseForm(true));
@@ -74,8 +68,6 @@ router.post('/register/verify/:key', async (req, res) => {
       if (!result) {
         throw new Error('unvalid authentication!');
       }
-    }).catch((err: any) => {
-      throw new Error(err);
     });
 
     redisClient.incCnt('accountCnt');
@@ -105,8 +97,6 @@ router.post('/register/verify/new/:key', async (req, res) => {
       if (!result) {
         throw new Error('unvalid authentication!');
       }
-    }).catch((err: any) => {
-      throw new Error(err);
     });
 
     await sendAuthEmail(email, verifyKey);
@@ -132,8 +122,6 @@ router.post('/signin', async (req, res, next) => {
             throw new Error('잘못된 비밀번호입니다');
           }
         }
-      }).catch((err) => {
-        throw new Error(err);
       });
 
     const payload = {
@@ -156,14 +144,14 @@ router.post('/signin', async (req, res, next) => {
     const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRET || config.REFRESH_SECRET, refreshOptions);
     
     await models.Account.findOneAndUpdate({ id, isVerified: true, active: true }, {
-      $set: { refreshToken },
-    }).then((result) => {
-      if (!result) {
-        throw new Error('Refresh Token 저장에 실패했습니다');
-      }
-    }).catch((err) => {
-      throw new Error(err);
-    });
+        $set: { refreshToken },
+      }).then((result) => {
+        if (!result) {
+          throw new Error('Refresh Token 저장에 실패했습니다');
+        }
+      }).catch((err) => {
+        throw new Error(err);
+      });
 
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
     

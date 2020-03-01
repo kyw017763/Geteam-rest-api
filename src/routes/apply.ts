@@ -28,12 +28,6 @@ router.get('/study/:page/:order', async (req, res, next) => {
       .populate({
         path: 'recvAccount',
         select: '_id id name sNum',
-      })
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        throw new err;
       });
     
     if (result.length) {
@@ -69,12 +63,6 @@ router.get('/accept/study/:page/:order', async (req, res, next) => {
       .populate({
         path: 'recvAccount',
         select: '_id id name sNum',
-      })
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        throw new err;
       });
 
     if (result.length) {
@@ -110,12 +98,6 @@ router.get('/unaccept/study/:page/:order', async (req, res, next) => {
       .populate({
         path: 'recvAccount',
         select: '_id id name sNum',
-      })
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        throw new err;
       });
 
     if (result.length) {
@@ -146,12 +128,6 @@ router.get('/study/:item', async (req, res, next) => {
       .populate({
         path: 'applyAccount',
         select: '_id id name sNum',
-      })
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        throw new err;
       });
 
     res.json(responseForm(true, '', result));
@@ -211,11 +187,7 @@ router.patch('/study/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const applyDocument = await models.StudyApply.findById(id)
-      .then((result) => result)
-      .catch((err) => {
-        throw new Error(err);
-      });
+    const applyDocument = await models.StudyApply.findById(id);
     
     if (req!.session!.passport.user.toString() !== applyDocument!.recvAccount.toString()) {
       throw new Error('옳지 않은 권한입니다!');
@@ -226,10 +198,6 @@ router.patch('/study/:id', async (req, res, next) => {
 
     const boardDocument = await models.Study.findByIdAndUpdate(applyDocument!.item, {
         $inc: { acceptNum: 1 }
-      })
-      .then((result) => result)
-      .catch((err) => {
-        throw new Error(err);
       });
 
     res.json(responseForm(true, '', boardDocument!._id));
@@ -242,11 +210,7 @@ router.delete('/study/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
    
-    const applyDocument = await models.StudyApply.findById(id)
-      .then((result) => result)
-      .catch((err) => {
-        throw new Error(err);
-      });
+    const applyDocument = await models.StudyApply.findById(id);
     
     if (req!.session!.passport.user.toString() !== applyDocument?.applyAccount.toString()) {
       throw new Error('옳지 않은 권한입니다!');
@@ -258,10 +222,6 @@ router.delete('/study/:id', async (req, res, next) => {
 
     const boardDocument = await models.Study.findByIdAndUpdate(applyDocument!.item, {
         $inc: { applyNum: -1 }
-      })
-      .then((result) => result)
-      .catch((err) => {
-        throw new Error(err);
       });
 
     if (boardDocument!.endDay < new Date()) {

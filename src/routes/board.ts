@@ -37,12 +37,6 @@ router.get('/boards/study/:page/:order', async (req, res, next) => {
       .populate({
         path: 'account',
         select: '_id id name sNum',
-      })
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        new Error(err);
       });
 
     if ((<any>result).length) {
@@ -92,12 +86,6 @@ router.get('/boards/study/:category/:page/:order', async (req, res, next) => {
       .populate({
         path: 'account',
         select: '_id id name sNum',
-      })
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        new Error(err);
       });
 
     if ((<any>result).length) {
@@ -123,20 +111,16 @@ router.get('/board/study/:id', async (req, res, next) => {
       .populate({
         path: 'account',
         select: '_id id name sNum',
-      })
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        new Error(err);
       });
+    
+    const isApplied = result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id }) : null;
 
     const data = {
       result,
       enableModify: result? result.enableModify() : null,
       enableApply: result? result.enableApply() : null,
-      isApplied: result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id }) : null,
-      isAccepted: result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true }) : null,
+      isApplied,
+      isAccepted: result && isApplied === true? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true }) : null,
     };
 
     res.json(responseForm(true, '', data));
@@ -276,12 +260,6 @@ router.get('/boards/contest/:page/:order', async (req, res, next) => {
       .populate({
         path: 'account',
         select: '_id id name sNum',
-      })
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        new Error(err);
       });
 
     if ((<any>result).length) {
@@ -329,12 +307,6 @@ router.get('/boards/contest/:category/:page/:order', async (req, res, next) => {
       .populate({
         path: 'account',
         select: '_id id name sNum',
-      })
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        new Error(err);
       });
 
     if ((<any>result).length) {
@@ -360,20 +332,16 @@ router.get('/board/contest/:id', async (req, res, next) => {
       .populate({
         path: 'account',
         select: '_id id name sNum',
-      })
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        new Error(err);
       });
+    
+    const isApplied = result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id }) : null;
 
     const data = {
       result,
       enableModify: result? result.enableModify() : null,
       enableApply: result? result.enableApply() : null,
-      isApplied: result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id }) : null,
-      isAccepted: result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true }) : null,
+      isApplied,
+      isAccepted: result && isApplied === true? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true }) : null,
     };
 
     res.json(responseForm(true, '', data));
