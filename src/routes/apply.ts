@@ -172,6 +172,11 @@ router.post('/study', async (req, res, next) => {
       case 'develop': case 'design': case 'etc': break;
       default: throw new Error('유효한 카테고리가 아닙니다');
     }
+
+    const cnt = await models.StudyApply.countDocuments({ item: applyItem, applyAccount }).exec();
+    if (cnt > 0) {
+      throw new Error('한 게시글에 한 번 이상 신청할 수 없습니다');
+    }
    
     const result = await models.StudyApply.create({
         kind: applyKind,
@@ -212,7 +217,7 @@ router.patch('/study/:id', async (req, res, next) => {
         throw new Error(err);
       });
     
-    if (req!.session!.passport.user.toString() !== applyDocument?.recvAccount) {
+    if (req!.session!.passport.user.toString() !== applyDocument!.recvAccount.toString()) {
       throw new Error('옳지 않은 권한입니다!');
     }
 
@@ -243,7 +248,7 @@ router.delete('/study/:id', async (req, res, next) => {
         throw new Error(err);
       });
     
-    if (req!.session!.passport.user.toString() !== applyDocument?.recvAccount) {
+    if (req!.session!.passport.user.toString() !== applyDocument?.applyAccount.toString()) {
       throw new Error('옳지 않은 권한입니다!');
     }
 
