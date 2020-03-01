@@ -7,8 +7,9 @@ import responseForm from './../lib/responseForm';
 import createKey from './../lib/createKey';
 import createHash from './../lib/createHash';
 import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from './../lib/sendEmail'
-import redisClient from './redis';
+import redisClient from './../redis';
 import models from './../models';
+import { incAccountCnt } from './../lib/increaseCnt';
 
 interface IDecodedAccessToken {
   _id: string;
@@ -25,7 +26,7 @@ router.post('/register', async (req, res) => {
     const verifyKey = createKey();
     await sendAuthEmail(req.body.signup_email, verifyKey);
 
-    await models.Member.findOneAndDelete({
+    await models.Account.findOneAndDelete({
       id: req.body.signup_email,
       isVerified: false,
       active: true,
@@ -34,7 +35,7 @@ router.post('/register', async (req, res) => {
       throw new Error(err);
     });
     
-    await models.Member.create({
+    await models.Account.create({
       id: req.body.signup_email,
       name: req.body.signup_name,
       pwd: req.body.signup_pwd,
@@ -49,7 +50,7 @@ router.post('/register', async (req, res) => {
       throw new Error(err);
     });
   
-    res.status(200).json(responseForm(true));
+    res.json(responseForm(true));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }
@@ -59,7 +60,7 @@ router.post('/register/verify/:key', async (req, res) => {
   try {
     const { key } = req.params;
 
-    await models.Member.findOneAndUpdate({
+    await models.Account.findOneAndUpdate({
       verifyKey: key,
       verifyExpireAt: {
         $gte: new Date(),
@@ -78,7 +79,8 @@ router.post('/register/verify/:key', async (req, res) => {
       throw new Error(err);
     });
     
-    res.status(200).json(responseForm(true));
+    incAccountCnt();
+    res.json(responseForm(true));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }
@@ -90,7 +92,7 @@ router.post('/register/verify/new/:key', async (req, res) => {
     const { email } = req.query;
 
     const verifyKey = createKey();
-    await models.Member.findOneAndUpdate({
+    await models.Account.findOneAndUpdate({
       id: email,
       verifyKey: key,
       isVerified: false,
@@ -109,7 +111,7 @@ router.post('/register/verify/new/:key', async (req, res) => {
 
     await sendAuthEmail(email, verifyKey);
   
-    res.status(200).json(responseForm(true));
+    res.json(responseForm(true));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }
@@ -119,7 +121,7 @@ router.post('/register/verify/new/:key', async (req, res) => {
 router.post('/signin', async (req, res, next) => {
   try {
     let { signin_email: id, signin_pwd: pwd } = req.body;
-    const member = await models.Member.findOne({ id, isVerified: true, active: true })
+    const member = await models.Account.findOne({ id, isVerified: true, active: true })
       .then((result) => {
         if (!result) {
           throw new Error('잘못된 이메일입니다');
@@ -153,7 +155,7 @@ router.post('/signin', async (req, res, next) => {
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET || config.JWT_SECRET, accessOptions);
     const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRET || config.REFRESH_SECRET, refreshOptions);
     
-    await models.Member.findOneAndUpdate({ id, isVerified: true, active: true }, {
+    await models.Account.findOneAndUpdate({ id, isVerified: true, active: true }, {
       $set: { refreshToken },
     }).then((result) => {
       if (!result) {
@@ -165,7 +167,7 @@ router.post('/signin', async (req, res, next) => {
 
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
     
-    res.status(200).json(responseForm(true, '', {
+    res.json(responseForm(true, '', {
       accessToken,
       exp: decodedAccessToken.exp * 1000,
     }));
@@ -189,7 +191,7 @@ router.post('/signin/refresh', async (req, res, next) => {
       throw new Error('Access Token이 전달되지 않았습니다');
     }
 
-    const member = await models.Member.findOne({ _id: decodedOldAccessToken._id, active: true, }).select('_id name sNum refreshToken')
+    const member = await models.Account.findOne({ _id: decodedOldAccessToken._id, active: true, }).select('_id name sNum refreshToken')
       .then((member) => {
         if (member) {
           return member;
@@ -222,7 +224,7 @@ router.post('/signin/refresh', async (req, res, next) => {
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET || config.JWT_SECRET, accessOptions);
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
 
-    res.status(200).json(responseForm(true, '', {
+    res.json(responseForm(true, '', {
       accessToken,
       exp: decodedAccessToken.exp * 1000,
     }));
@@ -241,7 +243,7 @@ router.post('/signout', passport.authenticate('jwt', { session: false }), async 
     }
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
 
-    await models.Member.findOneAndUpdate({ _id: decodedAccessToken._id, active: true, }, { $set: { refreshToken: '' }})
+    await models.Account.findOneAndUpdate({ _id: decodedAccessToken._id, active: true, }, { $set: { refreshToken: '' }})
       .then((member) => {
         if (member) {
           return member;
@@ -257,7 +259,7 @@ router.post('/signout', passport.authenticate('jwt', { session: false }), async 
     redisClient.set(`jwt-blacklist-${accessToken}`, Number(0).toString());
     redisClient.expire(`jwt-blacklist-${accessToken}`, decodedAccessToken.exp - (new Date().getTime() / 1000));
     
-    res.status(200).json(responseForm(true));
+    res.json(responseForm(true));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }
@@ -268,7 +270,7 @@ router.patch('/signin/reset', async (req, res, next) => {
   try {
     const { find_email: email, find_hint: hint } = req.body;
 
-    const member = await models.Member.findOne({ id: email, active: true }).select('id name interest1 interest2 interest3')
+    const member = await models.Account.findOne({ id: email, active: true }).select('id name interest1 interest2 interest3')
       .then((member) => {
         if (member) {
           return member;
@@ -281,7 +283,7 @@ router.patch('/signin/reset', async (req, res, next) => {
     
     const interestsArr = [member.interest1, member.interest2, member.interest3];
     
-    const memberDoc = await models.Member.findOne({ id: email, active: true })
+    const memberDoc = await models.Account.findOne({ id: email, active: true })
       .then((member) => {
         if (member) {
           return member;
@@ -301,7 +303,7 @@ router.patch('/signin/reset', async (req, res, next) => {
       throw new Error('입력하신 정보가 잘못되었습니다');
     }
 
-    res.status(200).json(responseForm(true));
+    res.json(responseForm(true));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }
@@ -314,7 +316,7 @@ router.delete('/unregister', passport.authenticate('jwt', { session: false }), a
       throw new Error('잘못된 Access Token이 전달되었습니다');
     }
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
-    await models.Member.findOneAndUpdate({ _id: decodedAccessToken._id }, { active: false, refreshToken: '' })
+    await models.Account.findOneAndUpdate({ _id: decodedAccessToken._id }, { active: false })
       .then((member) => {
         if (!member) {
           throw new Error('인증 정보가 잘못되었습니다');
@@ -323,7 +325,7 @@ router.delete('/unregister', passport.authenticate('jwt', { session: false }), a
         throw new Error('인증 정보로 새로운 비밀번호를 설정하던 중 에러가 발생했습니다');
       });
     
-    res.status(200).json(responseForm(true));
+    res.json(responseForm(true));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }

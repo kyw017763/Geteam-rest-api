@@ -1,54 +1,44 @@
 import mongoose from 'mongoose';
-import autoIncrement from 'mongoose-auto-increment';
-import { IMember } from './member'
+import { IAccount } from './account'
 import { connection } from './Database';
 
-autoIncrement.initialize(mongoose.connection);
-
 export interface IContestApply extends mongoose.Document {
-  _id: IMember['_id'];
-  num: number;
+  _id: IAccount['_id'];
   kind: string;
   itemNum: number;
-  memApply: string;
-  memRecv: string;
+  accountApply: string;
+  accountRecv: string;
   topic: string;
   title: string;
   part: string;
   portfolio: string;
   want: string;
   applyChk: number;
+  active: boolean;
 };
 
 const applyContestSchema = new mongoose.Schema({
-  num: { type: Number, required: true, unique: true }, // A.I
   kind: { type: String, required: true },
   itemNum: { type: Number, required: true },
-  memApply: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
-  memRecv: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  accountApply: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
+  accountRecv: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   topic: { type: String, required: true, trim: true },
   title: { type: String, required: true, trim: true },
   part: { type: String, required: true, trim: true },
   portfolio: { type: String, required: true, trim: true },
   want: { type: String, required: true, trim: true },
   applyChk: { type: Number, default: 0 },
+  active: { type: Boolean, default: true },
 }, {
   timestamps: true,
-});
-
-applyContestSchema.plugin(autoIncrement.plugin, {
-  model: 'ApplyContest',
-  field: 'num',
-  startAt: 1,
-  incrementBy: 1,
 });
 
 applyContestSchema.statics = {
   // 신청하기
   createApplyContest:
-  function (kind: string, itemNum: number, memApply: string, memRecv: string, topic: string, title: string, part: string, portfolio: string, want: string) {
+  function (kind: string, itemNum: number, accountApply: string, accountRecv: string, topic: string, title: string, part: string, portfolio: string, want: string) {
     return this.create({
-      kind, itemNum, memApply, memRecv, topic, title, part, portfolio, want,
+      kind, itemNum, accountApply, accountRecv, topic, title, part, portfolio, want,
     });
   },
   // 모든 신청 받아오기
@@ -57,28 +47,28 @@ applyContestSchema.statics = {
   },
   // 내가 한 모든 신청 받아오기
   getApplyContestById: function (userId: string) {
-    return this.find({ memApply: userId });
+    return this.find({ accountApply: userId });
   },
   // 내가 한 신청 종류별로 받아오기
   getApplyContestByIdAndKind: function (userId: string, kind: string) {
-    return this.find({ memApply: userId, kind });
+    return this.find({ accountApply: userId, kind });
   },
   // 내가 한 신청 변경하기
   updateApplyContest: function (userId: string, itemNum: number, topic: string, title: string, part: string, portfolio: string, want: string) {
-    return this.findOneAndUpdate({ memApply: userId, itemNum }, {
+    return this.findOneAndUpdate({ accountApply: userId, itemNum }, {
       topic, title, part, portfolio, want,
     }, { returnNewDocument: true });
   },
   // 내가 한 신청 삭제하기
   removeApplyContest: function (userId: string, itemNum: number) {
-    return this.findOneAndDelete({ memApply: userId, itemNum });
+    return this.findOneAndDelete({ accountApply: userId, itemNum });
   },
   // 신청 한 게시물인지 확인
   isApplied: function (userId: string, kind: string, itemNum: number) {
     this.find({
       kind,
       itemNum,
-      memApply: userId,
+      accountApply: userId,
     }, (err: any, result: string | string[]) => {
       if (err) {
         return false;
@@ -93,7 +83,7 @@ applyContestSchema.statics = {
     this.find({
       kind,
       itemNum,
-      memApply: userId,
+      accountApply: userId,
       applyChk: 1,
     }, (err: any, result: string | string[]) => {
       if (err) {
@@ -106,4 +96,4 @@ applyContestSchema.statics = {
   },
 };
 
-export const ApplyContest: mongoose.Model<IContestApply> = connection.model<IContestApply>('contestApplies', applyContestSchema);
+export const ContestApply: mongoose.Model<IContestApply> = connection.model<IContestApply>('ContestApply', applyContestSchema);
