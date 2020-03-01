@@ -1,14 +1,12 @@
 import express from 'express';
-import redisClient from './../redis';
+import redisClient from '../redisClient';
 import responseForm from './../lib/responseForm';
-import { incVisitCnt } from './../lib/increaseCnt';
 
 const router = express.Router();
 export default router;
 
 router.get('/counting', async (req, res, next) => {
   try {
-
     interface ICounting {
       visit?: number;
       account?: number;
@@ -19,42 +17,14 @@ router.get('/counting', async (req, res, next) => {
 
     let counting: ICounting = {};
 
-    if (redisClient.EXISTS('visitCnt')) {
-      counting.visit = Number(redisClient.GET('visitCnt'));
-    } else {
-      redisClient.SET('visitCnt', '0');
-      counting.visit = 0;
-    }
+    redisClient.incCnt('visitCnt');
 
-    if (redisClient.EXISTS('accountCnt')) {
-      counting.account = Number(redisClient.GET('accountCnt'));
-    } else {
-      redisClient.SET('accountCnt', '0');
-      counting.account = 0;
-    }
-
-    if (redisClient.EXISTS('listCnt')) {
-      counting.list = Number(redisClient.GET('listCnt'));
-    } else {
-      redisClient.SET('listCnt', '0');
-      counting.list = 0;
-    }
-
-    if (redisClient.EXISTS('applyCnt')) {
-      counting.apply = Number(redisClient.GET('applyCnt'));
-    } else {
-      redisClient.SET('applyCnt', '0');
-      counting.apply = 0;
-    }
-
-    if (redisClient.EXISTS('teamCnt')) {
-      counting.team = Number(redisClient.GET('teamCnt'));
-    } else {
-      redisClient.SET('teamCnt', '0');
-      counting.team = 0;
-    }
-
-    incVisitCnt();
+    counting.visit = redisClient.getCnt('visitCnt');
+    counting.account = redisClient.getCnt('accountCnt');
+    counting.list = redisClient.getCnt('listCnt');
+    counting.apply = redisClient.getCnt('applyCnt');
+    counting.team = redisClient.getCnt('teamCnt');
+    
     res.status(200).json(responseForm(true, '', counting));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));

@@ -1,6 +1,6 @@
 import express from 'express';
 import passport from 'passport';
-import passportConfig from './routes/passport';
+import passportConfig from './middleware/passport';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import config from './config';
@@ -8,7 +8,7 @@ dotenv.config();
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import connectRedis from 'connect-redis';
-import redisClient from './redis';
+import redisClient from './redisClient';
 
 import { auth, counting, board, apply } from './routes';
 
@@ -24,7 +24,7 @@ app.use(session({
     maxAge: 24000 * 60 * 60, // 쿠키 유효기간 24시간
   },
   store: new RedisStore({
-    client: redisClient,
+    client: redisClient.client,
     host: '127.0.0.1',
     port: 6379,
     logErrors: true,

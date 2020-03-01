@@ -7,9 +7,8 @@ import responseForm from './../lib/responseForm';
 import createKey from './../lib/createKey';
 import createHash from './../lib/createHash';
 import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from './../lib/sendEmail'
-import redisClient from './../redis';
+import redisClient from '../redisClient';
 import models from './../models';
-import { incAccountCnt } from './../lib/increaseCnt';
 
 interface IDecodedAccessToken {
   _id: string;
@@ -78,8 +77,9 @@ router.post('/register/verify/:key', async (req, res) => {
     }).catch((err: any) => {
       throw new Error(err);
     });
-    
-    incAccountCnt();
+
+    redisClient.incCnt('accountCnt');
+
     res.json(responseForm(true));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
@@ -256,8 +256,7 @@ router.post('/signout', passport.authenticate('jwt', { session: false }), async 
       });
 
     // Blacklisting Token
-    redisClient.set(`jwt-blacklist-${accessToken}`, Number(0).toString());
-    redisClient.expire(`jwt-blacklist-${accessToken}`, decodedAccessToken.exp - (new Date().getTime() / 1000));
+    redisClient.blacklistToken(accessToken, decodedAccessToken.exp);
     
     res.json(responseForm(true));
   } catch (err) {
@@ -325,6 +324,9 @@ router.delete('/unregister', passport.authenticate('jwt', { session: false }), a
         throw new Error('인증 정보로 새로운 비밀번호를 설정하던 중 에러가 발생했습니다');
       });
     
+    // Blacklisting Token
+    redisClient.blacklistToken(accessToken, decodedAccessToken.exp);
+    
     res.json(responseForm(true));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
@@ -333,27 +335,20 @@ router.delete('/unregister', passport.authenticate('jwt', { session: false }), a
 
 router.post('/verify', async (req, res, next) => {
   try {
-    // TODO: jwt.verify
+    // TODO: expire check
     // TODO: blacklisting
-    // TODO: db에 제대로 있는지
 
     const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '');
+    
     if (!accessToken) {
       throw new Error('잘못된 Access Token이 전달되었습니다');
     }
-    if (redisClient.EXISTS(`jwt-blacklist-${accessToken}`)) {
+    if (redisClient.checkToken(accessToken)) {
       throw new Error('Signout 처리된 Access Token입니다');
     }
-    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
-    await models.Member.findOneAndUpdate({ _id: decodedAccessToken._id }, { active: false })
-      .then((member) => {
-        if (!member) {
-          throw new Error('인증 정보가 잘못되었습니다');
-        }
-      }).catch((err) => {
-        throw new Error('인증 정보를 검증하던 중 에러가 발생했습니다');
-      });
     
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
+
     res.status(200).json(responseForm(true, '', decodedAccessToken));
   } catch (err) {
     res.status(401).json(responseForm(false, err.toString()));
