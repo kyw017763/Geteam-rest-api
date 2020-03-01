@@ -21,7 +21,7 @@ interface IDecodedAccessToken {
 const router = express.Router();
 export default router;
 
-router.post('/register/email', async (req, res) => {
+router.post('/register', async (req, res) => {
   try {
     const verifyKey = createKey();
     await sendAuthEmail(req.body.signup_email, verifyKey);
@@ -56,7 +56,7 @@ router.post('/register/email', async (req, res) => {
   }
 });
 
-router.get('/register/verify/:key', async (req, res) => {
+router.post('/register/verify/:key', async (req, res) => {
   try {
     const { key } = req.params;
 
@@ -86,7 +86,7 @@ router.get('/register/verify/:key', async (req, res) => {
   }
 });
 
-router.get('/register/verify/new/:key', async (req, res) => {
+router.post('/register/verify/new/:key', async (req, res) => {
   try {
     const { key } = req.params;
     const { email } = req.query;
@@ -169,7 +169,7 @@ router.post('/signin', async (req, res, next) => {
     
     res.json(responseForm(true, '', {
       accessToken,
-      expiresIn: decodedAccessToken.exp * 1000,
+      exp: decodedAccessToken.exp * 1000,
     }));
   } catch (err) {
     res.status(401).json(responseForm(false, err.toString()));
@@ -226,7 +226,7 @@ router.post('/signin/refresh', async (req, res, next) => {
 
     res.json(responseForm(true, '', {
       accessToken,
-      expiresIn: decodedAccessToken.exp * 1000,
+      exp: decodedAccessToken.exp * 1000,
     }));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
@@ -328,5 +328,34 @@ router.delete('/unregister', passport.authenticate('jwt', { session: false }), a
     res.json(responseForm(true));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
+  }
+});
+
+router.post('/verify', async (req, res, next) => {
+  try {
+    // TODO: jwt.verify
+    // TODO: blacklisting
+    // TODO: db에 제대로 있는지
+
+    const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '');
+    if (!accessToken) {
+      throw new Error('잘못된 Access Token이 전달되었습니다');
+    }
+    if (redisClient.EXISTS(`jwt-blacklist-${accessToken}`)) {
+      throw new Error('Signout 처리된 Access Token입니다');
+    }
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);
+    await models.Member.findOneAndUpdate({ _id: decodedAccessToken._id }, { active: false })
+      .then((member) => {
+        if (!member) {
+          throw new Error('인증 정보가 잘못되었습니다');
+        }
+      }).catch((err) => {
+        throw new Error('인증 정보를 검증하던 중 에러가 발생했습니다');
+      });
+    
+    res.status(200).json(responseForm(true, '', decodedAccessToken));
+  } catch (err) {
+    res.status(401).json(responseForm(false, err.toString()));
   }
 });
