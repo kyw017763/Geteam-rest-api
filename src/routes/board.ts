@@ -131,7 +131,15 @@ router.get('/board/study/:id', async (req, res, next) => {
         new Error(err);
       });
 
-    res.json(responseForm(true, '', result));
+    const data = {
+      result,
+      enableModify: result? result.enableModify() : null,
+      enableApply: result? result.enableApply() : null,
+      isApplied: result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id }) : null,
+      isAccepted: result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true }) : null,
+    };
+
+    res.json(responseForm(true, '', data));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }
@@ -360,7 +368,15 @@ router.get('/board/contest/:id', async (req, res, next) => {
         new Error(err);
       });
 
-    res.json(responseForm(true, '', result));
+    const data = {
+      result,
+      enableModify: result? result.enableModify() : null,
+      enableApply: result? result.enableApply() : null,
+      isApplied: result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id }) : null,
+      isAccepted: result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true }) : null,
+    };
+
+    res.json(responseForm(true, '', data));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }

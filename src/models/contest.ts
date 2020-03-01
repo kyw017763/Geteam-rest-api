@@ -15,8 +15,11 @@ export interface IContest extends mongoose.Document {
   acceptNum: number;
   endDay: Date;
   hit: number;
-  teamChk: number;
+  teamChk: boolean;
   active: boolean;
+
+  enableModify(): boolean;
+  enableApply(): boolean;
 }
 
 const partSchema = new mongoose.Schema({
@@ -37,10 +40,23 @@ const contestSchema = new mongoose.Schema({
   // startDay는 createdAt 으로 대신한다
   endDay: { type: Date, required: true },
   hit: { type: Number, default: 0 },
-  teamChk: { type: Number, default: 0 },
+  teamChk: { type: Boolean, default: false },
   active: { type: Boolean, default: true },
 }, {
   timestamps: true,
 });
+
+contestSchema.methods = {
+  enableModify: function (): boolean {
+    if (this.applyNum === 0) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+  enableApply: function (): boolean {
+    return !this.teamChk;
+  },
+}
 
 export const Contest: mongoose.Model<IContest> = connection.model<IContest>('Contest', contestSchema);

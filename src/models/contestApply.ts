@@ -34,4 +34,13 @@ const applyContestSchema = new mongoose.Schema({
   timestamps: true,
 });
 
+applyContestSchema.statics = {
+  isApplied: async function (account: string, item: string) {
+    return await this.exists({ applyAccount: account, item });
+  },
+  isAccepted: async function (account: string, item: string) {
+    return await this.exists({ applyAccount: account, item, accept: true });
+  },
+}
+
 export const ContestApply: mongoose.Model<IContestApply> = connection.model<IContestApply>('ContestApply', applyContestSchema);
