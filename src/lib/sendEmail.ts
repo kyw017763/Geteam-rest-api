@@ -52,7 +52,7 @@ export async function sendPwdEmail(subject: string, userEmail: string, userName:
       from: process.env.EMAIL || config.EMAIL,
       to: userEmail,
       subject: subject,
-      html: `<h1>비밀번호 찾기</h1> ${userName}님의 임시 비밀번호는 <span style="background: #efdc05;">${userTempPwd}</span> 입니다.`,
+      html: `<h1>비밀번호 초기화</h1> ${userName}님의 임시 비밀번호는 <span style="background: #efdc05;">${userTempPwd}</span> 입니다.`,
     };
   
     const info = await transporter.sendMail(mailOptions);

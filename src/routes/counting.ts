@@ -25,7 +25,7 @@ router.get('/counting', async (req, res, next) => {
     counting.apply = await redisClient.getCnt('applyCnt');
     counting.team = await redisClient.getCnt('teamCnt');
     
-    res.status(200).json(responseForm(true, '', counting));
+    res.json(responseForm(true, '', counting));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }

@@ -49,6 +49,15 @@ router.post('/register', async (req, res) => {
   }
 });
 
+router.post('/register/compareEmail', async (req, res) => {
+  try {
+    const result = await models.Account.exists({ id: req.body.id, isVerified: true });
+    res.json(responseForm(!result ? true : false));
+  } catch (err) {
+    res.status(500).json(responseForm(false, err.toString()));
+  }
+});
+
 router.post('/register/verify/:key', async (req, res) => {
   try {
     const { key } = req.params;
@@ -126,6 +135,7 @@ router.post('/signin', async (req, res, next) => {
 
     const payload = {
       _id: member._id,
+      id: member.id,
       name: member.name,
       sNum: member.sNum,
       listNum: member.listNum,
@@ -201,6 +211,7 @@ router.post('/signin/refresh', async (req, res, next) => {
 
     const payload = {
       _id: member._id,
+      id: member.id,
       name: member.name,
       sNum: member.sNum,
       listNum: member.listNum,
@@ -340,7 +351,7 @@ router.post('/verify', async (req, res, next) => {
       throw new Error('만료된 Access Token입니다');
     }
 
-    res.status(200).json(responseForm(true, '', decodedAccessToken));
+    res.json(responseForm(true, '', decodedAccessToken));
   } catch (err) {
     res.status(401).json(responseForm(false, err.toString()));
   }
