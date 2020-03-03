@@ -160,8 +160,6 @@ router.post('/signin', async (req, res, next) => {
         if (!result) {
           throw new Error('Refresh Token 저장에 실패했습니다');
         }
-      }).catch((err) => {
-        throw new Error(err);
       });
 
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken);

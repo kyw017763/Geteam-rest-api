@@ -249,14 +249,10 @@ router.post('/:kind', async (req, res, next) => {
         })
         .then((result) => {
           return result.item;
-        }).catch((err) => {
-          throw new err;
         });
 
       await models.Study.findByIdAndUpdate(result, {
         $inc: { applyNum: 1 }
-      }).catch((err) => {
-        throw new Error(err);
       });
     } else if (kind === 'contest') {
       const { applyPart } = req.body;
@@ -271,14 +267,10 @@ router.post('/:kind', async (req, res, next) => {
         })
         .then((result) => {
           return result.item;
-        }).catch((err) => {
-          throw new err;
         });
 
       await models.Contest.findByIdAndUpdate(result, {
         $inc: { applyNum: 1 }
-      }).catch((err) => {
-        throw new Error(err);
       });
     }
 
