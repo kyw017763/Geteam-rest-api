@@ -9,8 +9,6 @@ export interface IStudyApply extends mongoose.Document {
   item: IStudy['_id'];
   applyAccount: IAccount['_id'];
   recvAccount: IAccount['_id'];
-  topic: string;
-  title: string;
   portfolio: string;
   want: string;
   accept: boolean;
@@ -22,8 +20,6 @@ const applyStudySchema = new mongoose.Schema({
   item: { type: mongoose.Schema.Types.ObjectId, ref: 'Study', required: true },
   applyAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   recvAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
-  topic: { type: String, required: true, trim: true },
-  title: { type: String, required: true, trim: true },
   portfolio: { type: String, required: true, trim: true },
   want: { type: String, required: true, trim: true },
   accept: { type: Boolean, default: false },

@@ -18,18 +18,19 @@ router.get('/boards/study/:page/:order', async (req, res, next) => {
       default: throw new Error('해당 속성으로 정렬할 수 없습니다');
     }
 
+    const condition = {
+      active: true,
+      $or: [
+        {
+          account: req!.session!.passport.user.toString() || null,
+          endDay: { $lt: new Date }
+        }, {
+          endDay: { $gt: new Date }
+        }
+      ]
+    };
     // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
-    const result = await models.Study.find({
-        active: true,
-        $or: [
-          {
-            account: req!.session!.passport.user.toString() || null,
-            endDay: { $lt: new Date }
-          }, {
-            endDay: { $gt: new Date }
-          }
-        ]
-      })
+    const result = await models.Study.find(condition)
       .sort(order)
       .skip(Number(page) * 10)
       .limit(10)
@@ -38,8 +39,10 @@ router.get('/boards/study/:page/:order', async (req, res, next) => {
         select: '_id id name sNum',
       });
 
+    const documentCnt = await models.Study.countDocuments(condition).exec();
+    
     if ((<any>result).length) {
-      res.json(responseForm(true, '', result));
+      res.json(responseForm(true, '', { list: result, total: documentCnt }));
     } else {
       res.status(204).json(responseForm(true));
     }
@@ -66,19 +69,21 @@ router.get('/boards/study/:category/:page/:order', async (req, res, next) => {
       default: throw new Error('해당 속성으로 정렬할 수 없습니다');
     }
 
+    const condition = {
+      kind: category,
+      active: true,
+      $or: [
+        {
+          account: req!.session!.passport.user.toString() || null,
+          endDay: { $lt: new Date }
+        }, {
+          endDay: { $gt: new Date }
+        }
+      ]
+    };
+    
     // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
-    const result = await models.Study.find({
-        kind: category,
-        active: true,
-        $or: [
-          {
-            account: req!.session!.passport.user.toString() || null,
-            endDay: { $lt: new Date }
-          }, {
-            endDay: { $gt: new Date }
-          }
-        ]
-      })
+    const result = await models.Study.find(condition)
       .sort(order)
       .skip(Number(page) * 10)
       .limit(10)
@@ -86,9 +91,11 @@ router.get('/boards/study/:category/:page/:order', async (req, res, next) => {
         path: 'account',
         select: '_id id name sNum',
       });
+    
+    const documentCnt = await models.Study.countDocuments(condition).exec();
 
     if ((<any>result).length) {
-      res.json(responseForm(true, '', result));
+      res.json(responseForm(true, '', { list: result, total: documentCnt }));
     } else {
       res.status(204).json(responseForm(true));
     }
@@ -101,7 +108,7 @@ router.get('/board/study/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     
-    await models.Study.findOneAndUpdate(id, { $inc: { hit: 1 } })
+    await models.Study.findByIdAndUpdate(id, { $inc: { hit: 1 } })
       .catch((err) => {
         new Error(err);
       });
@@ -112,12 +119,18 @@ router.get('/board/study/:id', async (req, res, next) => {
         select: '_id id name sNum',
       });
     
-    const isApplied = result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id }) : null;
+    const applyId = result? await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
+    .then((result) => result!._id)  
+    .catch((err) => {
+        new Error(err);
+      }) : null;
+    const isApplied = applyId? true : false;
 
     const data = {
       result,
       enableModify: result? result.enableModify() : null,
       enableApply: result? result.enableApply() : null,
+      applyId,
       isApplied,
       isAccepted: result && isApplied === true? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true }) : null,
     };
@@ -174,11 +187,12 @@ router.patch('/board/study/:id', async (req, res, next) => {
 
     const { id } = req.params;
 
-    const { modifyWantNum, modifyEndDay, modifyTopic, modifyTitle, modifyContent } = req.body;
+    const { modifyCategory, modifyWantNum, modifyEndDay, modifyTopic, modifyTitle, modifyContent } = req.body;
     
     const updateObj = { 
       $set: 
       {
+        kind: modifyCategory,
         topic: modifyTopic,
         title: modifyTitle,
         content: modifyContent,
@@ -242,17 +256,19 @@ router.get('/boards/contest/:page/:order', async (req, res, next) => {
       default: throw new Error('해당 속성으로 정렬할 수 없습니다');
     }
 
-    const result = await models.Contest.find({
-        active: true,
-        $or: [
-          {
-            account: req!.session!.passport.user.toString() || null,
-            endDay: { $lt: new Date }
-          }, {
-            endDay: { $gt: new Date }
-          }
-        ]
-      })
+    const condition = {
+      active: true,
+      $or: [
+        {
+          account: req!.session!.passport.user.toString() || null,
+          endDay: { $lt: new Date }
+        }, {
+          endDay: { $gt: new Date }
+        }
+      ]
+    };
+  
+    const result = await models.Contest.find(condition)
       .sort(order)
       .skip(Number(page) * 10)
       .limit(10)
@@ -261,8 +277,10 @@ router.get('/boards/contest/:page/:order', async (req, res, next) => {
         select: '_id id name sNum',
       });
 
+    const documentCnt = await models.Contest.countDocuments(condition).exec();
+    
     if ((<any>result).length) {
-      res.json(responseForm(true, '', result));
+      res.json(responseForm(true, '', { list: result, total: documentCnt }));
     } else {
       res.status(204).json(responseForm(true));
     }
@@ -289,17 +307,19 @@ router.get('/boards/contest/:category/:page/:order', async (req, res, next) => {
       default: throw new Error('해당 속성으로 정렬할 수 없습니다');
     }
 
-    const result = await models.Contest.find({
-        kind: category,
-        active: true,
-        $or: [{
-            account: req!.session!.passport.user.toString() || null,
-            endDay: { $lt: new Date }
-          }, {
-            endDay: { $gt: new Date }
-          }
-        ]
-      })
+    const condition = {
+      kind: category,
+      active: true,
+      $or: [{
+          account: req!.session!.passport.user.toString() || null,
+          endDay: { $lt: new Date }
+        }, {
+          endDay: { $gt: new Date }
+        }
+      ]
+    };
+
+    const result = await models.Contest.find(condition)
       .sort(order)
       .skip(Number(page) * 10)
       .limit(10)
@@ -308,8 +328,10 @@ router.get('/boards/contest/:category/:page/:order', async (req, res, next) => {
         select: '_id id name sNum',
       });
 
+    const documentCnt = await models.Study.countDocuments(condition).exec();
+
     if ((<any>result).length) {
-      res.json(responseForm(true, '', result));
+      res.json(responseForm(true, '', { list: result, total: documentCnt }));
     } else {
       res.status(204).json(responseForm(true));
     }
@@ -322,7 +344,7 @@ router.get('/board/contest/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    await models.Contest.findOneAndUpdate(id, { $inc: { hit: 1 } })
+    await models.Contest.findByIdAndUpdate(id, { $inc: { hit: 1 } })
       .catch((err) => {
         new Error(err);
       });
@@ -332,15 +354,21 @@ router.get('/board/contest/:id', async (req, res, next) => {
         path: 'account',
         select: '_id id name sNum',
       });
-    
-    const isApplied = result? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id }) : null;
+
+    const applyId = result? await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
+      .then((result) => result!._id)  
+      .catch((err) => {
+          new Error(err);
+        }) : null;
+    const isApplied = applyId? true : false;
 
     const data = {
       result,
       enableModify: result? result.enableModify() : null,
       enableApply: result? result.enableApply() : null,
+      applyId,
       isApplied,
-      isAccepted: result && isApplied === true? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true }) : null,
+      isAccepted: result && isApplied === true? await models.ContestApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true }) : null,
     };
 
     res.json(responseForm(true, '', data));
@@ -363,7 +391,7 @@ router.post('/board/contest', async (req, res, next) => {
     const { writeMem, writeKind, writeTopic, writePart, writePartNum, writeTitle, writeContent, writeWantNum, writeEndDay } = req.body;
     
     const partObj = {
-      name: writePart.split(','),
+      name: writePart.split(',').map((item: string) => item.trim()),
       num: writePartNum,
     };
     
@@ -402,11 +430,12 @@ router.patch('/board/contest/:id', async (req, res, next) => {
 
     const { id } = req.params;
 
-    const { modifyWantNum, modifyEndDay, modifyTopic, modifyTitle, modifyContent } = req.body;
+    const { modifyCategory, modifyWantNum, modifyEndDay, modifyTopic, modifyTitle, modifyContent } = req.body;
     
     const updateObj = { 
       $set: 
       {
+        kind: modifyCategory,
         topic: modifyTopic,
         title: modifyTitle,
         content: modifyContent,

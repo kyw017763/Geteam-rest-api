@@ -9,8 +9,6 @@ export interface IContestApply extends mongoose.Document {
   item: IContest['_id'];
   applyAccount: IAccount['_id'];
   recvAccount: IAccount['_id'];
-  topic: string;
-  title: string;
   part: string;
   portfolio: string;
   want: string;
@@ -23,8 +21,6 @@ const applyContestSchema = new mongoose.Schema({
   item: { type: mongoose.Schema.Types.ObjectId, ref: 'Contest', required: true },
   applyAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
   recvAccount: { type: mongoose.Schema.Types.ObjectId, ref: 'Account', required: true },
-  topic: { type: String, required: true, trim: true },
-  title: { type: String, required: true, trim: true },
   part: { type: String, required: true, trim: true },
   portfolio: { type: String, required: true, trim: true },
   want: { type: String, required: true, trim: true },
