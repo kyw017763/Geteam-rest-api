@@ -1,6 +1,7 @@
 import express from 'express';
 import responseForm from './../lib/responseForm';
 import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue';
+import redisClient from '../redisClient';
 import models from './../models';
 
 const router = express.Router();
@@ -246,6 +247,8 @@ router.post('/board/:kind', async (req, res, next) => {
           new Error(err);
         });
     }
+
+    await redisClient.incCnt('listCnt');
 
     res.status(201).json(responseForm(true, '', result));
   } catch (err) {

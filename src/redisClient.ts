@@ -57,7 +57,7 @@ class RedisClient {
 
   async getCnt(key: string): Promise<number> {
     if (await this.existsAsync(key)) {
-      return Number(this.getAsync(key));
+      return Number(await this.getAsync(key));
     } else {
       await this.setAsync(key, '0');
       return 0;
@@ -66,8 +66,8 @@ class RedisClient {
 
   async incCnt(key: string): Promise<number> {
     if (await this.existsAsync(key)) {
-      let cnt = Number(this.getAsync(key));
-      let cntNum = Number(cnt) + 1;
+      let cnt = Number(await this.getAsync(key));
+      let cntNum = cnt + 1;
       await this.setAsync(key, cntNum.toString());
       return cnt;
     } else {
