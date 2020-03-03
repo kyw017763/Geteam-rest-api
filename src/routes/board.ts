@@ -126,10 +126,7 @@ router.get('/board/:kind/:id', async (req, res, next) => {
     validateKind(kind);
     
     if (kind === 'study') {
-      await models.Study.findByIdAndUpdate(id, { $inc: { hit: 1 } })
-        .catch((err) => {
-          new Error(err);
-        });
+      await models.Study.findByIdAndUpdate(id, { $inc: { hit: 1 } });
 
       result = await models.Study.findById(id)
         .populate({
@@ -138,15 +135,9 @@ router.get('/board/:kind/:id', async (req, res, next) => {
         });
 
       applyId = result? await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
-        .then((result) => result!._id)  
-        .catch((err) => {
-          new Error(err);
-        }) : null;
+        .then((result) => result!._id) : null;
     } else if (kind === 'contest') {
-      await models.Contest.findByIdAndUpdate(id, { $inc: { hit: 1 } })
-        .catch((err) => {
-          new Error(err);
-        });
+      await models.Contest.findByIdAndUpdate(id, { $inc: { hit: 1 } });
 
       result = await models.Contest.findById(id)
         .populate({
@@ -155,10 +146,7 @@ router.get('/board/:kind/:id', async (req, res, next) => {
         });
 
       applyId = result? await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
-        .then((result) => result!._id)  
-        .catch((err) => {
-          new Error(err);
-        }) : null;
+        .then((result) => result!._id) : null;
     }
 
     const isApplied = applyId? true : false;
@@ -210,14 +198,9 @@ router.post('/board/:kind', async (req, res, next) => {
         })
         .then((result) => {
           return result._id;
-        }).catch((err) => {
-          new Error(err);
         });
       
-      await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } })
-        .catch((err) => {
-          new Error(err);
-        });
+      await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } });
     } else if (kind === 'contest') {
       const { writePart } = req.body;
       const tempPartArr = writePart.split(',').map((item: string) => item.trim())
@@ -238,14 +221,9 @@ router.post('/board/:kind', async (req, res, next) => {
         })
         .then((result) => {
           return result._id;
-        }).catch((err) => {
-          new Error(err);
         });
 
-      await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } })
-        .catch((err) => {
-          new Error(err);
-        });
+      await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } });
     }
 
     await redisClient.incCnt('listCnt');
@@ -285,17 +263,11 @@ router.patch('/board/:kind/:id', async (req, res, next) => {
       result = await models.Study.findByIdAndUpdate(id, updateObj, { new: true })
       .then((result) => {
         return result ? result._id : result; 
-      })
-      .catch((err) => {
-        new Error(err);
       });
     } else if (kind === 'contest') {
       result = await models.Contest.findByIdAndUpdate(id, updateObj, { new: true })
         .then((result) => {
           return result ? result._id : result;
-        })
-        .catch((err) => {
-          new Error(err);
         });
     }
 
@@ -320,31 +292,17 @@ router.delete('/board/:kind/:id', async (req, res, next) => {
       result = await models.Study.findByIdAndUpdate(id, { active: false })
         .then((result) => {
           return true;
-        })
-        .catch((err) => {
-          new Error(err);
         });
       
-      await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } })
-        .catch((err) => {
-          new Error(err);
-        });
+      await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } });
     } else if (kind === 'contest') {
       result = await models.Contest.findByIdAndUpdate(id, { active: false })
         .then((result) => {
           return true;
-        })
-        .catch((err) => {
-          new Error(err);
         });
       
-      await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } })
-        .catch((err) => {
-          new Error(err);
-        });
+      await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } });
     }
-
-    
     
     res.json(responseForm(true, '', result));
   } catch (err) {
