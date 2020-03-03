@@ -10,7 +10,7 @@ import session from 'express-session';
 import connectRedis from 'connect-redis';
 import redisClient from './redisClient';
 
-import { auth, counting, board, apply } from './routes';
+import { auth, counting, board, apply, mypage } from './routes';
 
 const app = express();
 
@@ -50,6 +50,7 @@ app.use('/', auth);
 app.use('/', counting);
 app.use('/', passport.authenticate('jwt', { session: true }), board);
 app.use('/apply', passport.authenticate('jwt', { session: true }), apply);
+app.use('/me', passport.authenticate('jwt', { session: true }), mypage);
 
 app.listen(process.env.PORT || config.PORT, () => {
   

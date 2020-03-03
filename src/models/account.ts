@@ -14,14 +14,12 @@ export interface IAccount extends mongoose.Document {
   interest3: string;
   profile: string;
   listNum: number;
-  notiApply: number;
-  notiRecv: number;
-  notiVol: number;
+  notiApply: boolean;
+  notiWrite: boolean;
   active: boolean;
   refreshToken: string;
   isVerified: boolean;
   verifyKey: string;
-  imageUrl: string;
 }
 
 const accountSchema = new mongoose.Schema({
@@ -35,9 +33,8 @@ const accountSchema = new mongoose.Schema({
   profile: { type: String, required: true },
   listNum: { type: Number, default: 0 },
   // 가입일은 createdAt 으로 대신한다
-  notiApply: { type: Number, default: 1 },
-  notiRecv: { type: Number, default: 1 },
-  notiVol: { type: Number, default: 1 },
+  notiApply: { type: Boolean, default: true },
+  notiWrite: { type: Boolean, default: true },
   active: { type: Boolean, default: true },
   refreshToken: { type: String },
   // 인증여부
@@ -49,7 +46,6 @@ const accountSchema = new mongoose.Schema({
     required: true,
     default: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), new Date().getHours() + 24),
   },
-  imageUrl: { type: String },
 }, { minimize: false, timestamps: true });
 
 accountSchema.pre<IAccount>('save', function (next) {
