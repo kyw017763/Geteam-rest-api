@@ -1,5 +1,6 @@
 import express from 'express';
 import responseForm from './../lib/responseForm';
+import { validateKind, validateCategory } from '../lib/validateValue';
 import models from './../models';
 
 const router = express.Router();
@@ -14,11 +15,8 @@ router.get('/:kind/:page/:order', async (req, res, next) => {
     // desc / asc, 최신 순, 오래된 순
     order = order === 'desc' ? '-createdAt' : 'createdAt';
     let result = null;
-    
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
+
+    validateKind(kind);
 
     if (kind === 'study') {
       result = await models.StudyApply.find({
@@ -72,10 +70,7 @@ router.get('/accept/:kind/:page/:order', async (req, res, next) => {
     order = order === 'desc' ? '-createdAt' : 'createdAt';
     let result = null;
 
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
+    validateKind(kind);
 
     if (kind === 'study') {
       result = await models.StudyApply.find({
@@ -131,10 +126,7 @@ router.get('/unaccept/:kind/:page/:order', async (req, res, next) => {
     order = order === 'desc' ? '-createdAt' : 'createdAt';
     let result = null;
 
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
+    validateKind(kind);
 
     if (kind === 'study') {
       result = await models.StudyApply.find({
@@ -187,10 +179,7 @@ router.get('/:kind/:item', async (req, res, next) => {
     const account = req!.session!.passport.user.toString();
     let result = null;
 
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
+    validateKind(kind);
 
     if (kind === 'study') {
       result = await models.StudyApply.find({
@@ -235,15 +224,8 @@ router.post('/:kind', async (req, res, next) => {
       throw new Error('옳지 않은 권한입니다!');
     }
 
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
-
-    switch (applyKind) {
-      case 'develop': case 'design': case 'etc': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
+    validateKind(kind);
+    validateCategory(kind, applyKind)
 
     if (kind === 'study') {
       cnt = await models.StudyApply.countDocuments({ item: applyItem, applyAccount }).exec();
@@ -312,10 +294,7 @@ router.patch('/:kind/:id', async (req, res, next) => {
     let applyDocument = null;
     let boardDocument = null;
 
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
+    validateKind(kind);
 
     if (kind === 'study') {
       applyDocument = await models.StudyApply.findById(id);
@@ -352,10 +331,7 @@ router.delete('/:kind/:id', async (req, res, next) => {
     let applyDocument = null;
     let boardDocument = null;
 
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
+    validateKind(kind);
 
     if (kind === 'study') {
       applyDocument = await models.StudyApply.findById(id);

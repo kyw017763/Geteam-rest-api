@@ -1,5 +1,6 @@
 import express from 'express';
 import responseForm from './../lib/responseForm';
+import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue';
 import models from './../models';
 
 const router = express.Router();
@@ -11,18 +12,8 @@ router.get('/boards/:kind/:page/:order', async (req, res, next) => {
     let { order } = req.params;
     let result = null, documentCnt = null;
 
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
-
-    switch (order) {
-      case 'createdAt': case 'endDay': case 'hit':
-        order = `-${order} title`; break;
-      case 'title':
-        order = `${order} -createdAt`; break;
-      default: throw new Error('해당 속성으로 정렬할 수 없습니다');
-    }
+    validateKind(kind);
+    order = validateModifyOrder(order);
 
     // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
     const condition = {
@@ -75,23 +66,9 @@ router.get('/boards/:kind/:category/:page/:order', async (req, res, next) => {
     let { order } = req.params;
     let result = null, documentCnt = null;
 
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
-    
-    switch (category) {
-      case 'develop': case 'design': case 'etc': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
-
-    switch (order) {
-      case 'createdAt': case 'endDay': case 'hit':
-        order = `-${order} title`; break;
-      case 'title':
-        order = `${order} -createdAt`; break;
-      default: throw new Error('해당 속성으로 정렬할 수 없습니다');
-    }
+    validateKind(kind);
+    validateCategory(kind, category);
+    order = validateModifyOrder(order);
 
     // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
     const condition = {
@@ -144,12 +121,9 @@ router.get('/board/:kind/:id', async (req, res, next) => {
     const { kind, id } = req.params;
     let result = null, applyId = null;
     let isAccepted = null;
-    
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
 
+    validateKind(kind);
+    
     if (kind === 'study') {
       await models.Study.findByIdAndUpdate(id, { $inc: { hit: 1 } })
         .catch((err) => {
@@ -213,19 +187,13 @@ router.post('/board/:kind', async (req, res, next) => {
     const { kind } = req.params;
     let result = null;
 
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
+    validateKind(kind);
 
     if (req!.session!.passport.user.toString() !== req.body.writeMem) {
       throw new Error('옳지 않은 권한입니다!');
     }
 
-    switch (req.body.writeKind) {
-      case 'develop': case 'design': case 'etc': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
+    validateCategory(kind, req.body.writeKind);
 
     const { writeMem, writeKind, writeTopic, writeTitle, writeContent, writeWantNum, writeEndDay } = req.body;
 
@@ -290,10 +258,7 @@ router.patch('/board/:kind/:id', async (req, res, next) => {
     const { kind, id } = req.params;
     let result = null;
 
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
+    validateKind(kind);
 
     if (req!.session!.passport.user.toString() !== req.body.modifyAuthor) {
       throw new Error('옳지 않은 권한입니다!');
@@ -342,10 +307,7 @@ router.delete('/board/:kind/:id', async (req, res, next) => {
     const { kind, id } = req.params;
     let result = null;
 
-    switch (kind) {
-      case 'study': case 'contest': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
+    validateKind(kind);
 
     if (req!.session!.passport.user.toString() !== req.body.writeMem) {
       throw new Error('옳지 않은 권한입니다!');
