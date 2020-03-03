@@ -5,10 +5,16 @@ import models from './../models';
 const router = express.Router();
 export default router;
 
-router.get('/boards/study/:page/:order', async (req, res, next) => {
+router.get('/boards/:kind/:page/:order', async (req, res, next) => {
   try {
-    const { page } = req.params;
+    const { kind, page } = req.params;
     let { order } = req.params;
+    let result = null, documentCnt = null;
+
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
+    }
 
     switch (order) {
       case 'createdAt': case 'endDay': case 'hit':
@@ -18,6 +24,7 @@ router.get('/boards/study/:page/:order', async (req, res, next) => {
       default: throw new Error('해당 속성으로 정렬할 수 없습니다');
     }
 
+    // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
     const condition = {
       active: true,
       $or: [
@@ -29,18 +36,29 @@ router.get('/boards/study/:page/:order', async (req, res, next) => {
         }
       ]
     };
-    // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
-    const result = await models.Study.find(condition)
-      .sort(order)
-      .skip(Number(page) * 10)
-      .limit(10)
-      .populate({
-        path: 'account',
-        select: '_id id name sNum',
-      });
 
-    const documentCnt = await models.Study.countDocuments(condition).exec();
-    
+    if (kind === 'study') {
+      result = await models.Study.find(condition)
+        .sort(order)
+        .skip(Number(page) * 10)
+        .limit(10)
+        .populate({
+          path: 'account',
+          select: '_id id name sNum',
+        });
+      documentCnt = await models.Study.countDocuments(condition).exec();
+    } else if (kind === 'contest') {
+      result = await models.Contest.find(condition)
+        .sort(order)
+        .skip(Number(page) * 10)
+        .limit(10)
+        .populate({
+          path: 'account',
+          select: '_id id name sNum',
+        });
+      documentCnt = await models.Contest.countDocuments(condition).exec();
+    }
+
     if ((<any>result).length) {
       res.json(responseForm(true, '', { list: result, total: documentCnt }));
     } else {
@@ -51,10 +69,16 @@ router.get('/boards/study/:page/:order', async (req, res, next) => {
   }
 });
 
-router.get('/boards/study/:category/:page/:order', async (req, res, next) => {
+router.get('/boards/:kind/:category/:page/:order', async (req, res, next) => {
   try {
-    const { category, page } = req.params;
+    const { kind, category, page } = req.params;
     let { order } = req.params;
+    let result = null, documentCnt = null;
+
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
+    }
     
     switch (category) {
       case 'develop': case 'design': case 'etc': break;
@@ -69,6 +93,7 @@ router.get('/boards/study/:category/:page/:order', async (req, res, next) => {
       default: throw new Error('해당 속성으로 정렬할 수 없습니다');
     }
 
+    // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
     const condition = {
       kind: category,
       active: true,
@@ -81,19 +106,29 @@ router.get('/boards/study/:category/:page/:order', async (req, res, next) => {
         }
       ]
     };
-    
-    // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
-    const result = await models.Study.find(condition)
-      .sort(order)
-      .skip(Number(page) * 10)
-      .limit(10)
-      .populate({
-        path: 'account',
-        select: '_id id name sNum',
-      });
-    
-    const documentCnt = await models.Study.countDocuments(condition).exec();
 
+    if (kind === 'study') {
+      result = await models.Study.find(condition)
+        .sort(order)
+        .skip(Number(page) * 10)
+        .limit(10)
+        .populate({
+          path: 'account',
+          select: '_id id name sNum',
+        });
+      documentCnt = await models.Study.countDocuments(condition).exec();
+    } else if (kind === 'contest') {
+      result = await models.Contest.find(condition)
+        .sort(order)
+        .skip(Number(page) * 10)
+        .limit(10)
+        .populate({
+          path: 'account',
+          select: '_id id name sNum',
+        });
+      documentCnt = await models.Contest.countDocuments(condition).exec();
+    }
+    
     if ((<any>result).length) {
       res.json(responseForm(true, '', { list: result, total: documentCnt }));
     } else {
@@ -104,27 +139,59 @@ router.get('/boards/study/:category/:page/:order', async (req, res, next) => {
   }
 });
 
-router.get('/board/study/:id', async (req, res, next) => {
+router.get('/board/:kind/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { kind, id } = req.params;
+    let result = null, applyId = null;
+    let isAccepted = null;
     
-    await models.Study.findByIdAndUpdate(id, { $inc: { hit: 1 } })
-      .catch((err) => {
-        new Error(err);
-      });
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
+    }
 
-    const result = await models.Study.findById(id)
-      .populate({
-        path: 'account',
-        select: '_id id name sNum',
-      });
-    
-    const applyId = result? await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
-    .then((result) => result!._id)  
-    .catch((err) => {
-        new Error(err);
-      }) : null;
+    if (kind === 'study') {
+      await models.Study.findByIdAndUpdate(id, { $inc: { hit: 1 } })
+        .catch((err) => {
+          new Error(err);
+        });
+
+      result = await models.Study.findById(id)
+        .populate({
+          path: 'account',
+          select: '_id id name sNum',
+        });
+
+      applyId = result? await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
+        .then((result) => result!._id)  
+        .catch((err) => {
+          new Error(err);
+        }) : null;
+    } else if (kind === 'contest') {
+      await models.Contest.findByIdAndUpdate(id, { $inc: { hit: 1 } })
+        .catch((err) => {
+          new Error(err);
+        });
+
+      result = await models.Contest.findById(id)
+        .populate({
+          path: 'account',
+          select: '_id id name sNum',
+        });
+
+      applyId = result? await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
+        .then((result) => result!._id)  
+        .catch((err) => {
+          new Error(err);
+        }) : null;
+    }
+
     const isApplied = applyId? true : false;
+    if (result && isApplied === true && kind === 'study') {
+      isAccepted = await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true });
+    } else if (result && isApplied === true && kind === 'contest') {
+      isAccepted = await models.ContestApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true });
+    }
 
     const data = {
       result,
@@ -132,7 +199,7 @@ router.get('/board/study/:id', async (req, res, next) => {
       enableApply: result? result.enableApply() : null,
       applyId,
       isApplied,
-      isAccepted: result && isApplied === true? await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true }) : null,
+      isAccepted,
     };
 
     res.json(responseForm(true, '', data));
@@ -141,8 +208,16 @@ router.get('/board/study/:id', async (req, res, next) => {
   }
 });
 
-router.post('/board/study', async (req, res, next) => {
+router.post('/board/:kind', async (req, res, next) => {
   try {
+    const { kind } = req.params;
+    let result = null;
+
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
+    }
+
     if (req!.session!.passport.user.toString() !== req.body.writeMem) {
       throw new Error('옳지 않은 권한입니다!');
     }
@@ -153,25 +228,56 @@ router.post('/board/study', async (req, res, next) => {
     }
 
     const { writeMem, writeKind, writeTopic, writeTitle, writeContent, writeWantNum, writeEndDay } = req.body;
-    const result = await models.Study.create({
-        kind: writeKind,
-        account: writeMem,
-        topic: writeTopic,
-        title: writeTitle,
-        content: writeContent,
-        wantNum: writeWantNum,
-        endDay: writeEndDay,
-      })
-      .then((result) => {
-        return result._id;
-      }).catch((err) => {
-        new Error(err);
-      });
-    
-    await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } })
-      .catch((err) => {
-        new Error(err);
-      });
+
+    if (kind === 'study') {
+      result = await models.Study.create({
+          kind: writeKind,
+          account: writeMem,
+          topic: writeTopic,
+          title: writeTitle,
+          content: writeContent,
+          wantNum: writeWantNum,
+          endDay: writeEndDay,
+        })
+        .then((result) => {
+          return result._id;
+        }).catch((err) => {
+          new Error(err);
+        });
+      
+      await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } })
+        .catch((err) => {
+          new Error(err);
+        });
+    } else if (kind === 'contest') {
+      const { writePart } = req.body;
+      const tempPartArr = writePart.split(',').map((item: string) => item.trim())
+      const partObj = {
+        name: tempPartArr,
+        num: tempPartArr.length,
+      };
+
+      result = await models.Contest.create({
+          kind: writeKind,
+          account: writeMem,
+          topic: writeTopic,
+          part: partObj,
+          title: writeTitle,
+          content: writeContent,
+          wantNum: writeWantNum,
+          endDay: writeEndDay,
+        })
+        .then((result) => {
+          return result._id;
+        }).catch((err) => {
+          new Error(err);
+        });
+
+      await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } })
+        .catch((err) => {
+          new Error(err);
+        });
+    }
 
     res.status(201).json(responseForm(true, '', result));
   } catch (err) {
@@ -179,13 +285,19 @@ router.post('/board/study', async (req, res, next) => {
   }
 });
 
-router.patch('/board/study/:id', async (req, res, next) => {
+router.patch('/board/:kind/:id', async (req, res, next) => {
   try {
+    const { kind, id } = req.params;
+    let result = null;
+
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
+    }
+
     if (req!.session!.passport.user.toString() !== req.body.modifyAuthor) {
       throw new Error('옳지 않은 권한입니다!');
     }
-
-    const { id } = req.params;
 
     const { modifyCategory, modifyWantNum, modifyEndDay, modifyTopic, modifyTitle, modifyContent } = req.body;
     
@@ -200,256 +312,24 @@ router.patch('/board/study/:id', async (req, res, next) => {
         endDay: modifyEndDay,
       }
     };
-    
-    const result = await models.Study.findByIdAndUpdate(id, updateObj, { new: true })
+
+    if (kind === 'study') {
+      result = await models.Study.findByIdAndUpdate(id, updateObj, { new: true })
       .then((result) => {
         return result ? result._id : result; 
       })
       .catch((err) => {
         new Error(err);
       });
-
-    res.json(responseForm(true, '', result));
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-router.delete('/board/study/:id', async (req, res, next) => {
-  try {
-    if (req!.session!.passport.user.toString() !== req.body.writeMem) {
-      throw new Error('옳지 않은 권한입니다!');
-    }
-
-    const { id } = req.params;
-    
-    const result = await models.Study.findByIdAndUpdate(id, { active: false })
-      .then((result) => {
-        return true;
-      })
-      .catch((err) => {
-        new Error(err);
-      });
-
-    await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } })
-      .catch((err) => {
-        new Error(err);
-      });
-    
-    res.json(responseForm(true, '', result));
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-
-router.get('/boards/contest/:page/:order', async (req, res, next) => {
-  try {
-    const { page } = req.params;
-    let { order } = req.params;
-
-    switch (order) {
-      case 'createdAt': case 'endDay': case 'hit':
-        order = `-${order} title`; break;
-      case 'title':
-        order = `${order} -createdAt`; break;
-      default: throw new Error('해당 속성으로 정렬할 수 없습니다');
-    }
-
-    const condition = {
-      active: true,
-      $or: [
-        {
-          account: req!.session!.passport.user.toString() || null,
-          endDay: { $lt: new Date }
-        }, {
-          endDay: { $gt: new Date }
-        }
-      ]
-    };
-  
-    const result = await models.Contest.find(condition)
-      .sort(order)
-      .skip(Number(page) * 10)
-      .limit(10)
-      .populate({
-        path: 'account',
-        select: '_id id name sNum',
-      });
-
-    const documentCnt = await models.Contest.countDocuments(condition).exec();
-    
-    if ((<any>result).length) {
-      res.json(responseForm(true, '', { list: result, total: documentCnt }));
-    } else {
-      res.status(204).json(responseForm(true));
-    }
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-router.get('/boards/contest/:category/:page/:order', async (req, res, next) => {
-  try {
-    const { category, page } = req.params;
-    let { order } = req.params;
-
-    switch (category) {
-      case 'develop': case 'design': case 'idea': case 'etc': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
-
-    switch (order) {
-      case 'createdAt': case 'endDay': case 'hit':
-        order = `-${order} title`; break;
-      case 'title':
-        order = `${order} -createdAt`; break;
-      default: throw new Error('해당 속성으로 정렬할 수 없습니다');
-    }
-
-    const condition = {
-      kind: category,
-      active: true,
-      $or: [{
-          account: req!.session!.passport.user.toString() || null,
-          endDay: { $lt: new Date }
-        }, {
-          endDay: { $gt: new Date }
-        }
-      ]
-    };
-
-    const result = await models.Contest.find(condition)
-      .sort(order)
-      .skip(Number(page) * 10)
-      .limit(10)
-      .populate({
-        path: 'account',
-        select: '_id id name sNum',
-      });
-
-    const documentCnt = await models.Study.countDocuments(condition).exec();
-
-    if ((<any>result).length) {
-      res.json(responseForm(true, '', { list: result, total: documentCnt }));
-    } else {
-      res.status(204).json(responseForm(true));
-    }
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-router.get('/board/contest/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    await models.Contest.findByIdAndUpdate(id, { $inc: { hit: 1 } })
-      .catch((err) => {
-        new Error(err);
-      });
-
-    const result = await models.Contest.findById(id)
-      .populate({
-        path: 'account',
-        select: '_id id name sNum',
-      });
-
-    const applyId = result? await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
-      .then((result) => result!._id)  
-      .catch((err) => {
+    } else if (kind === 'contest') {
+      result = await models.Contest.findByIdAndUpdate(id, updateObj, { new: true })
+        .then((result) => {
+          return result ? result._id : result;
+        })
+        .catch((err) => {
           new Error(err);
-        }) : null;
-    const isApplied = applyId? true : false;
-
-    const data = {
-      result,
-      enableModify: result? result.enableModify() : null,
-      enableApply: result? result.enableApply() : null,
-      applyId,
-      isApplied,
-      isAccepted: result && isApplied === true? await models.ContestApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true }) : null,
-    };
-
-    res.json(responseForm(true, '', data));
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-router.post('/board/contest', async (req, res, next) => {
-  try {
-    if (req!.session!.passport.user.toString() !== req.body.writeMem) {
-      throw new Error('옳지 않은 권한입니다!');
+        });
     }
-
-    switch (req.body.writeKind) {
-      case 'develop': case 'design': case 'idea': case 'etc': break;
-      default: throw new Error('유효한 카테고리가 아닙니다');
-    }
-    
-    const { writeMem, writeKind, writeTopic, writePart, writePartNum, writeTitle, writeContent, writeWantNum, writeEndDay } = req.body;
-    
-    const partObj = {
-      name: writePart.split(',').map((item: string) => item.trim()),
-      num: writePartNum,
-    };
-    
-    const result = await models.Contest.create({
-        kind: writeKind,
-        account: writeMem,
-        topic: writeTopic,
-        part: partObj,
-        title: writeTitle,
-        content: writeContent,
-        wantNum: writeWantNum,
-        endDay: writeEndDay,
-      })
-      .then((result) => {
-        return result._id;
-      }).catch((err) => {
-        new Error(err);
-      });
-
-    await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } })
-      .catch((err) => {
-        new Error(err);
-      });
-
-    res.status(201).json(responseForm(true, '', result));
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-router.patch('/board/contest/:id', async (req, res, next) => {
-  try {
-    if (req!.session!.passport.user.toString() !== req.body.modifyAuthor) {
-      throw new Error('옳지 않은 권한입니다!');
-    }
-
-    const { id } = req.params;
-
-    const { modifyCategory, modifyWantNum, modifyEndDay, modifyTopic, modifyTitle, modifyContent } = req.body;
-    
-    const updateObj = { 
-      $set: 
-      {
-        kind: modifyCategory,
-        topic: modifyTopic,
-        title: modifyTitle,
-        content: modifyContent,
-        wantNum: modifyWantNum,
-        endDay: modifyEndDay,
-      }
-    };
-    const result = await models.Contest.findByIdAndUpdate(id, updateObj, { new: true })
-      .then((result) => {
-        return result ? result._id : result;
-      })
-      .catch((err) => {
-        new Error(err);
-      });
 
     res.json(responseForm(true, '', result));
   } catch (err) {
@@ -457,27 +337,50 @@ router.patch('/board/contest/:id', async (req, res, next) => {
   }
 });
 
-router.delete('/board/contest/:id', async (req, res, next) => {
+router.delete('/board/:kind/:id', async (req, res, next) => {
   try {
+    const { kind, id } = req.params;
+    let result = null;
+
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
+    }
+
     if (req!.session!.passport.user.toString() !== req.body.writeMem) {
       throw new Error('옳지 않은 권한입니다!');
     }
 
-    const { id } = req.params;
-    
-    const result = await models.Contest.findByIdAndUpdate(id, { active: false })
-      .then((result) => {
-        return true;
-      })
-      .catch((err) => {
-        new Error(err);
-      });
-    
-    await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } })
-      .catch((err) => {
-        new Error(err);
-      });
+    if (kind === 'study') {
+      result = await models.Study.findByIdAndUpdate(id, { active: false })
+        .then((result) => {
+          return true;
+        })
+        .catch((err) => {
+          new Error(err);
+        });
+      
+      await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } })
+        .catch((err) => {
+          new Error(err);
+        });
+    } else if (kind === 'contest') {
+      result = await models.Contest.findByIdAndUpdate(id, { active: false })
+        .then((result) => {
+          return true;
+        })
+        .catch((err) => {
+          new Error(err);
+        });
+      
+      await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } })
+        .catch((err) => {
+          new Error(err);
+        });
+    }
 
+    
+    
     res.json(responseForm(true, '', result));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));

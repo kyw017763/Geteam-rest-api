@@ -5,31 +5,54 @@ import models from './../models';
 const router = express.Router();
 export default router;
 
-router.get('/study/:page/:order', async (req, res, next) => {
+router.get('/:kind/:page/:order', async (req, res, next) => {
   // 내가 한 신청
   try {
     const account = req!.session!.passport.user.toString();
-    const { page } = req.params;
+    const { kind, page } = req.params;
     let { order } = req.params;
     // desc / asc, 최신 순, 오래된 순
     order = order === 'desc' ? '-createdAt' : 'createdAt';
+    let result = null;
     
-    const result = await models.StudyApply.find({
-        applyAccount: account
-      })
-      .sort(order)
-      .skip(Number(page) * 10)
-      .limit(10)
-      .populate({
-        path: 'item',
-        select: '_id kind topic title wantNum applyNum endDay hit teamChk active',
-      })
-      .populate({
-        path: 'recvAccount',
-        select: '_id id name sNum',
-      });
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
+    }
+
+    if (kind === 'study') {
+      result = await models.StudyApply.find({
+          applyAccount: account
+        })
+        .sort(order)
+        .skip(Number(page) * 10)
+        .limit(10)
+        .populate({
+          path: 'item',
+          select: '_id kind topic title wantNum applyNum endDay hit teamChk active',
+        })
+        .populate({
+          path: 'recvAccount',
+          select: '_id id name sNum',
+        });
+    } else if (kind === 'contest') {
+      result = await models.ContestApply.find({
+          applyAccount: account
+        })
+        .sort(order)
+        .skip(Number(page) * 10)
+        .limit(10)
+        .populate({
+          path: 'item',
+          select: '_id kind topic title part wantNum applyNum endDay hit teamChk active',
+        })
+        .populate({
+          path: 'recvAccount',
+          select: '_id id name sNum',
+        });
+    }
     
-    if (result.length) {
+    if (result!.length) {
       res.json(responseForm(true, '', result));
     } else {
       res.status(204).json(responseForm(true));
@@ -39,32 +62,56 @@ router.get('/study/:page/:order', async (req, res, next) => {
   }
 });
 
-router.get('/accept/study/:page/:order', async (req, res, next) => {
+router.get('/accept/:kind/:page/:order', async (req, res, next) => {
   // 내가 한 신청 중 수락된 것
   try {
     const account = req!.session!.passport.user.toString();
-    const { page } = req.params;
+    const { kind, page } = req.params;
     let { order } = req.params;
     // desc / asc, 최신 순, 오래된 순
     order = order === 'desc' ? '-createdAt' : 'createdAt';
+    let result = null;
 
-    const result = await models.StudyApply.find({
-        applyAccount: account,
-        accept: true,
-      })
-      .sort(order)
-      .skip(Number(page) * 10)
-      .limit(10)
-      .populate({
-        path: 'item',
-        select: '_id kind topic title wantNum applyNum endDay hit teamChk active',
-      })
-      .populate({
-        path: 'recvAccount',
-        select: '_id id name sNum',
-      });
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
+    }
 
-    if (result.length) {
+    if (kind === 'study') {
+      result = await models.StudyApply.find({
+          applyAccount: account,
+          accept: true,
+        })
+        .sort(order)
+        .skip(Number(page) * 10)
+        .limit(10)
+        .populate({
+          path: 'item',
+          select: '_id kind topic title wantNum applyNum endDay hit teamChk active',
+        })
+        .populate({
+          path: 'recvAccount',
+          select: '_id id name sNum',
+        });
+    } else if (kind === 'contest') {
+      result = await models.ContestApply.find({
+          applyAccount: account,
+          accept: true,
+        })
+        .sort(order)
+        .skip(Number(page) * 10)
+        .limit(10)
+        .populate({
+          path: 'item',
+          select: '_id kind topic title part wantNum applyNum endDay hit teamChk active',
+        })
+        .populate({
+          path: 'recvAccount',
+          select: '_id id name sNum',
+        });
+    }
+
+    if (result!.length) {
       res.json(responseForm(true, '', result));
     } else {
       res.status(204).json(responseForm(true));
@@ -74,32 +121,56 @@ router.get('/accept/study/:page/:order', async (req, res, next) => {
   }
 });
 
-router.get('/unaccept/study/:page/:order', async (req, res, next) => {
+router.get('/unaccept/:kind/:page/:order', async (req, res, next) => {
   // 내가 한 신청 중 수락되지 않은 것
   try {
     const account = req!.session!.passport.user.toString();
-    const { page } = req.params;
+    const { kind, page } = req.params;
     let { order } = req.params;
     // desc / asc, 최신 순, 오래된 순
     order = order === 'desc' ? '-createdAt' : 'createdAt';
+    let result = null;
 
-    const result = await models.StudyApply.find({
-        applyAccount: account,
-        accept: false,
-      })
-      .sort(order)
-      .skip(Number(page) * 10)
-      .limit(10)
-      .populate({
-        path: 'item',
-        select: '_id kind topic title wantNum applyNum endDay hit teamChk active',
-      })
-      .populate({
-        path: 'recvAccount',
-        select: '_id id name sNum',
-      });
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
+    }
 
-    if (result.length) {
+    if (kind === 'study') {
+      result = await models.StudyApply.find({
+          applyAccount: account,
+          accept: false,
+        })
+        .sort(order)
+        .skip(Number(page) * 10)
+        .limit(10)
+        .populate({
+          path: 'item',
+          select: '_id kind topic title wantNum applyNum endDay hit teamChk active',
+        })
+        .populate({
+          path: 'recvAccount',
+          select: '_id id name sNum',
+        });
+    } else if (kind === 'contest') {
+      result = await models.ContestApply.find({
+          applyAccount: account,
+          accept: false,
+        })
+        .sort(order)
+        .skip(Number(page) * 10)
+        .limit(10)
+        .populate({
+          path: 'item',
+          select: '_id kind topic title part wantNum applyNum endDay hit teamChk active',
+        })
+        .populate({
+          path: 'recvAccount',
+          select: '_id id name sNum',
+        });
+    }
+
+    if (result!.length) {
       res.json(responseForm(true, '', result));
     } else {
       res.status(204).json(responseForm(true));
@@ -109,23 +180,41 @@ router.get('/unaccept/study/:page/:order', async (req, res, next) => {
   }
 });
 
-router.get('/study/:item', async (req, res, next) => {
+router.get('/:kind/:item', async (req, res, next) => {
   // 내가 작성한 글에 들어온 신청
   try {
-    const { item } = req.params;
+    const { kind, item } = req.params;
     const account = req!.session!.passport.user.toString();
+    let result = null;
 
-    const result = await models.StudyApply.find({
-        item,
-        recvAccount: account,
-        active: true,
-      })
-      .populate({
-        path: 'applyAccount',
-        select: '_id id name sNum',
-      });
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
+    }
 
-    if (result.length) {
+    if (kind === 'study') {
+      result = await models.StudyApply.find({
+          item,
+          recvAccount: account,
+          active: true,
+        })
+        .populate({
+          path: 'applyAccount',
+          select: '_id id name sNum',
+        });
+    } else if (kind === 'contest') {
+      result = await models.ContestApply.find({
+          item,
+          recvAccount: account,
+          active: true,
+        })
+        .populate({
+          path: 'applyAccount',
+          select: '_id id name sNum',
+        });
+    }
+
+    if (result!.length) {
       res.json(responseForm(true, '', result));
     } else {
       res.status(204).json(responseForm(true));
@@ -135,12 +224,20 @@ router.get('/study/:item', async (req, res, next) => {
   }
 });
 
-router.post('/study', async (req, res, next) => {
+router.post('/:kind', async (req, res, next) => {
   try {
+    const { kind } = req.params;
     const { applyKind, applyItem, applyAccount, recvAccount, applyPortfolio, applyWant } = req.body;
+    let cnt = null;
+    let result = null;
 
     if (req!.session!.passport.user.toString() !== applyAccount) {
       throw new Error('옳지 않은 권한입니다!');
+    }
+
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
     }
 
     switch (applyKind) {
@@ -148,30 +245,59 @@ router.post('/study', async (req, res, next) => {
       default: throw new Error('유효한 카테고리가 아닙니다');
     }
 
-    const cnt = await models.StudyApply.countDocuments({ item: applyItem, applyAccount }).exec();
-    if (cnt > 0) {
+    if (kind === 'study') {
+      cnt = await models.StudyApply.countDocuments({ item: applyItem, applyAccount }).exec();
+    } else if (kind === 'contest') {
+      cnt = await models.ContestApply.countDocuments({ item: applyItem, applyAccount }).exec();
+    }
+
+    if (cnt! > 0 || !cnt) {
       throw new Error('한 게시글에 한 번 이상 신청할 수 없습니다');
     }
-   
-    const result = await models.StudyApply.create({
-        kind: applyKind,
-        item: applyItem,
-        applyAccount,
-        recvAccount,
-        portfolio: applyPortfolio,
-        want: applyWant,
-      })
-      .then((result) => {
-        return result.item;
+
+    if (kind === 'study') {
+      result = await models.StudyApply.create({
+          kind: applyKind,
+          item: applyItem,
+          applyAccount,
+          recvAccount,
+          portfolio: applyPortfolio,
+          want: applyWant,
+        })
+        .then((result) => {
+          return result.item;
+        }).catch((err) => {
+          throw new err;
+        });
+
+      await models.Study.findByIdAndUpdate(result, {
+        $inc: { applyNum: 1 }
       }).catch((err) => {
-        throw new err;
+        throw new Error(err);
       });
-    
-    await models.Study.findByIdAndUpdate(result, {
-      $inc: { applyNum: 1 }
-    }).catch((err) => {
-      throw new Error(err);
-    });
+    } else if (kind === 'contest') {
+      const { applyPart } = req.body;
+      result = await models.ContestApply.create({
+          kind: applyKind,
+          item: applyItem,
+          part: applyPart,
+          applyAccount,
+          recvAccount,
+          portfolio: applyPortfolio,
+          want: applyWant,
+        })
+        .then((result) => {
+          return result.item;
+        }).catch((err) => {
+          throw new err;
+        });
+
+      await models.Contest.findByIdAndUpdate(result, {
+        $inc: { applyNum: 1 }
+      }).catch((err) => {
+        throw new Error(err);
+      });
+    }
 
     res.status(201).json(responseForm(true, '', result));
   } catch (err) {
@@ -179,243 +305,24 @@ router.post('/study', async (req, res, next) => {
   }
 });
 
-router.patch('/study/:id', async (req, res, next) => {
+router.patch('/:kind/:id', async (req, res, next) => {
   // accept
   try {
-    const { id } = req.params;
+    const { kind, id } = req.params;
+    let applyDocument = null;
+    let boardDocument = null;
 
-    const applyDocument = await models.StudyApply.findById(id);
-    
-    if (req!.session!.passport.user.toString() !== applyDocument!.recvAccount.toString()) {
-      throw new Error('옳지 않은 권한입니다!');
-    }
-
-    applyDocument!.accept = true;
-    applyDocument?.save();
-
-    const boardDocument = await models.Study.findByIdAndUpdate(applyDocument!.item, {
-        $inc: { acceptNum: 1 }
-      });
-
-    res.json(responseForm(true, '', boardDocument!._id));
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-router.delete('/study/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const applyDocument = await models.StudyApply.findById(id);
-    
-    if (req!.session!.passport.user.toString() !== applyDocument?.applyAccount.toString()) {
-      throw new Error('옳지 않은 권한입니다!');
-    }
-
-    if (applyDocument!.accept === true) {
-      throw new Error('이미 수락된 신청은 취소할 수 없습니다');
-    }
-
-    const boardDocument = await models.Study.findByIdAndUpdate(applyDocument!.item, {
-        $inc: { applyNum: -1 }
-      });
-
-    if (boardDocument!.endDay < new Date()) {
-      throw new Error('신청기간이 지난 글의 신청을 취소할 수 없습니다');
-    }
-
-    if (boardDocument!.active === false) {
-      throw new Error('삭제된 글의 신청을 취소할 수 없습니다');
-    }
-
-    applyDocument!.active = false;
-    applyDocument?.save();
-
-    res.json(responseForm(true, '', boardDocument!._id));
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-
-router.get('/contest/:page/:order', async (req, res, next) => {
-  // 내가 한 신청
-  try {
-    const account = req!.session!.passport.user.toString();
-    const { page } = req.params;
-    let { order } = req.params;
-    // desc / asc, 최신 순, 오래된 순
-    order = order === 'desc' ? '-createdAt' : 'createdAt';
-    
-    const result = await models.ContestApply.find({
-        applyAccount: account
-      })
-      .sort(order)
-      .skip(Number(page) * 10)
-      .limit(10)
-      .populate({
-        path: 'item',
-        select: '_id kind topic title part wantNum applyNum endDay hit teamChk active',
-      })
-      .populate({
-        path: 'recvAccount',
-        select: '_id id name sNum',
-      });
-    
-    if (result.length) {
-      res.json(responseForm(true, '', result));
-    } else {
-      res.status(204).json(responseForm(true));
-    }
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-router.get('/accept/contest/:page/:order', async (req, res, next) => {
-  // 내가 한 신청 중 수락된 것
-  try {
-    const account = req!.session!.passport.user.toString();
-    const { page } = req.params;
-    let { order } = req.params;
-    // desc / asc, 최신 순, 오래된 순
-    order = order === 'desc' ? '-createdAt' : 'createdAt';
-
-    const result = await models.ContestApply.find({
-        applyAccount: account,
-        accept: true,
-      })
-      .sort(order)
-      .skip(Number(page) * 10)
-      .limit(10)
-      .populate({
-        path: 'item',
-        select: '_id kind topic title part wantNum applyNum endDay hit teamChk active',
-      })
-      .populate({
-        path: 'recvAccount',
-        select: '_id id name sNum',
-      });
-
-    if (result.length) {
-      res.json(responseForm(true, '', result));
-    } else {
-      res.status(204).json(responseForm(true));
-    }
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-router.get('/unaccept/contest/:page/:order', async (req, res, next) => {
-  // 내가 한 신청 중 수락되지 않은 것
-  try {
-    const account = req!.session!.passport.user.toString();
-    const { page } = req.params;
-    let { order } = req.params;
-    // desc / asc, 최신 순, 오래된 순
-    order = order === 'desc' ? '-createdAt' : 'createdAt';
-
-    const result = await models.ContestApply.find({
-        applyAccount: account,
-        accept: false,
-      })
-      .sort(order)
-      .skip(Number(page) * 10)
-      .limit(10)
-      .populate({
-        path: 'item',
-        select: '_id kind topic title part wantNum applyNum endDay hit teamChk active',
-      })
-      .populate({
-        path: 'recvAccount',
-        select: '_id id name sNum',
-      });
-
-    if (result.length) {
-      res.json(responseForm(true, '', result));
-    } else {
-      res.status(204).json(responseForm(true));
-    }
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-router.get('/contest/:item', async (req, res, next) => {
-  // 내가 작성한 글에 들어온 신청
-  try {
-    const { item } = req.params;
-    const account = req!.session!.passport.user.toString();
-
-    const result = await models.ContestApply.find({
-        item,
-        recvAccount: account,
-        active: true,
-      })
-      .populate({
-        path: 'applyAccount',
-        select: '_id id name sNum',
-      });
-
-    res.json(responseForm(true, '', result));
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-router.post('/contest', async (req, res, next) => {
-  try {
-    const { applyKind, applyItem, applyPart, applyAccount, recvAccount, applyPortfolio, applyWant } = req.body;
-
-    if (req!.session!.passport.user.toString() !== applyAccount) {
-      throw new Error('옳지 않은 권한입니다!');
-    }
-
-    switch (applyKind) {
-      case 'develop': case 'design': case 'idea': case 'etc': break;
+    switch (kind) {
+      case 'study': case 'contest': break;
       default: throw new Error('유효한 카테고리가 아닙니다');
     }
 
-    const cnt = await models.ContestApply.countDocuments({ item: applyItem, applyAccount }).exec();
-    if (cnt > 0) {
-      throw new Error('한 게시글에 한 번 이상 신청할 수 없습니다');
+    if (kind === 'study') {
+      applyDocument = await models.StudyApply.findById(id);
+    } else if (kind === 'contest') {
+      applyDocument = await models.ContestApply.findById(id);
     }
-   
-    const result = await models.ContestApply.create({
-        kind: applyKind,
-        item: applyItem,
-        part: applyPart,
-        applyAccount,
-        recvAccount,
-        portfolio: applyPortfolio,
-        want: applyWant,
-      })
-      .then((result) => {
-        return result.item;
-      }).catch((err) => {
-        throw new err;
-      });
-    
-    await models.Contest.findByIdAndUpdate(result, {
-      $inc: { applyNum: 1 }
-    }).catch((err) => {
-      throw new Error(err);
-    });
 
-    res.status(201).json(responseForm(true, '', result));
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
-  }
-});
-
-router.patch('/contest/:id', async (req, res, next) => {
-  // accept
-  try {
-    const { id } = req.params;
-
-    const applyDocument = await models.ContestApply.findById(id);
-    
     if (req!.session!.passport.user.toString() !== applyDocument!.recvAccount.toString()) {
       throw new Error('옳지 않은 권한입니다!');
     }
@@ -423,9 +330,15 @@ router.patch('/contest/:id', async (req, res, next) => {
     applyDocument!.accept = true;
     applyDocument?.save();
 
-    const boardDocument = await models.Contest.findByIdAndUpdate(applyDocument!.item, {
-        $inc: { acceptNum: 1 }
-      });
+    if (kind === 'study') {
+      boardDocument = await models.Study.findByIdAndUpdate(applyDocument!.item, {
+          $inc: { acceptNum: 1 }
+        });
+    } else if (kind === 'contest') {
+      boardDocument = await models.Contest.findByIdAndUpdate(applyDocument!.item, {
+          $inc: { acceptNum: 1 }
+        });
+    }
 
     res.json(responseForm(true, '', boardDocument!._id));
   } catch (err) {
@@ -433,12 +346,23 @@ router.patch('/contest/:id', async (req, res, next) => {
   }
 });
 
-router.delete('/contest/:id', async (req, res, next) => {
+router.delete('/:kind/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
-   
-    const applyDocument = await models.ContestApply.findById(id);
-    
+    const { kind, id } = req.params;
+    let applyDocument = null;
+    let boardDocument = null;
+
+    switch (kind) {
+      case 'study': case 'contest': break;
+      default: throw new Error('유효한 카테고리가 아닙니다');
+    }
+
+    if (kind === 'study') {
+      applyDocument = await models.StudyApply.findById(id);
+    } else if (kind === 'contest') {
+      applyDocument = await models.ContestApply.findById(id);
+    }
+
     if (req!.session!.passport.user.toString() !== applyDocument?.applyAccount.toString()) {
       throw new Error('옳지 않은 권한입니다!');
     }
@@ -447,9 +371,15 @@ router.delete('/contest/:id', async (req, res, next) => {
       throw new Error('이미 수락된 신청은 취소할 수 없습니다');
     }
 
-    const boardDocument = await models.Contest.findByIdAndUpdate(applyDocument!.item, {
-        $inc: { applyNum: -1 }
-      });
+    if (kind === 'study') {
+      boardDocument = await models.Study.findByIdAndUpdate(applyDocument!.item, {
+          $inc: { applyNum: -1 }
+        });
+    } else if (kind === 'contest') {
+      boardDocument = await models.Contest.findByIdAndUpdate(applyDocument!.item, {
+          $inc: { applyNum: -1 }
+        });
+    }
 
     if (boardDocument!.endDay < new Date()) {
       throw new Error('신청기간이 지난 글의 신청을 취소할 수 없습니다');
