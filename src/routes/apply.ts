@@ -253,12 +253,7 @@ router.post('/:kind', async (req, res, next) => {
 
       await models.Study.findByIdAndUpdate(result, {
         $inc: { applyNum: 1 }
-      }, { new: true })
-        .then((result) => {
-          if (!result) {
-            throw new Error();
-          }
-        });
+      });
     } else if (kind === 'contest') {
       const { applyPart } = req.body;
       result = await models.ContestApply.create({
