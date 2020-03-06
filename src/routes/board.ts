@@ -126,7 +126,12 @@ router.get('/board/:kind/:id', async (req, res, next) => {
     validateKind(kind);
     
     if (kind === 'study') {
-      await models.Study.findByIdAndUpdate(id, { $inc: { hit: 1 } });
+      await models.Study.findByIdAndUpdate(id, { $inc: { hit: 1 } }, { new: true })
+        .then((result) => {
+          if (!result) {
+            throw new Error();
+          }
+        });
 
       result = await models.Study.findById(id)
         .populate({
@@ -137,7 +142,12 @@ router.get('/board/:kind/:id', async (req, res, next) => {
       applyId = result? await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
         .then((result) => result!._id) : null;
     } else if (kind === 'contest') {
-      await models.Contest.findByIdAndUpdate(id, { $inc: { hit: 1 } });
+      await models.Contest.findByIdAndUpdate(id, { $inc: { hit: 1 } }, { new: true })
+      .then((result) => {
+        if (!result) {
+          throw new Error();
+        }
+      });
 
       result = await models.Contest.findById(id)
         .populate({
@@ -200,7 +210,12 @@ router.post('/board/:kind', async (req, res, next) => {
           return result._id;
         });
       
-      await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } });
+      await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } }, { new: true })
+        .then((result) => {
+          if (!result) {
+            throw new Error();
+          }
+        });
     } else if (kind === 'contest') {
       const { writePart } = req.body;
       const tempPartArr = writePart.split(',').map((item: string) => item.trim())
@@ -223,7 +238,12 @@ router.post('/board/:kind', async (req, res, next) => {
           return result._id;
         });
 
-      await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } });
+      await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } }, { new: true})
+        .then((result) => {
+          if (!result) {
+            throw new Error();
+          }
+        });
     }
 
     await redisClient.incCnt('listCnt');
@@ -289,16 +309,22 @@ router.delete('/board/:kind/:id', async (req, res, next) => {
     }
 
     if (kind === 'study') {
-      result = await models.Study.findByIdAndUpdate(id, { active: false })
+      result = await models.Study.findByIdAndUpdate(id, { active: false }, { new: true })
         .then((result) => {
-          return true;
+          if (result) {
+            return true;
+          }
+          throw new Error();
         });
       
       await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } });
     } else if (kind === 'contest') {
-      result = await models.Contest.findByIdAndUpdate(id, { active: false })
+      result = await models.Contest.findByIdAndUpdate(id, { active: false }, { new: true })
         .then((result) => {
-          return true;
+          if (result) {
+            return true;
+          }
+          throw new Error();
         });
       
       await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } });

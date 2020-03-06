@@ -253,7 +253,12 @@ router.post('/:kind', async (req, res, next) => {
 
       await models.Study.findByIdAndUpdate(result, {
         $inc: { applyNum: 1 }
-      });
+      }, { new: true })
+        .then((result) => {
+          if (!result) {
+            throw new Error();
+          }
+        });
     } else if (kind === 'contest') {
       const { applyPart } = req.body;
       result = await models.ContestApply.create({
@@ -271,7 +276,12 @@ router.post('/:kind', async (req, res, next) => {
 
       await models.Contest.findByIdAndUpdate(result, {
         $inc: { applyNum: 1 }
-      });
+      }, { new: true })
+        .then((result) => {
+          if (!result) {
+            throw new Error();
+          }
+        });
     }
 
     await redisClient.incCnt('applyCnt');
@@ -307,10 +317,22 @@ router.patch('/:kind/:id', async (req, res, next) => {
     if (kind === 'study') {
       boardDocument = await models.Study.findByIdAndUpdate(applyDocument!.item, {
           $inc: { acceptNum: 1 }
+        }, { new: true })
+        .then((result) => {
+          if (!result) {
+            throw new Error();
+          }
+          return result;
         });
     } else if (kind === 'contest') {
       boardDocument = await models.Contest.findByIdAndUpdate(applyDocument!.item, {
           $inc: { acceptNum: 1 }
+        }, { new: true })
+        .then((result) => {
+          if (!result) {
+            throw new Error();
+          }
+          return result;
         });
     }
 
@@ -345,10 +367,22 @@ router.delete('/:kind/:id', async (req, res, next) => {
     if (kind === 'study') {
       boardDocument = await models.Study.findByIdAndUpdate(applyDocument!.item, {
           $inc: { applyNum: -1 }
+        }, { new: true })
+        .then((result) => {
+          if (!result) {
+            throw new Error();
+          }
+          return result;
         });
     } else if (kind === 'contest') {
       boardDocument = await models.Contest.findByIdAndUpdate(applyDocument!.item, {
           $inc: { applyNum: -1 }
+        }, { new: true })
+        .then((result) => {
+          if (!result) {
+            throw new Error();
+          }
+          return result;
         });
     }
 
