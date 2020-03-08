@@ -49,7 +49,7 @@ router.get('/applies', async (req, res) => {
 router.get('/info', async (req, res) => {
   try {
     const user = req!.session!.passport.user.toString();
-    const result = await models.Account.findById(user).select(['interest1', 'interest2', 'interest3', 'profile', 'listNum', 'notiApply', 'notiWrite']);
+    const result = await models.Account.findById(user).select(['id', 'name', 'sNum', 'interest1', 'interest2', 'interest3', 'profile', 'notiApply', 'notiWrite']);
     res.json(responseForm(true, '', result));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
@@ -88,6 +88,8 @@ router.patch('/pwd', async (req, res) => {
           if (result.compareHash(oldPwd)) {
             result.pwd = newPwd;
             result.save();
+          } else {
+            throw new Error('기존 비밀번호를 잘못 입력하셨습니다');
           }
         } else {
           throw new Error();
