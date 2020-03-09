@@ -19,6 +19,7 @@ router.get('/boards/:kind/:page/:order', async (req, res, next) => {
     // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
     const condition = {
       active: true,
+      teamChk: false,
       $or: [
         {
           account: req!.session!.passport.user.toString() || null,
@@ -75,6 +76,7 @@ router.get('/boards/:kind/:category/:page/:order', async (req, res, next) => {
     const condition = {
       kind: category,
       active: true,
+      teamChk: false,
       $or: [
         {
           account: req!.session!.passport.user.toString() || null,

@@ -1,5 +1,7 @@
 import nodemailer from 'nodemailer';
 import config from './../config';
+import { IStudy } from '../models/study';
+import { IContest } from '../models/contest';
 
 export async function sendAuthEmail(userEmail: string, key: string) {
   try {
@@ -84,6 +86,37 @@ export async function sendQuestionEmail (kind: string, title: string, content: s
       to: process.env.EMAIL || config.EMAIL,
       subject: `Geteam 문의사항 : ${title}`,
       html: `<h3>[${kind}] ${title}</h3> ${message}`,
+    };
+  
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Message sent : ${info.response}`);
+    transporter.close();
+    return true;
+  } catch (err) {
+    throw new Error(err);
+  }
+}
+
+export async function sendTeamEmail (kind: string, item: IStudy | IContest, content: string) {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      host :'smtp.gmlail.com',
+      secure: false,
+      auth: {
+        user: process.env.EMAIL || config.EMAIL,
+        pass: process.env.PWD || config.PWD,
+      },
+    });
+  
+    let message = content;
+    message = message.replace(/(?:\r\n|\r|\n)/g, '<br />');
+    
+    const mailOptions = {
+      from: process.env.EMAIL || config.EMAIL,
+      to: process.env.EMAIL || config.EMAIL,
+      subject: `Geteam 팀 모집 완료 : ${item.title}`,
+      html: `<h3>[${kind}] ${item.title}</h3><br /> <h5>팀 모집자님(${item.account})이 보내셨습니다<h5><br />${message}`,
     };
   
     const info = await transporter.sendMail(mailOptions);

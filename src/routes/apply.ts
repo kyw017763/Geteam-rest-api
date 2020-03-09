@@ -1,5 +1,6 @@
 import express from 'express';
 import responseForm from './../lib/responseForm';
+import { sendTeamEmail } from './../lib/sendEmail';
 import { validateKind, validateCategory } from '../lib/validateValue';
 import redisClient from '../redisClient';
 import models from './../models';
@@ -393,6 +394,67 @@ router.delete('/:kind/:id', async (req, res, next) => {
     applyDocument?.save();
 
     res.json(responseForm(true, '', boardDocument!._id));
+  } catch (err) {
+    res.status(500).json(responseForm(false, err.toString()));
+  }
+});
+
+router.patch('/team/:kind/:id', async (req, res, next) => {
+  try {
+    const { kind, id } = req.params;
+    const { teamContent } = req.body;
+    let result = null;
+
+    validateKind(kind);
+
+    if (kind === 'study') {
+      result = await models.Study.findById(id)
+        .populate({
+          path: 'account',
+          select: ['name']
+        })
+        .exec()
+        .then((result) => {
+          if (result) {
+            return result;
+          }
+          throw new Error()
+        });
+    } else if (kind === 'contest') {
+      result = await models.Contest.findById(id)
+        .populate({
+          path: 'account',
+          select: ['name']
+        })
+        .exec()
+        .then((result) => {
+          if (result) {
+            return result;
+          }
+          throw new Error()
+        });
+    }
+
+    if (!result) {
+      throw new Error();
+    }
+
+    if (req!.session!.passport.user.toString() !== result!._id) {
+      throw new Error('옳지 않은 권한입니다!');
+    }
+
+    if (result!.teamChk) {
+      throw new Error('이미 팀 모집이 완료된 글입니다!');
+    }
+
+    result!.teamChk = true;
+    result!.save();
+
+    sendTeamEmail(kind, result, teamContent);
+
+    await redisClient.incCnt('teamCnt');
+
+    res.status(200).json(responseForm(true, '', result));
   } catch (err) {
     res.status(500).json(responseForm(false, err.toString()));
   }
