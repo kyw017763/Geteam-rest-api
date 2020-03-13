@@ -122,6 +122,7 @@ router.get('/boards/:kind/:category/:page/:order', async (req, res, next) => {
 router.get('/board/:kind/:id', async (req, res, next) => {
   try {
     const { kind, id } = req.params;
+    console.log(id);
     let result = null, applyId = null;
     let isAccepted = null;
 
@@ -134,6 +135,8 @@ router.get('/board/:kind/:id', async (req, res, next) => {
             throw new Error();
           }
         });
+      
+      console.log('111');
 
       result = await models.Study.findById(id)
         .populate({
@@ -141,8 +144,18 @@ router.get('/board/:kind/:id', async (req, res, next) => {
           select: '_id id name sNum',
         });
 
-      applyId = result? await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
-        .then((result) => result!._id) : null;
+      if (!result) {
+        throw new Error();
+      }
+
+      applyId = await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
+        .then((result) => {
+          if (result) {
+            return result._id;
+          } else {
+            return null;
+          }
+        });
     } else if (kind === 'contest') {
       await models.Contest.findByIdAndUpdate(id, { $inc: { hit: 1 } }, { new: true })
       .then((result) => {
@@ -157,8 +170,18 @@ router.get('/board/:kind/:id', async (req, res, next) => {
           select: '_id id name sNum',
         });
 
-      applyId = result? await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
-        .then((result) => result!._id) : null;
+        if (!result) {
+          throw new Error();
+        }
+  
+      applyId = await models.ContestApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
+        .then((result) => {
+          if (result) {
+            return result._id;
+          } else {
+            return null;
+          }
+        });
     }
 
     const isApplied = applyId? true : false;
