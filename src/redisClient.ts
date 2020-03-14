@@ -10,21 +10,18 @@ import config from './config';
 
 class RedisClient {
   public client: redis.RedisClient;
-  private pwd: string;
   private existsAsync: any;
   private getAsync: any;
   private setAsync: any;
   private expireAsync: any;
 
-	constructor (pwd: string) {
-    this.pwd = pwd;
-
+	constructor () {
     this.client = redis.createClient({
-      host: '127.0.0.1',
-      port: 6379,
+      host: process.env.REDIS_URL || config.REDIS_URL,
+      port: Number(process.env.REDIS_PORT || config.REDIS_PORT),
     });
 
-    this.client.auth(this.pwd, (err) => {
+    this.client.auth('', (err) => {
       if (err) {
         throw err;
       }
@@ -77,6 +74,6 @@ class RedisClient {
   }
 }
 
-const redisClient = new RedisClient(process.env.REDIS_PWD || config.REDIS_PWD);
+const redisClient = new RedisClient();
 
 export default redisClient;

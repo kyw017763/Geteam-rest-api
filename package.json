@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/kyw017763/Geteam-rest-api#readme",
   "dependencies": {
+    "@types/aws-sdk": "^2.7.0",
     "@types/bcryptjs": "^2.4.2",
     "@types/cors": "^2.8.6",
     "@types/express": "^4.17.2",
@@ -29,6 +30,7 @@
     "@types/passport": "^1.0.2",
     "@types/passport-jwt": "^3.0.3",
     "@types/redis": "^2.8.16",
+    "aws-sdk": "^2.639.0",
     "bcryptjs": "^2.4.3",
     "connect-redis": "^4.0.4",
     "cookie-parser": "^1.4.4",
