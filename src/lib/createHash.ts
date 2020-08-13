@@ -1,5 +1,5 @@
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs'
 
 export default (pwd: string) => {
-  return bcrypt.hashSync(pwd);
+  return bcrypt.hashSync(pwd)
 }

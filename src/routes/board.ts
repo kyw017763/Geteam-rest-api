@@ -1,20 +1,20 @@
-import express from 'express';
-import responseForm from './../lib/responseForm';
-import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue';
-import redisClient from '../redisClient';
-import models from './../models';
+import express from 'express'
+import responseForm from './../lib/responseForm'
+import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
+import redisClient from '../lib/redisClient'
+import models from './../models'
 
-const router = express.Router();
-export default router;
+const router = express.Router()
+export default router
 
 router.get('/boards/:kind/:page/:order', async (req, res, next) => {
   try {
-    const { kind, page } = req.params;
-    let { order } = req.params;
-    let result = null, documentCnt = null;
+    const { kind, page } = req.params
+    let { order } = req.params
+    let result = null, documentCnt = null
 
-    validateKind(kind);
-    order = validateModifyOrder(order);
+    validateKind(kind)
+    order = validateModifyOrder(order)
 
     // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
     const condition = {
@@ -28,7 +28,7 @@ router.get('/boards/:kind/:page/:order', async (req, res, next) => {
           endDay: { $gt: new Date }
         }
       ]
-    };
+    }
 
     if (kind === 'study') {
       result = await models.Study.find(condition)
@@ -38,8 +38,8 @@ router.get('/boards/:kind/:page/:order', async (req, res, next) => {
         .populate({
           path: 'account',
           select: '_id id name sNum',
-        });
-      documentCnt = await models.Study.countDocuments(condition).exec();
+        })
+      documentCnt = await models.Study.countDocuments(condition).exec()
     } else if (kind === 'contest') {
       result = await models.Contest.find(condition)
         .sort(order)
@@ -48,29 +48,29 @@ router.get('/boards/:kind/:page/:order', async (req, res, next) => {
         .populate({
           path: 'account',
           select: '_id id name sNum',
-        });
-      documentCnt = await models.Contest.countDocuments(condition).exec();
+        })
+      documentCnt = await models.Contest.countDocuments(condition).exec()
     }
 
     if ((<any>result).length) {
-      res.json(responseForm(true, '', { list: result, total: documentCnt }));
+      res.json(responseForm(true, '', { list: result, total: documentCnt }))
     } else {
-      res.status(204).json(responseForm(true));
+      res.status(204).json(responseForm(true))
     }
   } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()))
   }
-});
+})
 
 router.get('/boards/:kind/:category/:page/:order', async (req, res, next) => {
   try {
-    const { kind, category, page } = req.params;
-    let { order } = req.params;
-    let result = null, documentCnt = null;
+    const { kind, category, page } = req.params
+    let { order } = req.params
+    let result = null, documentCnt = null
 
-    validateKind(kind);
-    validateCategory(kind, category);
-    order = validateModifyOrder(order);
+    validateKind(kind)
+    validateCategory(kind, category)
+    order = validateModifyOrder(order)
 
     // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
     const condition = {
@@ -85,7 +85,7 @@ router.get('/boards/:kind/:category/:page/:order', async (req, res, next) => {
           endDay: { $gt: new Date }
         }
       ]
-    };
+    }
 
     if (kind === 'study') {
       result = await models.Study.find(condition)
@@ -95,8 +95,8 @@ router.get('/boards/:kind/:category/:page/:order', async (req, res, next) => {
         .populate({
           path: 'account',
           select: '_id id name sNum',
-        });
-      documentCnt = await models.Study.countDocuments(condition).exec();
+        })
+      documentCnt = await models.Study.countDocuments(condition).exec()
     } else if (kind === 'contest') {
       result = await models.Contest.find(condition)
         .sort(order)
@@ -105,90 +105,90 @@ router.get('/boards/:kind/:category/:page/:order', async (req, res, next) => {
         .populate({
           path: 'account',
           select: '_id id name sNum',
-        });
-      documentCnt = await models.Contest.countDocuments(condition).exec();
+        })
+      documentCnt = await models.Contest.countDocuments(condition).exec()
     }
     
     if ((<any>result).length) {
-      res.json(responseForm(true, '', { list: result, total: documentCnt }));
+      res.json(responseForm(true, '', { list: result, total: documentCnt }))
     } else {
-      res.status(204).json(responseForm(true));
+      res.status(204).json(responseForm(true))
     }
   } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()))
   }
-});
+})
 
 router.get('/board/:kind/:id', async (req, res, next) => {
   try {
-    const { kind, id } = req.params;
-    console.log(id);
-    let result = null, applyId = null;
-    let isAccepted = null;
+    const { kind, id } = req.params
+    console.log(id)
+    let result = null, applyId = null
+    let isAccepted = null
 
-    validateKind(kind);
+    validateKind(kind)
     
     if (kind === 'study') {
       await models.Study.findByIdAndUpdate(id, { $inc: { hit: 1 } }, { new: true })
         .then((result) => {
           if (!result) {
-            throw new Error();
+            throw new Error()
           }
-        });
+        })
       
-      console.log('111');
+      console.log('111')
 
       result = await models.Study.findById(id)
         .populate({
           path: 'account',
           select: '_id id name sNum',
-        });
+        })
 
       if (!result) {
-        throw new Error();
+        throw new Error()
       }
 
       applyId = await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
         .then((result) => {
           if (result) {
-            return result._id;
+            return result._id
           } else {
-            return null;
+            return null
           }
-        });
+        })
     } else if (kind === 'contest') {
       await models.Contest.findByIdAndUpdate(id, { $inc: { hit: 1 } }, { new: true })
       .then((result) => {
         if (!result) {
-          throw new Error();
+          throw new Error()
         }
-      });
+      })
 
       result = await models.Contest.findById(id)
         .populate({
           path: 'account',
           select: '_id id name sNum',
-        });
+        })
 
         if (!result) {
-          throw new Error();
+          throw new Error()
         }
   
       applyId = await models.ContestApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
         .then((result) => {
           if (result) {
-            return result._id;
+            return result._id
           } else {
-            return null;
+            return null
           }
-        });
+        })
     }
 
-    const isApplied = applyId? true : false;
+    const isApplied = applyId? true : false
     if (result && isApplied === true && kind === 'study') {
-      isAccepted = await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true });
+      isAccepted = await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true })
     } else if (result && isApplied === true && kind === 'contest') {
-      isAccepted = await models.ContestApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true });
+      isAccepted = await models.ContestApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true })
     }
 
     const data = {
@@ -198,28 +198,28 @@ router.get('/board/:kind/:id', async (req, res, next) => {
       applyId,
       isApplied,
       isAccepted,
-    };
+    }
 
-    res.json(responseForm(true, '', data));
+    res.json(responseForm(true, '', data))
   } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()))
   }
-});
+})
 
 router.post('/board/:kind', async (req, res, next) => {
   try {
-    const { kind } = req.params;
-    let result = null;
+    const { kind } = req.params
+    let result = null
 
-    validateKind(kind);
+    validateKind(kind)
 
     if (req!.session!.passport.user.toString() !== req.body.writeMem) {
-      throw new Error('옳지 않은 권한입니다!');
+      throw new Error('옳지 않은 권한입니다!')
     }
 
-    validateCategory(kind, req.body.writeKind);
+    validateCategory(kind, req.body.writeKind)
 
-    const { writeMem, writeKind, writeTopic, writeTitle, writeContent, writeWantNum, writeEndDay } = req.body;
+    const { writeMem, writeKind, writeTopic, writeTitle, writeContent, writeWantNum, writeEndDay } = req.body
 
     if (kind === 'study') {
       result = await models.Study.create({
@@ -232,22 +232,22 @@ router.post('/board/:kind', async (req, res, next) => {
           endDay: writeEndDay,
         })
         .then((result) => {
-          return result._id;
-        });
+          return result._id
+        })
       
       await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } }, { new: true })
         .then((result) => {
           if (!result) {
-            throw new Error();
+            throw new Error()
           }
-        });
+        })
     } else if (kind === 'contest') {
-      const { writePart } = req.body;
+      const { writePart } = req.body
       const tempPartArr = writePart.split(',').map((item: string) => item.trim())
       const partObj = {
         name: tempPartArr,
         num: tempPartArr.length,
-      };
+      }
 
       result = await models.Contest.create({
           kind: writeKind,
@@ -260,37 +260,37 @@ router.post('/board/:kind', async (req, res, next) => {
           endDay: writeEndDay,
         })
         .then((result) => {
-          return result._id;
-        });
+          return result._id
+        })
 
       await models.Account.findByIdAndUpdate(writeMem, { $inc: { listNum: 1 } }, { new: true})
         .then((result) => {
           if (!result) {
-            throw new Error();
+            throw new Error()
           }
-        });
+        })
     }
 
-    await redisClient.incCnt('listCnt');
+    await redisClient.incCnt('listCnt')
 
-    res.status(201).json(responseForm(true, '', result));
+    res.status(201).json(responseForm(true, '', result))
   } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()))
   }
-});
+})
 
 router.patch('/board/:kind/:id', async (req, res, next) => {
   try {
-    const { kind, id } = req.params;
-    let result = null;
+    const { kind, id } = req.params
+    let result = null
 
-    validateKind(kind);
+    validateKind(kind)
 
     if (req!.session!.passport.user.toString() !== req.body.modifyAuthor) {
-      throw new Error('옳지 않은 권한입니다!');
+      throw new Error('옳지 않은 권한입니다!')
     }
 
-    const { modifyCategory, modifyWantNum, modifyEndDay, modifyTopic, modifyTitle, modifyContent } = req.body;
+    const { modifyCategory, modifyWantNum, modifyEndDay, modifyTopic, modifyTitle, modifyContent } = req.body
     
     const updateObj = { 
       $set: 
@@ -302,61 +302,61 @@ router.patch('/board/:kind/:id', async (req, res, next) => {
         wantNum: modifyWantNum,
         endDay: modifyEndDay,
       }
-    };
+    }
 
     if (kind === 'study') {
       result = await models.Study.findByIdAndUpdate(id, updateObj, { new: true })
       .then((result) => {
-        return result ? result._id : result; 
-      });
+        return result ? result._id : result 
+      })
     } else if (kind === 'contest') {
       result = await models.Contest.findByIdAndUpdate(id, updateObj, { new: true })
         .then((result) => {
-          return result ? result._id : result;
-        });
+          return result ? result._id : result
+        })
     }
 
-    res.json(responseForm(true, '', result));
+    res.json(responseForm(true, '', result))
   } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()))
   }
-});
+})
 
 router.delete('/board/:kind/:id', async (req, res, next) => {
   try {
-    const { kind, id } = req.params;
-    let result = null;
+    const { kind, id } = req.params
+    let result = null
 
-    validateKind(kind);
+    validateKind(kind)
 
     if (req!.session!.passport.user.toString() !== req.body.writeMem) {
-      throw new Error('옳지 않은 권한입니다!');
+      throw new Error('옳지 않은 권한입니다!')
     }
 
     if (kind === 'study') {
       result = await models.Study.findByIdAndUpdate(id, { active: false }, { new: true })
         .then((result) => {
           if (result) {
-            return true;
+            return true
           }
-          throw new Error();
-        });
+          throw new Error()
+        })
       
-      await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } });
+      await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } })
     } else if (kind === 'contest') {
       result = await models.Contest.findByIdAndUpdate(id, { active: false }, { new: true })
         .then((result) => {
           if (result) {
-            return true;
+            return true
           }
-          throw new Error();
-        });
+          throw new Error()
+        })
       
-      await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } });
+      await models.Account.findByIdAndUpdate(req.body.writeMem, { $inc: { listNum: -1 } })
     }
     
-    res.json(responseForm(true, '', result));
+    res.json(responseForm(true, '', result))
   } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()));
+    res.status(500).json(responseForm(false, err.toString()))
   }
-});
+})

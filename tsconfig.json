@@ -11,7 +11,7 @@
 		],
     "baseUrl": ".",
 		"sourceMap": true,
-		"rootDir": "src",
+		"rootDir": "./",
     "strict": true,
     "esModuleInterop": true
   },

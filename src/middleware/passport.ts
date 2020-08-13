@@ -1,19 +1,19 @@
-import passport from 'passport';
-import passportJWT from 'passport-jwt';
-import config from '../config';
-import models from '../models';
+import passport from 'passport'
+import passportJWT from 'passport-jwt'
+import config from '../config'
+import models from '../models'
 
-const JWTStrategy = passportJWT.Strategy;
-const extractJWT = passportJWT.ExtractJwt;
+const JWTStrategy = passportJWT.Strategy
+const extractJWT = passportJWT.ExtractJwt
 
 export default () => {
   passport.serializeUser((account, done) => {
-    done(null, account);
-  });
+    done(null, account)
+  })
 
   passport.deserializeUser((account, done) => {
-    done(null, account);
-  });
+    done(null, account)
+  })
 
   passport.use('jwt', new JWTStrategy({
     jwtFromRequest: extractJWT.fromAuthHeaderAsBearerToken(),
@@ -23,13 +23,13 @@ export default () => {
     models.Account.findById(payload._id)
       .then((account) => {
         if (account) {
-          return done(null, account._id);
+          return done(null, account._id)
         } else {
-          return done(true);
+          return done(true)
         }
       })
       .catch((err) => {
-        return done(err);
-      });
-  })));
-};
+        return done(err)
+      })
+  })))
+}

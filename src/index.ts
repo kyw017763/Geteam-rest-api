@@ -1,20 +1,20 @@
-import express from 'express';
-import passport from 'passport';
-import passportConfig from './middleware/passport';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import config from './config';
-dotenv.config();
-import cookieParser from 'cookie-parser';
-import session from 'express-session';
-import connectRedis from 'connect-redis';
-import redisClient from './redisClient';
+import express from 'express'
+import passport from 'passport'
+import passportConfig from './middleware/passport'
+import cors from 'cors'
+import dotenv from 'dotenv'
+import config from './config'
+dotenv.config()
+import cookieParser from 'cookie-parser'
+import session from 'express-session'
+import connectRedis from 'connect-redis'
+import redisClient from './lib/redisClient'
 
-import { auth, counting, board, apply, mypage } from './routes';
+import { auth, counting, board, apply, mypage } from './routes'
 
-const app = express();
+const app = express()
 
-const RedisStore = connectRedis(session);
+const RedisStore = connectRedis(session)
 app.use(session({
   secret: process.env.SESSION_SECRET || config.SESSION_SECRET,
   resave: false,
@@ -29,29 +29,29 @@ app.use(session({
     port: 6379,
     logErrors: true,
   }),
-}));
+}))
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
 
-app.use(passport.initialize());
-app.use(passport.session());
-passportConfig();
+app.use(passport.initialize())
+app.use(passport.session())
+passportConfig()
 
-app.use(cors());
+app.use(cors())
 
 app.all('/*', function(req, res, next) {
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE');
-  next();
-});
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE')
+  next()
+})
 
-app.use('/', auth);
-app.use('/', counting);
-app.use('/', passport.authenticate('jwt', { session: true }), board);
-app.use('/apply', passport.authenticate('jwt', { session: true }), apply);
-app.use('/me', passport.authenticate('jwt', { session: true }), mypage);
+app.use('/', auth)
+app.use('/', counting)
+app.use('/', passport.authenticate('jwt', { session: true }), board)
+app.use('/apply', passport.authenticate('jwt', { session: true }), apply)
+app.use('/me', passport.authenticate('jwt', { session: true }), mypage)
 
 app.listen(process.env.PORT || config.PORT, () => {
   
-});
+})

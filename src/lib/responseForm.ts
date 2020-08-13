@@ -3,5 +3,5 @@ export default (success: boolean, error: string = '', data: any = null) => {
     success,
     error,
     data,
-  };
-};
+  }
+}
