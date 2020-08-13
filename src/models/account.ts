@@ -1,60 +1,20 @@
-import mongoose from 'mongoose';
-import { connection } from './Database';
-import bcrypt from 'bcryptjs';
+import { connection } from 'mongoose'
+import { ObjectId } from 'mongodb'
+import * as models from './models'
+import bcrypt from 'bcryptjs'
+import IAccount from '../ts/IAccount'
 
-export interface IAccount extends mongoose.Document {
-  [x: string]: any;
-  _id: string;
-  id: string;
-  name: string;
-  pwd: string;
-  sNum: number;
-  interest1: string;
-  interest2: string;
-  interest3: string;
-  profile: string;
-  listNum: number;
-  notiApply: boolean;
-  notiWrite: boolean;
-  active: boolean;
-  refreshToken: string;
-  isVerified: boolean;
-  verifyKey: string;
-}
+const Account = connection.collection(models.ACCOUNT)
 
-const accountSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
-  name: { type: String, required: true },
-  pwd: { type: String, required: true },
-  sNum: { type: Number, required: true, validate:[ (sNum) => sNum && sNum.toString().length === 4, `sNum's length is 4` ] },
-  interest1: { type: String, required: true },
-  interest2: { type: String, required: true },
-  interest3: { type: String, required: true },
-  profile: { type: String, required: true },
-  listNum: { type: Number, default: 0 },
-  // 가입일은 createdAt 으로 대신한다
-  notiApply: { type: Boolean, default: true },
-  notiWrite: { type: Boolean, default: true },
-  active: { type: Boolean, default: true },
-  refreshToken: { type: String },
-  // 인증여부
-  isVerified: { type: Boolean, required: true, default: false },
-  // 인증코드
-  verifyKey: { type: String, required: true },
-  verifyExpireAt: {
-    type: Date,
-    required: true,
-    default: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), new Date().getHours() + 24),
+export default {
+  SignUp: (params: IAccount = {}) => {
+    let { pwd } = params
+    pwd = bcrypt.hashSync(pwd)
   },
-}, { minimize: false, timestamps: true });
+  Signin: async (params: IAccount = {}) => {
+    const { _id, pwd } = params
+    const currentPwd = await Account.findOne({ _id: new ObjectId(_id) })
+    return bcrypt.compareSync(pwd, currentPwd)
 
-accountSchema.pre<IAccount>('save', function (next) {
-  this.pwd = bcrypt.hashSync(this.pwd);
-  next();
-});
-
-accountSchema.methods.compareHash = function (pwd: string) {
-  return bcrypt.compareSync(pwd, this.pwd);
+  }
 }
-
-export const Account: mongoose.Model<IAccount> = connection.model<IAccount>('Account', accountSchema);

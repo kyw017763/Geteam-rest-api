@@ -1,17 +1,15 @@
-import { ContestApply } from './contestApply';
-import { StudyApply } from './studyApply';
-import { Contest } from './contest';
-import { Account } from './account';
-import { Note } from './note';
-import { Study } from './study';
+import account from './account'
+import apply from './apply'
+import board from './board'
+import message from './message'
+import team from './team'
 
 const models = {
-  ContestApply,
-  StudyApply,
-  Contest,
-  Account,
-  Note,
-  Study,
-};
+  account,
+  apply,
+  board,
+  message,
+  team,
+}
 
-export default models;
+export default models
