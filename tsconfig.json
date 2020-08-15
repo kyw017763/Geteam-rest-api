@@ -11,12 +11,12 @@
 		],
     "baseUrl": ".",
 		"sourceMap": true,
-		"rootDir": "./",
+		"rootDir": ".",
     "strict": true,
     "esModuleInterop": true
   },
   "include": [
-    "src/**/*"
+    "src/**/*", "app.ts"
   ],
 	"exclude": [
 		"node_modules",

@@ -1,19 +1,19 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
-import * as models from './models'
+import { APPLY } from './models'
 import IApply from '../ts/IApply'
 
-const Apply = connection.collection(models.APPLY)
+const Apply = connection.collection(APPLY)
 
 export default {
-  IsApplied: async (params: IApply = {}) => {
+  IsApplied: async (params: any = {}) => {
     const { accountId, boardId } = params
     return (await Apply.countDocuments({
       accountId: new ObjectId(accountId),
       boardId: new ObjectId(boardId)
     })) > 0
   },
-  IsAccepted: async (params: IApply = {}) => {
+  IsAccepted: async (params: any = {}) => {
     const { accountId, boardId } = params
     return (await Apply.countDocuments({
       accountId: new ObjectId(accountId),

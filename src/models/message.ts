@@ -1,12 +1,12 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
-import * as models from './models'
+import { MESSAGE } from './models'
 import IMessage from '../ts/IMessage'
 
-const Board = connection.collection(models.MESSAGE)
+const Board = connection.collection(MESSAGE)
 
 export default {
-  Create: (params: IMessage = {}) => {
+  Create: (params: any = {}) => {
     const {
       receiveAccount,
       sendAccount,
@@ -21,27 +21,27 @@ export default {
       createdAt: Date.now(),
     })
   },
-  GetMessageByReceiveAccount: (params: IMessage = {}) => {
+  GetMessageByReceiveAccount: (params: any = {}) => {
     const { accountId } = params
     return Board.find({
       receiveAccount: new ObjectId(accountId)
     })
 
   },
-  GetMessageBySendAccount: (params: IMessage = {}) => {
+  GetMessageBySendAccount: (params: any = {}) => {
     const { accountId } = params
     return Board.find({
       sendAccount: new ObjectId(accountId)
     })
   },
-  UpdateIsReaded: (params: IMessage = {}) => {
+  UpdateIsReaded: (params: any = {}) => {
     const { _id } = params
     return Board.updateOne(
       { _id: new ObjectId(_id) },
       { $set: { receiveCheck: 1 } },
     )
   },
-  Delete: (params: IMessage = {}) => {
+  Delete: (params: any = {}) => {
     const { ids } = params
     return Board.deleteMany({
       _id: { $in: ids.map((id: string) => new ObjectId(id)) }
