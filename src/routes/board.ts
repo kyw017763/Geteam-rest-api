@@ -13,6 +13,41 @@ const TeamDB = models.team
 const router = express.Router()
 export default router
 
+router.get('/boards', async (req, res) => {
+  try {
+    const me = req!.session!.passport.user.toString()
+    let { offset, limit, order } = req.query
+
+    offset = isNaN(offset) ? 0 : offset
+    limit = isNaN(limit) ? 12 : limit
+    order = validateModifyOrder(order)
+
+    const result = await BoardDB.GetList({ me }, { offset, limit, order })
+    res.send(SuccessResponse(result))
+  }
+  catch (err) {
+    res.status(500).send(InternalErrorResponse)
+  }
+})
+
+// in my page
+router.get('/boards/me', async (req, res) => {
+  try {
+    const me = req!.session!.passport.user.toString()
+    let { offset, limit, order } = req.query
+
+    offset = isNaN(offset) ? 0 : offset
+    limit = isNaN(limit) ? 12 : limit
+    order = validateModifyOrder(order)
+
+    const result = await BoardDB.GetListByMe({ me }, { offset, limit, order })
+    res.send(SuccessResponse(result))
+  }
+  catch (err) {
+    res.status(500).send(InternalErrorResponse)
+  }
+})
+
 router.get('/boards/:kind', async (req, res) => {
   try {
     const me = req!.session!.passport.user.toString()

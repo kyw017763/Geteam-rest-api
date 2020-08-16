@@ -38,6 +38,23 @@ export default {
       updatedAt: Date.now(),
     })
   },
+  GetListByMe: async (params: any = {}, options: any = {}) => {
+    const { me } = params
+    const { skip, limit, sort } = options
+
+    const list = await Board.find({
+      accountId: new ObjectId(me)
+    }, {
+      skip,
+      limit,
+      sort
+    }).toArray()
+    const count = await Board.countDocuments({
+      accountId: new ObjectId(me)
+    })
+
+    return { list, count }
+  },
   GetList: async (params: any = {}, options: any = {}) => {
     const { kind, category, me } = params
     const { skip, limit, sort } = options

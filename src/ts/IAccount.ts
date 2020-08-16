@@ -7,6 +7,7 @@ export default interface IAccount {
   sNum: number
   interests: [string]
   profile: string
+  profilePhoto: string // TODO: 프로필사진 처리
   
   notiApplied: boolean // apply
   notiAccepted: boolean // apply acception

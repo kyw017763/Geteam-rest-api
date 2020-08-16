@@ -11,6 +11,9 @@ import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from 'src/lib/sendEmai
 import redisClient from '../lib/redisClient'
 import config from '../../config'
 
+const AccountDB = models.account
+const ApplyDB = models.apply
+
 interface IDecodedAccessToken {
   _id: string
   name: string
@@ -308,6 +311,37 @@ router.patch('/signin/reset', async (req, res, next) => {
   }
 })
 
+router.patch('/pwd', async (req, res) => {
+  try {
+    const user = req!.session!.passport.user.toString()
+    const { oldPwd, newPwd } = req.body
+    await models.Account.findById(user)
+      .then((result) => {
+        if (result)  {
+          if (result.compareHash(oldPwd)) {
+            result.pwd = newPwd
+            result.save()
+          } else {
+            throw new Error('기존 비밀번호를 잘못 입력하셨습니다')
+          }
+        } else {
+          throw new Error()
+        }
+      })
+    
+    const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '')
+    if (!accessToken) {
+      throw new Error('잘못된 Access Token이 전달되었습니다')
+    }
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
+    // Blacklisting Token
+    await redisClient.blacklistToken(accessToken, decodedAccessToken.exp)
+    res.json(responseForm(true))
+  } catch (err) {
+    res.status(500).json(responseForm(false, err.toString()))
+  }
+})
+
 router.delete('/unregister', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
   try {
     const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '')
@@ -353,5 +387,68 @@ router.post('/verify', async (req, res, next) => {
     res.json(responseForm(true, '', decodedAccessToken))
   } catch (err) {
     res.status(401).json(responseForm(false, err.toString()))
+  }
+})
+
+router.get('/info', async (req, res) => {
+  try {
+    const me = req!.session!.passport.user.toString()
+
+    const result = await AccountDB.GetItem({ me })
+
+    res.send(SuccessResponse(result))
+  } catch (err) {
+    res.status(500).json(responseForm(false, err.toString()))
+  }
+})
+
+router.patch('/info', async (req, res) => {
+  try {
+    const me = req!.session!.passport.user.toString()
+    const { modifyName, modifySNum, modifyInterest1, modifyInterest2, modifyInterest3, modifyProfile } = req.body
+
+    await AccountDB.UpdateInfo({
+      me,
+      name: modifyName,
+      sNum: modifySNum,
+      interest1: modifyInterest1,
+      interest2: modifyInterest2,
+      interest3: modifyInterest3,
+      profile: modifyProfile
+    })
+
+    res.send()
+  } catch (err) {
+    res.status(500).json(responseForm(false, err.toString()))
+  }
+})
+
+router.patch('/noti/apply', async (req, res) => {
+  try {
+    const user = req!.session!.passport.user.toString()
+    const { applyBoolean: notiApply } = req.body
+    const result = await models.Account.findByIdAndUpdate(user, { notiApply }, { new: true })
+    if (result) {
+      res.json(responseForm(true, '', result.notiApply))
+    } else {
+      throw new Error()
+    }
+  } catch (err) {
+    res.status(500).json(responseForm(false, err.toString()))
+  }
+})
+
+router.patch('/noti/write', async (req, res) => {
+  try {
+    const user = req!.session!.passport.user.toString()
+    const { writeBoolean: notiWrite } = req.body
+    const result = await models.Account.findByIdAndUpdate(user, { notiWrite }, { new: true })
+    if (result) {
+      res.json(responseForm(true, '', result.notiWrite))
+    } else {
+      throw new Error()
+    }
+  } catch (err) {
+    res.status(500).json(responseForm(false, err.toString()))
   }
 })

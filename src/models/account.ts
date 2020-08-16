@@ -16,5 +16,27 @@ export default {
     const currentPwd = await Account.findOne({ _id: new ObjectId(_id) })
     return bcrypt.compareSync(pwd, currentPwd)
 
-  }
+  },
+  GetItem: (params: any = {}) => {
+    const { me } = params
+    return Account.findOne(
+      { _id: new ObjectId(me) },
+      {
+        projection: {
+          id: true,
+          name: true,
+          sNum: true,
+          interests: true,
+          profile: true,
+          notiApplied: true,
+          notiAccepted: true,
+          notiTeam: true,
+          createdAt: true,
+        }
+      }
+    )
+  },
+  UpdateInfo: (params: any = {}) => {
+
+  },
 }
