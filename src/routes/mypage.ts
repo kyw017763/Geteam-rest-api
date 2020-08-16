@@ -1,6 +1,6 @@
 import express from 'express'
 import decodeJWT from 'jwt-decode'
-import responseForm from './../lib/responseForm'
+import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
 import redisClient from '../lib/redisClient'
 import models from './../models'
 

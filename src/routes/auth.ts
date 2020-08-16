@@ -2,13 +2,14 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import decodeJWT from 'jwt-decode'
 import passport from 'passport'
-import config from './../config'
-import responseForm from './../lib/responseForm'
 import createKey from './../lib/createKey'
 import createHash from './../lib/createHash'
-import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from './../lib/sendEmail'
+import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
+import models from '../models'
+import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
+import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from 'src/lib/sendEmail'
 import redisClient from '../lib/redisClient'
-import models from './../models'
+import config from '../../config'
 
 interface IDecodedAccessToken {
   _id: string

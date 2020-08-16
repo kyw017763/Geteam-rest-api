@@ -6,6 +6,38 @@ import IBoard from '../ts/IBoard'
 const Board = connection.collection(BOARD)
 
 export default {
+  Create: async (params: any = {}) => {
+    const {
+      accountId,
+      kind,
+      category,
+      topic,
+      title,
+      content,
+      position,
+      wantCnt,
+      endDate,
+    } = params
+    return Board.insertOne({
+      accountId: new ObjectId(accountId),
+      kind,
+      category,
+      topic,
+      title,
+      content,
+      position,
+      wantCnt,
+      applyCnt: 0,
+      acceptCnt: 0,
+      startDate: Date.now(),
+      endDate,
+      isCompleted: false,
+      active: true,
+      hit: 0,
+    
+      updatedAt: Date.now(),
+    })
+  },
   GetList: async (params: any = {}, options: any = {}) => {
     const { kind, category, me } = params
     const { skip, limit, sort } = options
@@ -62,6 +94,42 @@ export default {
     const board = await Board.findOne({ _id: new ObjectId(_id) })
     return !board.isCompleted
   },
+  UpdateItem: (params: any = {}) => {
+    const {
+      _id,
+      category,
+      topic,
+      title,
+      content,
+      position,
+      wantCnt,
+      endDate,
+    } = params
+
+    return Board.updateOne({
+      _id: new ObjectId(_id)
+    }, {
+      $set: {
+        category,
+        topic,
+        title,
+        content,
+        position,
+        wantCnt,
+        endDate,
+      }
+    })
+  },
+  UpdateIsCompleted: (params: any = {}) => {
+    const { _id } = params
+    return Board.updateOne({
+      _id: new ObjectId(_id)
+    }, {
+      $set: {
+        isCompleted: true,
+      }
+    })
+  },
   UpdateApplyCnt: (params: any = {}) => {
     const { _id, diff } = params
     return Board.updateOne({
@@ -89,6 +157,17 @@ export default {
     }, {
       $set: {
         $inc: { hit: diff }
+      }
+    })
+  },
+  Delete: (params: any = {}) => {
+    const { _id, accountId } = params
+    return Board.updateOne({
+      _id: new ObjectId(_id),
+      accountId: new ObjectId(accountId)
+    }, {
+      $set: {
+        active: false,
       }
     })
   },
