@@ -5,6 +5,7 @@ import passport from 'passport'
 import createKey from './../lib/createKey'
 import createHash from './../lib/createHash'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
+import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse';
 import models from '../models'
 import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
 import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from 'src/lib/sendEmail'

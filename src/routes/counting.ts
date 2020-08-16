@@ -1,20 +1,13 @@
 import express from 'express'
 import redisClient from '../lib/redisClient'
 import { SuccessResponse, InternalErrorResponse } from './../lib/responseForm'
+import ICounting from '../ts/ICounting';
 
 const router = express.Router()
 export default router
 
 router.get('/counting', async (req, res, next) => {
   try {
-    interface ICounting {
-      visit?: number
-      account?: number
-      list?: number
-      apply?: number
-      team?: number
-    }
-
     let counting: ICounting = {}
 
     await redisClient.incCnt('visitCnt')
@@ -25,8 +18,9 @@ router.get('/counting', async (req, res, next) => {
     counting.apply = await redisClient.getCnt('applyCnt')
     counting.team = await redisClient.getCnt('teamCnt')
     
-    res.json(SuccessResponse(counting))
+    res.send(SuccessResponse(counting))
   } catch (err) {
+    console.log(err)
     res.status(500).json(InternalErrorResponse)
   }
 })

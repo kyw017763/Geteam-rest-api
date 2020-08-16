@@ -1,5 +1,6 @@
 import express from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
+import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse';
 import { validateKind } from '../lib/validateValue'
 import redisClient from '../lib/redisClient'
 import models from '../models'
@@ -20,7 +21,7 @@ router.get('/', async (req, res) => {
     offset = isNaN(offset) ? 0 : offset
     limit = isNaN(limit) ? 12 : limit
 
-    let result = await ApplyDB.GetList({
+    const result = await ApplyDB.GetList({
       accountId: me,
       boardKind: kind,
     }, {
@@ -28,13 +29,10 @@ router.get('/', async (req, res) => {
       limit,
     })
 
-    if (result!.length === 0) {
-      return res.status(204) // EMPTY_RESULT
-    }
-
     res.send(SuccessResponse(result))
   }
-  catch {
+  catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
@@ -49,7 +47,7 @@ router.get('/applied', async (req, res) => {
     offset = isNaN(offset) ? 0 : offset
     limit = isNaN(limit) ? 12 : limit
 
-    let result = await ApplyDB.GetList({
+    const result = await ApplyDB.GetList({
       authorAccountId: me,
       boardKind: kind,
     }, {
@@ -57,13 +55,10 @@ router.get('/applied', async (req, res) => {
       limit,
     })
 
-    if (result.length === 0) {
-      return res.status(204) // EMPTY_RESULT
-    }
-
     res.send(SuccessResponse(result))
   }
-  catch {
+  catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
@@ -78,7 +73,7 @@ router.get('/accepted', async (req, res) => {
     offset = isNaN(offset) ? 0 : offset
     limit = isNaN(limit) ? 12 : limit
 
-    let result = await ApplyDB.GetList({
+    const result = await ApplyDB.GetList({
       accountId: me,
       isAccepted: true,
       boardKind: kind,
@@ -87,13 +82,10 @@ router.get('/accepted', async (req, res) => {
       limit,
     })
 
-    if (result.length === 0) {
-      return res.status(204) // EMPTY_RESULT
-    }
-
     res.send(SuccessResponse(result))
   }
-  catch {
+  catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
@@ -108,7 +100,7 @@ router.get('/unaccpeted', async (req, res) => {
     offset = isNaN(offset) ? 0 : offset
     limit = isNaN(limit) ? 12 : limit
 
-    let result = await ApplyDB.GetList({
+    const result = await ApplyDB.GetList({
       accountId: me,
       isAccepted: false,
       boardKind: kind,
@@ -117,13 +109,10 @@ router.get('/unaccpeted', async (req, res) => {
       limit,
     })
 
-    if (result.length === 0) {
-      return res.status(204) // EMPTY_RESULT
-    }
-
     res.send(SuccessResponse(result))
   }
-  catch {
+  catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
@@ -135,22 +124,19 @@ router.get('/:id', async (req, res) => {
     let { id } = req.query
 
     if (!id || id.length !== 24) {
-      return res.status(400) // INVALID_PARAM
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
 
-    let result = await ApplyDB.GetList({
+    const result = await ApplyDB.GetList({
       authorAccountId: me,
       boardId: id,
       active: true,
     })
 
-    if (result.length === 0) {
-      return res.status(204) // EMPTY_RESULT
-    }
-
     res.send(SuccessResponse(result))
   }
-  catch {
+  catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
@@ -170,23 +156,27 @@ router.post('/', async (req, res) => {
     } = req.body
   
     if (me !== applyAccountId) {
-      return res.status(400) // BAD_REQUEST
+      return res.status(404).send(FailureResponse(NOT_FOUND))
     }
   
     if (authorAccountId === me) {
-      return res.status(400) // BAD_REQUEST
-    }
-  
-    if (!boardKind || !validateKind(boardKind)) {
-      return res.status(400) // INVALID_PARAM
+      return res.status(404).send(FailureResponse(NOT_FOUND))
     }
   
     if (!boardId || boardId.length !== 24) {
-      return res.status(400) // INVALID_PARAM
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
+    }
+  
+    if (!boardKind || !validateKind(boardKind)) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
   
     if (boardKind === 'study' && (applyPosition || applyPortfolio || applyPortfolioText)) {
-      return res.status(400) // INVALID_PARAM
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
+    }
+
+    if (!applyAccountId || applyAccountId.length !== 24) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
   
     wantedText = wantedText || ''
@@ -207,7 +197,7 @@ router.post('/', async (req, res) => {
       contestObj['applyPortfolioText'] = applyPortfolioText
     }
 
-    await ApplyDB.Create({
+    const result = await ApplyDB.Create({
       accountId: me,
       boardId,
       boardKind,
@@ -216,13 +206,18 @@ router.post('/', async (req, res) => {
       ...contestObj,
     })
 
+    if (!result || !result.insertedId) {
+      throw new Error()
+    }
+
     await BoardDB.UpdateApplyCnt({ _id: boardId, diff: 1 })
 
     await redisClient.incCnt('applyCnt')
-
-    res.status(201) // TODO: Resopnse 처리. _id는 보내야함
+    
+    res.status(201).send(SuccessResponse({ _id: result.insertedId }))
   }
-  catch {
+  catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
@@ -234,15 +229,15 @@ router.patch('/:id/accept', async (req, res) => {
     const { applyAccountId } = req.body
 
     if (!id || id.length !== 24) {
-      return res.status(400) // INVALID_PARAM
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
 
     if (!applyAccountId || applyAccountId.length !== 24) {
-      return res.status(400) // INVALID_PARAM
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
 
     if (await ApplyDB.IsAccepted({ accountId: applyAccountId, boardId: id })) {
-      return res.status(400) // BAD_REQUEST
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
 
     await ApplyDB.UpdateApplyIsAccepted({
@@ -256,6 +251,7 @@ router.patch('/:id/accept', async (req, res) => {
     res.send(SuccessResponse({ _id: id }))
   }
   catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   } 
 })
@@ -266,26 +262,26 @@ router.delete('/:boardId/:applyId', async (req, res) => {
     const { boardId, applyId } = req.params
     
     if (!boardId || boardId.length !== 24) {
-      return res.status(400) // INVALID_PARAM
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
 
     if (!applyId || applyId.length !== 24) {
-      return res.status(400) // INVALID_PARAM
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
 
     const boardDoc = await BoardDB.GetItem({ _id: boardId })
     const applyDoc = await ApplyDB.GetItem({ _id: applyId })
 
     if (boardDoc.endDate < Date.now()) {
-      return res.status(400) // BAD_REQUEST
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
 
     if (boardDoc.active === false) {
-      return res.status(400) // BAD_REQUEST
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
 
     if (applyDoc.isAccepted === true) {
-      return res.status(400) // BAD_REQUEST
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
 
     await ApplyDB.Delete({
@@ -294,9 +290,10 @@ router.delete('/:boardId/:applyId', async (req, res) => {
 
     await BoardDB.UpdateApplyCnt({ _id: boardId, diff: -1 })
 
-    res.send() // TODO: Resopnse 처리
+    res.end()
   }
   catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })

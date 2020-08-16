@@ -1,6 +1,6 @@
 import redis from 'redis'
 import { promisify } from 'util'
-import config from './config'
+import config from '../../config'
 
 // 'visitCnt'
 // 'accountCnt'

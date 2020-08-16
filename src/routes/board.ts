@@ -1,5 +1,6 @@
 import express from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
+import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse';
 import models from '../models'
 import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
 import { sendTeamEmail } from 'src/lib/sendEmail'
@@ -26,6 +27,7 @@ router.get('/boards', async (req, res) => {
     res.send(SuccessResponse(result))
   }
   catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
@@ -44,6 +46,7 @@ router.get('/boards/me', async (req, res) => {
     res.send(SuccessResponse(result))
   }
   catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
@@ -63,6 +66,7 @@ router.get('/boards/:kind', async (req, res) => {
     res.send(SuccessResponse(result))
   }
   catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
@@ -83,6 +87,7 @@ router.get('/boards/:kind/:category', async (req, res) => {
     res.send(SuccessResponse(result))
   }
   catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
@@ -93,13 +98,13 @@ router.get('/board/:id', async (req, res) => {
     const { id } = req.params
 
     if (!id || id.length !== 24) {
-      return res.status(400) // INVALID_PARAM
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
     
     const result = await BoardDB.GetItem({ _id: id })
 
     if (!result) {
-      return res.status(404) // NOT_FOUND
+      return res.status(404).send(FailureResponse(NOT_FOUND))
     }
 
     await BoardDB.UpdateHit({ _id: id, diff: 1 })
@@ -117,6 +122,7 @@ router.get('/board/:id', async (req, res) => {
 
     res.send(SuccessResponse(data))
   } catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
@@ -139,10 +145,10 @@ router.post('/board/:kind/:category', async (req, res, next) => {
     category = validateKind(category) ? category : 'develop'
 
     if (me !== writeAccountId) {
-      return res.status(400) // BAD_REQUEST
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
 
-    await BoardDB.Create({
+    const result = await BoardDB.Create({
       accountId: me,
       kind,
       category,
@@ -154,9 +160,13 @@ router.post('/board/:kind/:category', async (req, res, next) => {
       endDate: new Date(writeEndDate).getTime(),
     })
 
+    if (!result || !result.insertedId) {
+      throw new Error()
+    }
+
     await redisClient.incCnt('listCnt')
 
-    res.status(201) // Response 하기
+    res.status(201).send(SuccessResponse(result.insertedId))
   } catch (err) {
     res.status(500).send(InternalErrorResponse)
   }
@@ -178,11 +188,11 @@ router.patch('/board/:id', async (req, res) => {
     } = req.body
 
     if (!id || id.length !== 24) {
-      return res.status(400) // INVALID_PARAM
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
 
     if (me !== modifyAuthor) {
-      throw new Error('옳지 않은 권한입니다!')
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
 
     await BoardDB.UpdateItem({
@@ -196,7 +206,7 @@ router.patch('/board/:id', async (req, res) => {
       endDate: new Date(modifyEndDate).getTime(),
     })
 
-    res.send() // Response 하기
+    res.end()
   } catch (err) {
     res.status(500).send(InternalErrorResponse)
   }
@@ -206,6 +216,10 @@ router.delete('/board/:id', async (req, res) => {
   try {
     const me = req!.session!.passport.user.toString()
     const { id } = req.params
+
+    if (!id || id.length !== 24) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
+    }
     
     await BoardDB.Delete({ _id: id, accountId: me })
 
@@ -219,8 +233,18 @@ router.post('/:id/team', async (req, res) => {
   try {
     const me = req!.session!.passport.user.toString()
     const { id } = req.params
-    const { kind } = req.query
+    let { kind } = req.query
     const { teamName, teamMessage } = req.body
+
+    kind = validateKind(kind) ? kind : 'develop'
+
+    if (!id || id.length !== 24) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
+    }
+
+    if (!teamName || !teamName) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
+    }
 
     const board = await BoardDB.GetItem({ _id: id })
 
@@ -259,6 +283,7 @@ router.post('/:id/team', async (req, res) => {
     sendTeamEmail(kind, board, teamMessage)
   }
   catch (err) {
+    console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
