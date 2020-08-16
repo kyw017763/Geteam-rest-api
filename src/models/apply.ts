@@ -7,7 +7,16 @@ import { IOption } from '../ts/common';
 const Apply = connection.collection(APPLY)
 
 export default {
-  GetApplyList: (params: any = {}, options: IOption = {}) => {
+  Create: (params: any = {}) => {
+    return Apply.insertOne({
+      ...params,
+      
+      active: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    })
+  },
+  GetList: (params: any = {}, options: IOption = {}) => {
     const {
       accountId,
       authorAccountId,
@@ -33,8 +42,13 @@ export default {
       })
       .toArray()
   },
+  GetItem: async (params: any = {}) => {
+    const { _id } = params
+    return Apply.findOne({ _id: new ObjectId(_id) })
+  },
   IsApplied: async (params: any = {}) => {
     const { accountId, boardId } = params
+
     return (await Apply.countDocuments({
       accountId: new ObjectId(accountId),
       boardId: new ObjectId(boardId)
@@ -42,10 +56,35 @@ export default {
   },
   IsAccepted: async (params: any = {}) => {
     const { accountId, boardId } = params
+
     return (await Apply.countDocuments({
       accountId: new ObjectId(accountId),
       boardId: new ObjectId(boardId),
       isAccepted: true,
     })) > 0
+  },
+  UpdateApplyIsAccepted: async (params: any = {}) => {
+    const { accountId, authorAccountId, boardId } = params
+    
+    return Apply.updateOne({
+      accountId: new ObjectId(accountId),
+      authorAccountId: new ObjectId(authorAccountId),
+      boardId: new ObjectId(boardId),
+    }, {
+      $set: {
+        isAccepted: true,
+      }
+    })
+  },
+  Delete: (params: any = {}) => {
+    const { _id } = params
+    
+    return Apply.updateOne({
+      _id: new ObjectId(_id),
+    }, {
+      $set: {
+        active: false,
+      }
+    })
   },
 }

@@ -11,7 +11,7 @@ export default interface IApply {
   position?: string // 맡고픈 역할. only contest
   portfolio?: string // path. only contest
   portfolioText?: string // only contest
-  wantedList: string // 요구사항
+  wantedText: string // 요구사항
   isAccepted: boolean
   acceptedAt: Date
   active: boolean

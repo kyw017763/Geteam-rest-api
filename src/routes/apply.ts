@@ -1,11 +1,11 @@
 import express from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
-import { sendTeamEmail } from './../lib/sendEmail'
-import { validateKind, validateCategory } from '../lib/validateValue'
+import { validateKind } from '../lib/validateValue'
 import redisClient from '../lib/redisClient'
 import models from '../models'
 
 const ApplyDB = models.apply
+const BoardDB = models.board
 
 const router = express.Router()
 export default router
@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
     offset = isNaN(offset) ? 0 : offset
     limit = isNaN(limit) ? 12 : limit
 
-    let result = await ApplyDB.GetApplyList({
+    let result = await ApplyDB.GetList({
       accountId: me,
       boardKind: kind,
     }, {
@@ -49,7 +49,7 @@ router.get('/applied', async (req, res) => {
     offset = isNaN(offset) ? 0 : offset
     limit = isNaN(limit) ? 12 : limit
 
-    let result = await ApplyDB.GetApplyList({
+    let result = await ApplyDB.GetList({
       authorAccountId: me,
       boardKind: kind,
     }, {
@@ -78,7 +78,7 @@ router.get('/accepted', async (req, res) => {
     offset = isNaN(offset) ? 0 : offset
     limit = isNaN(limit) ? 12 : limit
 
-    let result = await ApplyDB.GetApplyList({
+    let result = await ApplyDB.GetList({
       accountId: me,
       isAccepted: true,
       boardKind: kind,
@@ -108,7 +108,7 @@ router.get('/unaccpeted', async (req, res) => {
     offset = isNaN(offset) ? 0 : offset
     limit = isNaN(limit) ? 12 : limit
 
-    let result = await ApplyDB.GetApplyList({
+    let result = await ApplyDB.GetList({
       accountId: me,
       isAccepted: false,
       boardKind: kind,
@@ -138,7 +138,7 @@ router.get('/:id', async (req, res) => {
       return res.status(400) // INVALID_PARAM
     }
 
-    let result = await ApplyDB.GetApplyList({
+    let result = await ApplyDB.GetList({
       authorAccountId: me,
       boardId: id,
       active: true,
@@ -155,248 +155,148 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-
-router.post('/:kind', async (req, res, next) => {
+router.post('/', async (req, res) => {
   try {
-    const { kind } = req.params
-    const { applyKind, applyItem, applyAccount, recvAccount, applyPortfolio, applyWant } = req.body
-    let cnt = null
-    let result = null
+    const me = req!.session!.passport.user.toString()
+    let {
+      authorAccountId,
+      boardId,
+      boardKind,
+      applyAccountId,
+      applyPosition, // only contest
+      applyPortfolio, // only contest
+      applyPortfolioText, // only contest
+      wantedText,
+    } = req.body
+  
+    if (me !== applyAccountId) {
+      return res.status(400) // BAD_REQUEST
+    }
+  
+    if (authorAccountId === me) {
+      return res.status(400) // BAD_REQUEST
+    }
+  
+    if (!boardKind || !validateKind(boardKind)) {
+      return res.status(400) // INVALID_PARAM
+    }
+  
+    if (!boardId || boardId.length !== 24) {
+      return res.status(400) // INVALID_PARAM
+    }
+  
+    if (boardKind === 'study' && (applyPosition || applyPortfolio || applyPortfolioText)) {
+      return res.status(400) // INVALID_PARAM
+    }
+  
+    wantedText = wantedText || ''
+  
+    const isApplied = await ApplyDB.IsApplied({
+      accountId: me,
+      boardId,
+    })
 
-    if (req!.session!.passport.user.toString() !== applyAccount) {
-      throw new Error('옳지 않은 권한입니다!')
+    if (isApplied) {
+      return res.status(400) // BAD_REQUEST
     }
 
-    validateKind(kind)
-    validateCategory(kind, applyKind)
-
-    if (kind === 'study') {
-      cnt = await models.StudyApply.countDocuments({ item: applyItem, applyAccount }).exec()
-    } else if (kind === 'contest') {
-      cnt = await models.ContestApply.countDocuments({ item: applyItem, applyAccount }).exec()
+    const contestObj: any = {}
+    if (boardKind === 'contest') {
+      contestObj['applyPosition'] = applyPosition
+      contestObj['applyPortfolio'] = applyPortfolio
+      contestObj['applyPortfolioText'] = applyPortfolioText
     }
 
-    if (cnt! > 0 || !cnt) {
-      throw new Error('한 게시글에 한 번 이상 신청할 수 없습니다')
-    }
+    await ApplyDB.Create({
+      accountId: me,
+      boardId,
+      boardKind,
+      authorAccountId,
+      wantedText,
+      ...contestObj,
+    })
 
-    if (kind === 'study') {
-      result = await models.StudyApply.create({
-          kind: applyKind,
-          item: applyItem,
-          applyAccount,
-          recvAccount,
-          portfolio: applyPortfolio,
-          want: applyWant,
-        })
-        .then((result) => {
-          return result.item
-        })
-
-      await models.Study.findByIdAndUpdate(result, {
-        $inc: { applyNum: 1 }
-      })
-    } else if (kind === 'contest') {
-      const { applyPart } = req.body
-      result = await models.ContestApply.create({
-          kind: applyKind,
-          item: applyItem,
-          part: applyPart,
-          applyAccount,
-          recvAccount,
-          portfolio: applyPortfolio,
-          want: applyWant,
-        })
-        .then((result) => {
-          return result.item
-        })
-
-      await models.Contest.findByIdAndUpdate(result, {
-        $inc: { applyNum: 1 }
-      }, { new: true })
-        .then((result) => {
-          if (!result) {
-            throw new Error()
-          }
-        })
-    }
+    await BoardDB.UpdateApplyCnt({ _id: boardId, diff: 1 })
 
     await redisClient.incCnt('applyCnt')
 
-    res.status(201).json(responseForm(true, '', result))
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+    res.status(201) // TODO: Resopnse 처리. _id는 보내야함
+  }
+  catch {
+    res.status(500).send(InternalErrorResponse)
   }
 })
 
-router.patch('/:kind/:id', async (req, res, next) => {
-  // accept
+router.patch('/:id/accept', async (req, res) => {
   try {
-    const { kind, id } = req.params
-    let applyDocument = null
-    let boardDocument = null
+    const me = req!.session!.passport.user.toString()
+    const { id } = req.params
+    const { applyAccountId } = req.body
 
-    validateKind(kind)
-
-    if (kind === 'study') {
-      applyDocument = await models.StudyApply.findById(id)
-    } else if (kind === 'contest') {
-      applyDocument = await models.ContestApply.findById(id)
+    if (!id || id.length !== 24) {
+      return res.status(400) // INVALID_PARAM
     }
 
-    if (req!.session!.passport.user.toString() !== applyDocument!.recvAccount.toString()) {
-      throw new Error('옳지 않은 권한입니다!')
+    if (!applyAccountId || applyAccountId.length !== 24) {
+      return res.status(400) // INVALID_PARAM
     }
 
-    applyDocument!.accept = true
-    applyDocument?.save()
-
-    if (kind === 'study') {
-      boardDocument = await models.Study.findByIdAndUpdate(applyDocument!.item, {
-          $inc: { acceptNum: 1 }
-        }, { new: true })
-        .then((result) => {
-          if (!result) {
-            throw new Error()
-          }
-          return result
-        })
-    } else if (kind === 'contest') {
-      boardDocument = await models.Contest.findByIdAndUpdate(applyDocument!.item, {
-          $inc: { acceptNum: 1 }
-        }, { new: true })
-        .then((result) => {
-          if (!result) {
-            throw new Error()
-          }
-          return result
-        })
+    if (await ApplyDB.IsAccepted({ accountId: applyAccountId, boardId: id })) {
+      return res.status(400) // BAD_REQUEST
     }
 
-    res.json(responseForm(true, '', boardDocument!._id))
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+    await ApplyDB.UpdateApplyIsAccepted({
+      accountId: applyAccountId,
+      authorAccountId: me,
+      boardId: id,
+    })
+
+    await BoardDB.UpdateAcceptCnt({ _id: id, diff: 1 })
+
+    res.send(SuccessResponse({ _id: id }))
   }
+  catch (err) {
+    res.status(500).send(InternalErrorResponse)
+  } 
 })
 
-router.delete('/:kind/:id', async (req, res, next) => {
+router.delete('/:boardId/:applyId', async (req, res) => {
   try {
-    const { kind, id } = req.params
-    let applyDocument = null
-    let boardDocument = null
-
-    validateKind(kind)
-
-    if (kind === 'study') {
-      applyDocument = await models.StudyApply.findById(id)
-    } else if (kind === 'contest') {
-      applyDocument = await models.ContestApply.findById(id)
+    const me = req!.session!.passport.user.toString()
+    const { boardId, applyId } = req.params
+    
+    if (!boardId || boardId.length !== 24) {
+      return res.status(400) // INVALID_PARAM
     }
 
-    if (req!.session!.passport.user.toString() !== applyDocument?.applyAccount.toString()) {
-      throw new Error('옳지 않은 권한입니다!')
+    if (!applyId || applyId.length !== 24) {
+      return res.status(400) // INVALID_PARAM
     }
 
-    if (applyDocument!.accept === true) {
-      throw new Error('이미 수락된 신청은 취소할 수 없습니다')
+    const boardDoc = await BoardDB.GetItem({ _id: boardId })
+    const applyDoc = await ApplyDB.GetItem({ _id: applyId })
+
+    if (boardDoc.endDate < Date.now()) {
+      return res.status(400) // BAD_REQUEST
     }
 
-    if (kind === 'study') {
-      boardDocument = await models.Study.findByIdAndUpdate(applyDocument!.item, {
-          $inc: { applyNum: -1 }
-        }, { new: true })
-        .then((result) => {
-          if (!result) {
-            throw new Error()
-          }
-          return result
-        })
-    } else if (kind === 'contest') {
-      boardDocument = await models.Contest.findByIdAndUpdate(applyDocument!.item, {
-          $inc: { applyNum: -1 }
-        }, { new: true })
-        .then((result) => {
-          if (!result) {
-            throw new Error()
-          }
-          return result
-        })
+    if (boardDoc.active === false) {
+      return res.status(400) // BAD_REQUEST
     }
 
-    if (boardDocument!.endDay < new Date()) {
-      throw new Error('신청기간이 지난 글의 신청을 취소할 수 없습니다')
+    if (applyDoc.isAccepted === true) {
+      return res.status(400) // BAD_REQUEST
     }
 
-    if (boardDocument!.active === false) {
-      throw new Error('삭제된 글의 신청을 취소할 수 없습니다')
-    }
+    await ApplyDB.Delete({
+      _id: applyId,
+    })
 
-    applyDocument!.active = false
-    applyDocument?.save()
+    await BoardDB.UpdateApplyCnt({ _id: boardId, diff: -1 })
 
-    res.json(responseForm(true, '', boardDocument!._id))
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+    res.send() // TODO: Resopnse 처리
   }
-})
-
-router.patch('/team/:kind/:id', async (req, res, next) => {
-  try {
-    const { kind, id } = req.params
-    const { teamContent } = req.body
-    let result = null
-
-    validateKind(kind)
-
-    if (kind === 'study') {
-      result = await models.Study.findById(id)
-        .populate({
-          path: 'account',
-          select: ['name']
-        })
-        .exec()
-        .then((result) => {
-          if (result) {
-            return result
-          }
-          throw new Error()
-        })
-    } else if (kind === 'contest') {
-      result = await models.Contest.findById(id)
-        .populate({
-          path: 'account',
-          select: ['name']
-        })
-        .exec()
-        .then((result) => {
-          if (result) {
-            return result
-          }
-          throw new Error()
-        })
-    }
-
-    if (!result) {
-      throw new Error()
-    }
-
-    if (req!.session!.passport.user.toString() !== result!._id) {
-      throw new Error('옳지 않은 권한입니다!')
-    }
-
-    if (result!.teamChk) {
-      throw new Error('이미 팀 모집이 완료된 글입니다!')
-    }
-
-    result!.teamChk = true
-    result!.save()
-
-    sendTeamEmail(kind, result, teamContent)
-
-    await redisClient.incCnt('teamCnt')
-
-    res.status(200).json(responseForm(true, '', result))
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+  catch (err) {
+    res.status(500).send(InternalErrorResponse)
   }
 })

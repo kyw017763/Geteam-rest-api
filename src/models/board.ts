@@ -16,4 +16,14 @@ export default {
     const board = await Board.findOne({ _id: new ObjectId(_id) })
     return !board.isCompleted
   },
+  UpdateApplyCount: (params: any = {}) => {
+    const { _id, diff } = params
+    return Board.updateOne({
+      _id: new ObjectId(_id)
+    }, {
+      $set: {
+        
+      }
+    })
+  },
 }
