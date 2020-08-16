@@ -1,9 +1,8 @@
 import nodemailer from 'nodemailer'
 import AWS from 'aws-sdk'
-import config from './../config'
-import { IStudy } from '../models/study'
-import { IContest } from '../models/mongoose/contest'
-import getEmailForm from './getEmailForm'
+import config from '../../config'
+import IBoard from '../ts/IBoard'
+import getEmailForm from './emailForm'
 
 AWS.config.loadFromPath('./../aws.json')
 
@@ -91,7 +90,7 @@ export async function sendQuestionEmail (kind: string, title: string, content: s
   }
 }
 
-export async function sendTeamEmail (kind: string, item: IStudy | IContest, content: string) {
+export async function sendTeamEmail (kind: string, item: IBoard, content: string) {
   try {
     const transporter = nodemailer.createTransport({
       SES: new AWS.SES({
