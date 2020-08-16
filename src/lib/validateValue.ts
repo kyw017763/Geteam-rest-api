@@ -1,7 +1,11 @@
 const validateKind = (kind: string) => {
   switch (kind) {
-    case 'study': case 'contest': break
-    default: throw new Error('유효한 카테고리가 아닙니다')
+    case 'study': case 'contest':
+      return true
+      break
+    default:
+      return false
+      break
   }
 }
 

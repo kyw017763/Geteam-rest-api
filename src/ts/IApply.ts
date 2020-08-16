@@ -6,7 +6,8 @@ export default interface IApply {
 
   accountId: IAccount['_id']
   boardId: IBoard['_id']
-  applyAccount: IAccount['_id']
+  boardKind: string
+  authorAccountId: IAccount['_id']
   position?: string // 맡고픈 역할. only contest
   portfolio?: string // path. only contest
   portfolioText?: string // only contest

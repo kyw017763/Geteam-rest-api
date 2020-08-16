@@ -1,219 +1,160 @@
 import express from 'express'
-import responseForm from './../lib/responseForm'
+import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
 import { sendTeamEmail } from './../lib/sendEmail'
 import { validateKind, validateCategory } from '../lib/validateValue'
 import redisClient from '../lib/redisClient'
-import models from './../models'
+import models from '../models'
+
+const ApplyDB = models.apply
 
 const router = express.Router()
 export default router
 
-router.get('/:kind/:page/:order', async (req, res, next) => {
-  // 내가 한 신청
+// my all apply by kind
+router.get('/', async (req, res) => {
   try {
-    const account = req!.session!.passport.user.toString()
-    const { kind, page } = req.params
-    let { order } = req.params
-    // desc / asc, 최신 순, 오래된 순
-    order = order === 'desc' ? '-createdAt' : 'createdAt'
-    let result = null
+    const me = req!.session!.passport.user.toString()
+    let { kind, offset, limit } = req.query
 
-    validateKind(kind)
+    kind = validateKind(kind) ? kind : 'study'
+    offset = isNaN(offset) ? 0 : offset
+    limit = isNaN(limit) ? 12 : limit
 
-    if (kind === 'study') {
-      result = await models.StudyApply.find({
-          applyAccount: account
-        })
-        .sort(order)
-        .skip(Number(page) * 10)
-        .limit(10)
-        .populate({
-          path: 'item',
-          select: '_id kind topic title wantNum applyNum endDay hit teamChk active',
-        })
-        .populate({
-          path: 'recvAccount',
-          select: '_id id name sNum',
-        })
-    } else if (kind === 'contest') {
-      result = await models.ContestApply.find({
-          applyAccount: account
-        })
-        .sort(order)
-        .skip(Number(page) * 10)
-        .limit(10)
-        .populate({
-          path: 'item',
-          select: '_id kind topic title part wantNum applyNum endDay hit teamChk active',
-        })
-        .populate({
-          path: 'recvAccount',
-          select: '_id id name sNum',
-        })
+    let result = await ApplyDB.GetApplyList({
+      accountId: me,
+      boardKind: kind,
+    }, {
+      skip: offset * limit,
+      limit,
+    })
+
+    if (result!.length === 0) {
+      return res.status(204) // EMPTY_RESULT
     }
-    
-    if (result!.length) {
-      res.json(responseForm(true, '', result))
-    } else {
-      res.status(204).json(responseForm(true))
-    }
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+
+    res.send(SuccessResponse(result))
+  }
+  catch {
+    res.status(500).send(InternalErrorResponse)
   }
 })
 
-router.get('/accept/:kind/:page/:order', async (req, res, next) => {
-  // 내가 한 신청 중 수락된 것
+// all apply on my all board
+router.get('/applied', async (req, res) => {
   try {
-    const account = req!.session!.passport.user.toString()
-    const { kind, page } = req.params
-    let { order } = req.params
-    // desc / asc, 최신 순, 오래된 순
-    order = order === 'desc' ? '-createdAt' : 'createdAt'
-    let result = null
+    const me = req!.session!.passport.user.toString()
+    let { kind, offset, limit } = req.query
 
-    validateKind(kind)
+    kind = validateKind(kind) ? kind : 'study'
+    offset = isNaN(offset) ? 0 : offset
+    limit = isNaN(limit) ? 12 : limit
 
-    if (kind === 'study') {
-      result = await models.StudyApply.find({
-          applyAccount: account,
-          accept: true,
-        })
-        .sort(order)
-        .skip(Number(page) * 10)
-        .limit(10)
-        .populate({
-          path: 'item',
-          select: '_id kind topic title wantNum applyNum endDay hit teamChk active',
-        })
-        .populate({
-          path: 'recvAccount',
-          select: '_id id name sNum',
-        })
-    } else if (kind === 'contest') {
-      result = await models.ContestApply.find({
-          applyAccount: account,
-          accept: true,
-        })
-        .sort(order)
-        .skip(Number(page) * 10)
-        .limit(10)
-        .populate({
-          path: 'item',
-          select: '_id kind topic title part wantNum applyNum endDay hit teamChk active',
-        })
-        .populate({
-          path: 'recvAccount',
-          select: '_id id name sNum',
-        })
+    let result = await ApplyDB.GetApplyList({
+      authorAccountId: me,
+      boardKind: kind,
+    }, {
+      skip: offset * limit,
+      limit,
+    })
+
+    if (result.length === 0) {
+      return res.status(204) // EMPTY_RESULT
     }
 
-    if (result!.length) {
-      res.json(responseForm(true, '', result))
-    } else {
-      res.status(204).json(responseForm(true))
-    }
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+    res.send(SuccessResponse(result))
+  }
+  catch {
+    res.status(500).send(InternalErrorResponse)
   }
 })
 
-router.get('/unaccept/:kind/:page/:order', async (req, res, next) => {
-  // 내가 한 신청 중 수락되지 않은 것
+// my accepted apply by kind
+router.get('/accepted', async (req, res) => {
   try {
-    const account = req!.session!.passport.user.toString()
-    const { kind, page } = req.params
-    let { order } = req.params
-    // desc / asc, 최신 순, 오래된 순
-    order = order === 'desc' ? '-createdAt' : 'createdAt'
-    let result = null
+    const me = req!.session!.passport.user.toString()
+    let { kind, offset, limit } = req.query
 
-    validateKind(kind)
+    kind = validateKind(kind) ? kind : 'study'
+    offset = isNaN(offset) ? 0 : offset
+    limit = isNaN(limit) ? 12 : limit
 
-    if (kind === 'study') {
-      result = await models.StudyApply.find({
-          applyAccount: account,
-          accept: false,
-        })
-        .sort(order)
-        .skip(Number(page) * 10)
-        .limit(10)
-        .populate({
-          path: 'item',
-          select: '_id kind topic title wantNum applyNum endDay hit teamChk active',
-        })
-        .populate({
-          path: 'recvAccount',
-          select: '_id id name sNum',
-        })
-    } else if (kind === 'contest') {
-      result = await models.ContestApply.find({
-          applyAccount: account,
-          accept: false,
-        })
-        .sort(order)
-        .skip(Number(page) * 10)
-        .limit(10)
-        .populate({
-          path: 'item',
-          select: '_id kind topic title part wantNum applyNum endDay hit teamChk active',
-        })
-        .populate({
-          path: 'recvAccount',
-          select: '_id id name sNum',
-        })
+    let result = await ApplyDB.GetApplyList({
+      accountId: me,
+      isAccepted: true,
+      boardKind: kind,
+    }, {
+      skip: offset * limit,
+      limit,
+    })
+
+    if (result.length === 0) {
+      return res.status(204) // EMPTY_RESULT
     }
 
-    if (result!.length) {
-      res.json(responseForm(true, '', result))
-    } else {
-      res.status(204).json(responseForm(true))
-    }
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+    res.send(SuccessResponse(result))
+  }
+  catch {
+    res.status(500).send(InternalErrorResponse)
   }
 })
 
-router.get('/:kind/:item', async (req, res, next) => {
-  // 내가 작성한 글에 들어온 신청
+// my unaccepted apply by kind
+router.get('/unaccpeted', async (req, res) => {
   try {
-    const { kind, item } = req.params
-    const account = req!.session!.passport.user.toString()
-    let result = null
+    const me = req!.session!.passport.user.toString()
+    let { kind, offset, limit } = req.query
 
-    validateKind(kind)
+    kind = validateKind(kind) ? kind : 'study'
+    offset = isNaN(offset) ? 0 : offset
+    limit = isNaN(limit) ? 12 : limit
 
-    if (kind === 'study') {
-      result = await models.StudyApply.find({
-          item,
-          recvAccount: account,
-          active: true,
-        })
-        .populate({
-          path: 'applyAccount',
-          select: '_id id name sNum',
-        })
-    } else if (kind === 'contest') {
-      result = await models.ContestApply.find({
-          item,
-          recvAccount: account,
-          active: true,
-        })
-        .populate({
-          path: 'applyAccount',
-          select: '_id id name sNum',
-        })
+    let result = await ApplyDB.GetApplyList({
+      accountId: me,
+      isAccepted: false,
+      boardKind: kind,
+    }, {
+      skip: offset * limit,
+      limit,
+    })
+
+    if (result.length === 0) {
+      return res.status(204) // EMPTY_RESULT
     }
 
-    if (result!.length) {
-      res.json(responseForm(true, '', result))
-    } else {
-      res.status(204).json(responseForm(true))
-    }
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+    res.send(SuccessResponse(result))
+  }
+  catch {
+    res.status(500).send(InternalErrorResponse)
   }
 })
+
+// apply on my particular board
+router.get('/:id', async (req, res) => {
+  try {
+    const me = req!.session!.passport.user.toString()
+    let { id } = req.query
+
+    if (!id || id.length !== 24) {
+      return res.status(400) // INVALID_PARAM
+    }
+
+    let result = await ApplyDB.GetApplyList({
+      authorAccountId: me,
+      boardId: id,
+      active: true,
+    })
+
+    if (result.length === 0) {
+      return res.status(204) // EMPTY_RESULT
+    }
+
+    res.send(SuccessResponse(result))
+  }
+  catch {
+    res.status(500).send(InternalErrorResponse)
+  }
+})
+
 
 router.post('/:kind', async (req, res, next) => {
   try {
