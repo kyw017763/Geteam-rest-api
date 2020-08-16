@@ -2,13 +2,15 @@ import IAccount from './IAccount'
 
 export default interface IBoard {
   _id: string
+
   accountId: IAccount['_id']
   kind: string // study or contest
   topic: string
   title: string
   content: string
-  position: {
+  position?: { // only contest
     title: [string]
+    description: [string]
     cnt: number
   }
   wantCnt: number
@@ -16,8 +18,9 @@ export default interface IBoard {
   acceptCnt: number
   startDate: Date
   endDate: Date
-  hit: number
   isCompleted: boolean
   active: boolean
+  hit: number
+  
   updatedAt: Date
 }
