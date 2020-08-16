@@ -1,6 +1,6 @@
 import express from 'express'
 import redisClient from '../lib/redisClient'
-import responseForm from './../lib/responseForm'
+import { SuccessResponse, InternalErrorResponse } from './../lib/responseForm'
 
 const router = express.Router()
 export default router
@@ -25,8 +25,8 @@ router.get('/counting', async (req, res, next) => {
     counting.apply = await redisClient.getCnt('applyCnt')
     counting.team = await redisClient.getCnt('teamCnt')
     
-    res.json(responseForm(true, '', counting))
+    res.json(SuccessResponse(counting))
   } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+    res.status(500).json(InternalErrorResponse)
   }
 })

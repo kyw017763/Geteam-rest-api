@@ -5,6 +5,7 @@ export default interface IBoard {
 
   accountId: IAccount['_id']
   kind: string // study or contest
+  category: string
   topic: string
   title: string
   content: string

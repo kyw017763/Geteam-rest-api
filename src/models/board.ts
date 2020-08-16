@@ -6,6 +6,52 @@ import IBoard from '../ts/IBoard'
 const Board = connection.collection(BOARD)
 
 export default {
+  GetList: async (params: any = {}, options: any = {}) => {
+    const { kind, category, me } = params
+    const { skip, limit, sort } = options
+
+    // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
+    const query: any = {
+      active: true,
+      isCompleted: false,
+    }
+
+    if (me) {
+      query['$or'] = [
+        {
+          accountId: new ObjectId(me) || null,
+          endDay: { $lt: Date.now() }
+        },
+        {
+          endDay: { $gt: Date.now() }
+        }
+      ]
+    }
+    else {
+      query['endDay'] = { $gt: Date.now() }
+    }
+
+    if (kind) {
+      query['kind'] = kind
+    }
+
+    if (category) {
+      query['category'] = category
+    }
+
+    const list = await Board.find(query, {
+      skip,
+      limit,
+      sort
+    }).toArray()
+    const count = await Board.countDocuments(query)
+
+    return { list, count }
+  },
+  GetItem: async (params: any = {}) => {
+    const { _id } = params
+    return Board.findOne({ _id: new ObjectId(_id) })
+  },
   IsEnableModify: async (params: any = {}) => {
     const { _id } = params
     const board = await Board.findOne({ _id: new ObjectId(_id) })
@@ -16,13 +62,33 @@ export default {
     const board = await Board.findOne({ _id: new ObjectId(_id) })
     return !board.isCompleted
   },
-  UpdateApplyCount: (params: any = {}) => {
+  UpdateApplyCnt: (params: any = {}) => {
     const { _id, diff } = params
     return Board.updateOne({
       _id: new ObjectId(_id)
     }, {
       $set: {
-        
+        $inc: { applyCnt: diff }
+      }
+    })
+  },
+  UpdateAcceptCnt: (params: any = {}) => {
+    const { _id, diff } = params
+    return Board.updateOne({
+      _id: new ObjectId(_id)
+    }, {
+      $set: {
+        $inc: { acceptCnt: diff }
+      }
+    })
+  },
+  UpdateHit: (params: any = {}) => {
+    const { _id, diff } = params
+    return Board.updateOne({
+      _id: new ObjectId(_id)
+    }, {
+      $set: {
+        $inc: { hit: diff }
       }
     })
   },

@@ -51,7 +51,8 @@ export default {
 
     return (await Apply.countDocuments({
       accountId: new ObjectId(accountId),
-      boardId: new ObjectId(boardId)
+      boardId: new ObjectId(boardId),
+      active: true,
     })) > 0
   },
   IsAccepted: async (params: any = {}) => {

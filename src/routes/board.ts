@@ -1,208 +1,85 @@
 import express from 'express'
-import responseForm from './../lib/responseForm'
+import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
 import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
 import redisClient from '../lib/redisClient'
-import models from './../models'
+import models from '../models'
+
+const BoardDB = models.board
+const ApplyDB = models.apply
 
 const router = express.Router()
 export default router
 
-router.get('/boards/:kind/:page/:order', async (req, res, next) => {
+router.get('/boards/:kind', async (req, res) => {
   try {
-    const { kind, page } = req.params
-    let { order } = req.params
-    let result = null, documentCnt = null
+    const me = req!.session!.passport.user.toString()
+    let { kind } = req.params
+    let { offset, limit, order } = req.query
 
-    validateKind(kind)
+    kind = validateKind(kind) ? kind : 'study'
+    offset = isNaN(offset) ? 0 : offset
+    limit = isNaN(limit) ? 12 : limit
     order = validateModifyOrder(order)
 
-    // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
-    const condition = {
-      active: true,
-      teamChk: false,
-      $or: [
-        {
-          account: req!.session!.passport.user.toString() || null,
-          endDay: { $lt: new Date }
-        }, {
-          endDay: { $gt: new Date }
-        }
-      ]
-    }
-
-    if (kind === 'study') {
-      result = await models.Study.find(condition)
-        .sort(order)
-        .skip(Number(page) * 10)
-        .limit(10)
-        .populate({
-          path: 'account',
-          select: '_id id name sNum',
-        })
-      documentCnt = await models.Study.countDocuments(condition).exec()
-    } else if (kind === 'contest') {
-      result = await models.Contest.find(condition)
-        .sort(order)
-        .skip(Number(page) * 10)
-        .limit(10)
-        .populate({
-          path: 'account',
-          select: '_id id name sNum',
-        })
-      documentCnt = await models.Contest.countDocuments(condition).exec()
-    }
-
-    if ((<any>result).length) {
-      res.json(responseForm(true, '', { list: result, total: documentCnt }))
-    } else {
-      res.status(204).json(responseForm(true))
-    }
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+    const result = await BoardDB.GetList({ kind, me }, { offset, limit, order })
+    res.status(SuccessResponse(result))
+  }
+  catch (err) {
+    res.status(500).send(InternalErrorResponse)
   }
 })
 
-router.get('/boards/:kind/:category/:page/:order', async (req, res, next) => {
+router.get('/boards/:kind/:category', async (req, res) => {
   try {
-    const { kind, category, page } = req.params
-    let { order } = req.params
-    let result = null, documentCnt = null
+    const me = req!.session!.passport.user.toString()
+    let { kind, category } = req.params
+    let { offset, limit, order } = req.query
 
-    validateKind(kind)
-    validateCategory(kind, category)
+    kind = validateKind(kind) ? kind : 'study'
+    category = validateCategory(kind, category) ? category : 'develop'
+    offset = isNaN(offset) ? 0 : offset
+    limit = isNaN(limit) ? 12 : limit
     order = validateModifyOrder(order)
 
-    // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
-    const condition = {
-      kind: category,
-      active: true,
-      teamChk: false,
-      $or: [
-        {
-          account: req!.session!.passport.user.toString() || null,
-          endDay: { $lt: new Date }
-        }, {
-          endDay: { $gt: new Date }
-        }
-      ]
-    }
-
-    if (kind === 'study') {
-      result = await models.Study.find(condition)
-        .sort(order)
-        .skip(Number(page) * 10)
-        .limit(10)
-        .populate({
-          path: 'account',
-          select: '_id id name sNum',
-        })
-      documentCnt = await models.Study.countDocuments(condition).exec()
-    } else if (kind === 'contest') {
-      result = await models.Contest.find(condition)
-        .sort(order)
-        .skip(Number(page) * 10)
-        .limit(10)
-        .populate({
-          path: 'account',
-          select: '_id id name sNum',
-        })
-      documentCnt = await models.Contest.countDocuments(condition).exec()
-    }
-    
-    if ((<any>result).length) {
-      res.json(responseForm(true, '', { list: result, total: documentCnt }))
-    } else {
-      res.status(204).json(responseForm(true))
-    }
-  } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+    const result = await BoardDB.GetList({ kind, category, me }, { offset, limit, order })
+    res.status(SuccessResponse(result))
+  }
+  catch (err) {
+    res.status(500).send(InternalErrorResponse)
   }
 })
 
-router.get('/board/:kind/:id', async (req, res, next) => {
+router.get('/board/:id', async (req, res) => {
   try {
-    const { kind, id } = req.params
-    console.log(id)
-    let result = null, applyId = null
-    let isAccepted = null
+    const me = req!.session!.passport.user.toString()
+    const { id } = req.params
 
-    validateKind(kind)
+    if (!id || id.length !== 24) {
+      return res.status(400) // INVALID_PARAM
+    }
     
-    if (kind === 'study') {
-      await models.Study.findByIdAndUpdate(id, { $inc: { hit: 1 } }, { new: true })
-        .then((result) => {
-          if (!result) {
-            throw new Error()
-          }
-        })
-      
-      console.log('111')
+    const result = await BoardDB.GetItem({ _id: id })
 
-      result = await models.Study.findById(id)
-        .populate({
-          path: 'account',
-          select: '_id id name sNum',
-        })
-
-      if (!result) {
-        throw new Error()
-      }
-
-      applyId = await models.StudyApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
-        .then((result) => {
-          if (result) {
-            return result._id
-          } else {
-            return null
-          }
-        })
-    } else if (kind === 'contest') {
-      await models.Contest.findByIdAndUpdate(id, { $inc: { hit: 1 } }, { new: true })
-      .then((result) => {
-        if (!result) {
-          throw new Error()
-        }
-      })
-
-      result = await models.Contest.findById(id)
-        .populate({
-          path: 'account',
-          select: '_id id name sNum',
-        })
-
-        if (!result) {
-          throw new Error()
-        }
-  
-      applyId = await models.ContestApply.findOne({ applyAccount: req!.session!.passport.user.toString(), item: result._id, active: true })
-        .then((result) => {
-          if (result) {
-            return result._id
-          } else {
-            return null
-          }
-        })
+    if (!result) {
+      return res.status(404) // NOT_FOUND
     }
 
-    const isApplied = applyId? true : false
-    if (result && isApplied === true && kind === 'study') {
-      isAccepted = await models.StudyApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true })
-    } else if (result && isApplied === true && kind === 'contest') {
-      isAccepted = await models.ContestApply.exists({ applyAccount: req!.session!.passport.user.toString(), item: result._id, accept: true })
-    }
+    await BoardDB.UpdateHit({ _id: id, diff: 1 })
 
+    const isApplied = await ApplyDB.IsApplied({ accountId: me, boardId: id })
+    const isAccepted = await ApplyDB.IsApplied({ accountId: me, boardId: id })
+    
     const data = {
-      result,
-      enableModify: result? result.enableModify() : null,
-      enableApply: result? result.enableApply() : null,
-      applyId,
-      isApplied,
-      isAccepted,
+      board: result,
+      isApplied, // if applier
+      isAccepted, // if applier
+      isEnableModify: result.applyCnt === 0, // if author
+      isEnableApply: !result.isCompleted, // if applier
     }
 
-    res.json(responseForm(true, '', data))
+    res.send(SuccessResponse(data))
   } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+    res.status(500).send(InternalErrorResponse)
   }
 })
 
@@ -360,3 +237,66 @@ router.delete('/board/:kind/:id', async (req, res, next) => {
     res.status(500).json(responseForm(false, err.toString()))
   }
 })
+
+router.patch('/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { kind } = req.query
+    const { teamMessage } = req.body
+  
+    await redisClient.incCnt('teamCnt')
+
+    sendTeamEmail(kind, result, teamMessage)
+  }
+  catch (err) {
+    res.status(500).send(InternalErrorResponse)
+  }
+})
+
+router.patch('/team/:kind/:id', async (req, res, next) => {
+  try {
+    if (kind === 'study') {
+      result = await models.Study.findById(id)
+        .populate({
+          path: 'account',
+          select: ['name']
+        })
+        .exec()
+        .then((result) => {
+          if (result) {
+            return result
+          }
+          throw new Error()
+        })
+    } else if (kind === 'contest') {
+      result = await models.Contest.findById(id)
+        .populate({
+          path: 'account',
+          select: ['name']
+        })
+        .exec()
+        .then((result) => {
+          if (result) {
+            return result
+          }
+          throw new Error()
+        })
+    }
+
+    if (!result) {
+      throw new Error()
+    }
+
+    if (req!.session!.passport.user.toString() !== result!._id) {
+      throw new Error('옳지 않은 권한입니다!')
+    }
+
+    if (result!.teamChk) {
+      throw new Error('이미 팀 모집이 완료된 글입니다!')
+    }
+
+    result!.teamChk = true
+    result!.save()
+})
+
+// TODO: isCompleted: true 로 만드는 end-point 하나
