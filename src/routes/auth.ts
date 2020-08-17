@@ -8,13 +8,11 @@ import createHash from './../lib/createHash'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
 import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse';
 import models from '../models'
-import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
 import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from 'src/lib/sendEmail'
 import redisClient from '../lib/redisClient'
 import config from '../../config'
 
 const AccountDB = models.account
-const ApplyDB = models.apply
 
 interface IDecodedAccessToken {
   _id: string
@@ -78,7 +76,7 @@ router.post('/register/verify/:key', async (req, res) => {
 
     const { matchedCount, modifiedCount } = result
 
-    if (matchedCount && modifiedCount) {
+    if (!matchedCount && !modifiedCount) {
       return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
 
@@ -102,7 +100,7 @@ router.post('/register/verify/new/:key', async (req, res) => {
 
     const { matchedCount, modifiedCount } = result
 
-    if (matchedCount && modifiedCount) {
+    if (!matchedCount && !modifiedCount) {
       return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
 
@@ -171,7 +169,7 @@ router.post('/signin/refresh', async (req, res) => {
         return res.status(400).send(FailureResponse(BAD_REQUEST))
       }
     } else {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
 
     const result = await AccountDB.SignIn({ id: decodedOldAccessToken._id })
@@ -181,11 +179,7 @@ router.post('/signin/refresh', async (req, res) => {
     }
 
     // Verify refresh token
-    try {
-      jwt.verify(result.refreshToken, process.env.REFRESH_SECRET || config.REFRESH_SECRET)
-    } catch (err) {
-      throw new Error(err)
-    }
+    jwt.verify(result.refreshToken, process.env.REFRESH_SECRET || config.REFRESH_SECRET)
 
     const payload = { _id: result._id }
     
@@ -224,7 +218,7 @@ router.post('/signout', passport.authenticate('jwt', { session: false }), async 
 
     const { matchedCount, modifiedCount } = result
 
-    if (matchedCount && modifiedCount) {
+    if (!matchedCount && !modifiedCount) {
       return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
 
@@ -239,126 +233,106 @@ router.post('/signout', passport.authenticate('jwt', { session: false }), async 
 })
 
 // Reset Password (Check Interests, Create Hash)
-router.patch('/signin/reset', async (req, res, next) => {
+router.patch('/signin/reset/pwd', async (req, res) => {
   try {
-    const { find_email: email, find_hint: hint } = req.body
+    const { findEmail: email, findHint: hint } = req.body
 
-    const member = await models.Account.findOne({ id: email, active: true }).select('id name interest1 interest2 interest3')
-      .then((member) => {
-        if (member) {
-          return member
-        } else {
-          throw new Error('인증 정보가 잘못되었습니다')
-        }
-      }).catch((err) => {
-        throw new Error('인증 정보로 새로운 비밀번호를 설정하던 중 에러가 발생했습니다')
-      })
-    
-    const interestsArr = [member.interest1, member.interest2, member.interest3]
-    
-    const memberDoc = await models.Account.findOne({ id: email, active: true })
-      .then((member) => {
-        if (member) {
-          return member
-        } else {
-          throw new Error('인증 정보가 잘못되었습니다')
-        }
-      }).catch((err) => {
-        throw new Error('인증 정보로 새로운 비밀번호를 설정하던 중 에러가 발생했습니다')
-      })
+    const result = await AccountDB.GetForResetPassword({ id: email })
 
-    if (interestsArr.includes(hint)) {
-      const newPwd = createHash(interestsArr.join('') + new Date().toISOString())
-      memberDoc.pwd = newPwd
-      memberDoc.save()
-      sendPwdEmail('Geteam 비밀번호 초기화', member.id, member.name, newPwd)
-    } else {
-      throw new Error('입력하신 정보가 잘못되었습니다')
+    if (!result || !result.interests) {
+      res.status(400).send(FailureResponse(NOT_FOUND))
     }
 
-    res.json(responseForm(true))
+    if (result.interests.includes(hint)) {
+      const newPwd = createHash(result.interests.join('') + new Date().toISOString())
+      await AccountDB.UpdatePassword({ _id: result._id, pwd: newPwd })
+      sendPwdEmail('Geteam 비밀번호 초기화', result.id, result.name, newPwd)
+    }
+
+    res.end()
   } catch (err) {
     console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
 
-router.patch('/pwd', async (req, res) => {
+router.patch('/pwd', passport.authenticate('jwt', { session: true }), async (req, res) => {
   try {
-    const user = req!.session!.passport.user.toString()
+    const me = req!.session!.passport.user.toString()
     const { oldPwd, newPwd } = req.body
-    await models.Account.findById(user)
-      .then((result) => {
-        if (result)  {
-          if (result.compareHash(oldPwd)) {
-            result.pwd = newPwd
-            result.save()
-          } else {
-            throw new Error('기존 비밀번호를 잘못 입력하셨습니다')
-          }
-        } else {
-          throw new Error()
-        }
-      })
+    
+    const result = await AccountDB.GetForUpdatePassword({ _id: me })
+    if (!result || !result.pwd) {
+      return res.status(400).send(FailureResponse(NOT_FOUND))
+    }
+    else if (!bcrypt.compareSync(result.pwd, bcrypt.hashSync(oldPwd))) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
+    }
+    else {
+      await AccountDB.UpdatePassword({ _id: result._id, pwd: newPwd })
+    }
     
     const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '')
-    if (!accessToken) {
-      throw new Error('잘못된 Access Token이 전달되었습니다')
-    }
-    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
+
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken!)
+    
     // Blacklisting Token
-    await redisClient.blacklistToken(accessToken, decodedAccessToken.exp)
-    res.json(responseForm(true))
+    await redisClient.blacklistToken(accessToken!, decodedAccessToken.exp)
+
+    res.end()
   } catch (err) {
     console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
 
-router.delete('/unregister', passport.authenticate('jwt', { session: false }), async (req, res, next) => {
+router.delete('/unregister', passport.authenticate('jwt', { session: false }), async (req, res) => {
   try {
     const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '')
+
     if (!accessToken) {
-      throw new Error('잘못된 Access Token이 전달되었습니다')
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
+
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
-    await models.Account.findOneAndUpdate({ _id: decodedAccessToken._id }, { active: false })
-      .then((member) => {
-        if (!member) {
-          throw new Error('인증 정보가 잘못되었습니다')
-        }
-      }).catch((err) => {
-        throw new Error('인증 정보로 새로운 비밀번호를 설정하던 중 에러가 발생했습니다')
-      })
-    
+
+    if (!decodedAccessToken || !decodedAccessToken._id) {
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
+    }
+
+    const result = await AccountDB.Delete({ _id: decodedAccessToken._id })
+
+    const { matchedCount, modifiedCount } = result
+
+    if (!matchedCount && !modifiedCount) {
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
+    }
+
     // Blacklisting Token
     await redisClient.blacklistToken(accessToken, decodedAccessToken.exp)
     
-    res.json(responseForm(true))
+    res.end()
   } catch (err) {
     console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
 
-router.post('/verify', async (req, res, next) => {
+router.post('/verify', async (req, res) => {
   try {
     const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '')
-    
-    if (!accessToken) {
-      throw new Error('잘못된 Access Token이 전달되었습니다')
-    }
-    if (await redisClient.checkToken(accessToken)) {
-      throw new Error('Signout 처리된 Access Token입니다')
+
+    if (await redisClient.checkToken(accessToken!)) {
+      return res.status(400).send(FailureResponse(BAD_REQUEST)) // Signout 처리된 Access Token
     }
     
-    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken!)
 
     if ((decodedAccessToken.exp * 1000) <= new Date().getTime()) {
-      throw new Error('만료된 Access Token입니다')
+      return res.status(400).send(FailureResponse(BAD_REQUEST)) // 만료된 Access Token입니다
     }
 
-    res.json(responseForm(true, '', decodedAccessToken))
+    res.send(SuccessResponse(decodedAccessToken))
   } catch (err) {
     console.log(err)
     res.status(500).send(InternalErrorResponse)
@@ -373,62 +347,102 @@ router.get('/info', async (req, res) => {
 
     res.send(SuccessResponse(result))
   } catch (err) {
-    res.status(500).json(responseForm(false, err.toString()))
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
   }
 })
 
 router.patch('/info', async (req, res) => {
   try {
     const me = req!.session!.passport.user.toString()
-    const { modifyName, modifySNum, modifyInterest1, modifyInterest2, modifyInterest3, modifyProfile } = req.body
+    const {
+      modifyName,
+      modifySNum,
+      modifyInterests,
+      modifyProfile,
+      modifyProfilePhoto,
+    } = req.body
 
     await AccountDB.UpdateInfo({
-      me,
+      _id: me,
       name: modifyName,
       sNum: modifySNum,
-      interest1: modifyInterest1,
-      interest2: modifyInterest2,
-      interest3: modifyInterest3,
-      profile: modifyProfile
+      interests: modifyInterests,
+      profile: modifyProfile,
+      profilePhoto: modifyProfilePhoto,
     })
 
-    res.send()
+    res.end()
   } catch (err) {
     console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
 
-router.patch('/noti/apply', async (req, res) => {
+router.patch('/noti/applied', async (req, res) => {
   try {
-    const user = req!.session!.passport.user.toString()
-    const { applyBoolean: notiApply } = req.body
-    const result = await models.Account.findByIdAndUpdate(user, { notiApply }, { new: true })
-    if (result) {
-      res.json(responseForm(true, '', result.notiApply))
-    } else {
-      throw new Error()
+    const me = req!.session!.passport.user.toString()
+    const { notiApply } = req.body
+
+    const result = await AccountDB.UpdateNoti({ _id: me, notiApply })
+
+    const { matchedCount, modifiedCount } = result
+
+    if (!matchedCount && !modifiedCount) {
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
+    
+    res.send(SuccessResponse(notiApply))
   } catch (err) {
     console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
 
-router.patch('/noti/write', async (req, res) => {
+router.patch('/noti/accepted', async (req, res) => {
   try {
-    const user = req!.session!.passport.user.toString()
-    const { writeBoolean: notiWrite } = req.body
-    const result = await models.Account.findByIdAndUpdate(user, { notiWrite }, { new: true })
-    if (result) {
-      res.json(responseForm(true, '', result.notiWrite))
-    } else {
-      throw new Error()
+    const me = req!.session!.passport.user.toString()
+    const { notiAccepted } = req.body
+
+    const result = await AccountDB.UpdateNoti({ _id: me, notiAccepted })
+
+    const { matchedCount, modifiedCount } = result
+
+    if (!matchedCount && !modifiedCount) {
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
+
+    res.send(SuccessResponse(notiAccepted))
   } catch (err) {
     console.log(err)
     res.status(500).send(InternalErrorResponse)
   }
 })
 
-// TODO: 회원가입 할 때 하나씩 ajax로 검사
+router.patch('/noti/team', async (req, res) => {
+  try {
+    const me = req!.session!.passport.user.toString()
+    const { notiTeam } = req.body
+    
+    const result = await AccountDB.UpdateNoti({ _id: me, notiTeam })
+
+    const { matchedCount, modifiedCount } = result
+
+    if (!matchedCount && !modifiedCount) {
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
+    }
+
+    res.send(SuccessResponse(notiTeam))
+  } catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
+})
+
+router.get('/check-email', async (req, res) => {
+
+})
+
+router.get('/check-snum', async (req, res) => {
+
+})

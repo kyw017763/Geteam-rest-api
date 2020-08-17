@@ -12,7 +12,7 @@ export default {
     return Account.deleteMany({
       id,
       isVerified: false,
-      active: true,
+      active: false,
     })
   },
   SignUp: (params: any = {}) => {
@@ -32,6 +32,7 @@ export default {
     return Account.insertOne({
       id,
       name,
+      pwd,
       sNum,
       interests,
       profile,
@@ -72,10 +73,11 @@ export default {
       verifyKey,
       verifyExpireAt: { $gte: new Date() },
       isVerified: false,
-      active: true,
+      active: false,
     }, {
       $set: {
         isVerified: true,
+        active: true,
       }
     })
   },
@@ -96,6 +98,32 @@ export default {
   SignIn: (params: any = {}) => {
     const { id } = params
     return Account.findOne({ id, isVerified: true, active: true })
+  },
+  GetForResetPassword: (params: any = {}) => {
+    const { id } = params
+    return Account.findOne(
+      { id, active: true, isVerified: true },
+      {
+        projection: {
+          id: true,
+          name: true,
+          interests: true,
+        }
+      }
+    )
+  },
+  GetForUpdatePassword: (params: any = {}) => {
+    const { _id } = params
+    return Account.findOne(
+      { _id: new ObjectId(_id), active: true, isVerified: true },
+      {
+        projection: {
+          id: true,
+          name: true,
+          interests: true,
+        }
+      }
+    )
   },
   GetCompareEmail: async (params: any = {}) => {
     const { id } = params
@@ -123,7 +151,60 @@ export default {
       }
     )
   },
-  UpdateInfo: (params: any = {}) => {
+  UpdatePassword: (params: any = {}) => {
+    const { _id } = params
+    let { pwd } = params
+    pwd = bcrypt.hashSync(pwd)
 
+    return Account.updateOne(
+      { _id: new ObjectId(_id) },
+      { $set: { pwd } }
+    )
+  },
+  UpdateInfo: (params: any = {}) => {
+    const { _id, name, sNum, interests, profile, profilePhoto } = params
+
+    return Account.updateOne(
+      { _id: new ObjectId(_id) },
+      {
+        $set: {
+          name,
+          sNum,
+          interests,
+          profile,
+          profilePhoto: profilePhoto || '',
+        }
+      }
+    )
+  },
+  UpdateNoti: (params: any = {}) => {
+    const { _id, notiApplied, notiAccepted, notiTeam } = params
+
+    const updateQuery: any = {}
+
+    if (notiApplied !== undefined) {
+      updateQuery['notiApplied'] = notiApplied
+    }
+    if (notiAccepted !== undefined) {
+      updateQuery['notiAccepted'] = notiAccepted
+    }
+    if (notiTeam !== undefined) {
+      updateQuery['notiTeam'] = notiTeam
+    }
+
+    return Account.updateOne(
+      { _id: new ObjectId(_id) },
+      {
+        $set: updateQuery
+      }
+    )
+  },
+  Delete: (params: any = {}) => {
+    const { _id } = params
+
+    return Account.updateOne(
+      { _id: new ObjectId(_id), active: true, isVerified: true },
+      { $set: { active: false } }
+    )
   },
 }
