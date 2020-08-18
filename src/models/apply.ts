@@ -16,7 +16,7 @@ export default {
       updatedAt: Date.now(),
     })
   },
-  GetList: (params: any = {}, options: IOption = {}) => {
+  GetList: async (params: any = {}, options: IOption = {}) => {
     const {
       accountId,
       authorAccountId,
@@ -34,13 +34,17 @@ export default {
       query[param] = params[param]
     })
 
-    return Apply
+    const list = await Apply
       .find(query, {
         skip,
         limit,
         sort: { createdAt: -1 },
       })
       .toArray()
+
+    const count = await Apply.countDocuments(query)
+
+    return { list, count }
   },
   GetItem: async (params: any = {}) => {
     const { _id } = params
