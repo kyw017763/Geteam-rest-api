@@ -3,9 +3,10 @@ interface IResponse {
   description: string 
 }
 
-export const SuccessResponse = (data: any) => {
+export const SuccessResponse = (data: any = {}) => {
   return {
-    data
+    success: true,
+    ...data
   }
 }
 

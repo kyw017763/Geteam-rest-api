@@ -49,6 +49,6 @@ app.all('/*', function(req, res, next) {
 app.use('/', auth)
 app.use('/', counting)
 app.use('/', passport.authenticate('jwt'), board)
-app.use('/apply', passport.authenticate('jwt', { session: true }), apply)
+app.use('/apply', passport.authenticate('jwt'), apply)
 
 app.listen(process.env.PORT || config.PORT, () => {})

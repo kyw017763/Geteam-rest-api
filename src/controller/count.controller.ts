@@ -1,12 +1,9 @@
-import express from 'express'
+import { Request, Response } from 'express'
 import redisClient from '../lib/redisClient'
-import { SuccessResponse, InternalErrorResponse } from './../lib/responseForm'
-import ICounting from '../ts/ICounting';
+import { SuccessResponse, InternalErrorResponse } from '../lib/responseForm'
+import ICounting from '../ts/ICounting'
 
-const router = express.Router()
-export default router
-
-router.get('/counting', async (req, res, next) => {
+export const GetCount = async (req: Request, res: Response) => {
   try {
     let counting: ICounting = {}
 
@@ -23,4 +20,4 @@ router.get('/counting', async (req, res, next) => {
     console.log(err)
     res.status(500).json(InternalErrorResponse)
   }
-})
+}

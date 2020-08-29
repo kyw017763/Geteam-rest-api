@@ -1,5 +1,5 @@
 import auth from './auth'
-import counting from './counting'
+import counting from './count'
 import board from './board'
 import apply from './apply'
 
