@@ -1,8 +1,9 @@
-import auth from './auth'
-import counting from './count'
-import board from './board'
 import apply from './apply'
+import auth from './auth'
+import board from './board'
+import counting from './count'
+import message from './message'
 
-export { auth, counting, board, apply }
+export { apply, auth, board, counting, message }
 
 // TODO: 3개 이상의 글은 작성하지 못하도록

@@ -25,26 +25,40 @@ export default {
     const { accountId } = params
     return Board.find({
       receiveAccount: new ObjectId(accountId)
-    })
+    }).toArray()
 
   },
   GetMessageBySendAccount: (params: any = {}) => {
     const { accountId } = params
     return Board.find({
       sendAccount: new ObjectId(accountId)
-    })
+    }).toArray()
   },
   UpdateIsReaded: (params: any = {}) => {
-    const { _id } = params
+    const { _id, receiveAccount } = params
     return Board.updateOne(
-      { _id: new ObjectId(_id) },
+      { _id: new ObjectId(_id), receiveAccount: new ObjectId(receiveAccount) },
       { $set: { receiveCheck: 1 } },
     )
   },
-  Delete: (params: any = {}) => {
-    const { ids } = params
+  DeleteList: (params: any = {}) => {
+    const { ids, accountId } = params
     return Board.deleteMany({
-      _id: { $in: ids.map((id: string) => new ObjectId(id)) }
+      _id: { $in: ids.map((id: string) => new ObjectId(id)) },
+      $or: [
+        { receiveAccount: new ObjectId(accountId) },
+        { sendAccount: new ObjectId(accountId) }
+      ]
     })
   },
+  DeleteItem: (params: any = {}) => {
+    const { _id, accountId } = params
+    return Board.deleteOne({
+      _id: new ObjectId(_id),
+      $or: [
+        { receiveAccount: new ObjectId(accountId) },
+        { sendAccount: new ObjectId(accountId) }
+      ]
+    })
+  }
 }

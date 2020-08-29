@@ -17,16 +17,8 @@ router.post('/signin', controller.SignIn)
 // Access Token이 만료되었을 것이므로 passport는 사용할 수 없음
 router.post('/signin/refresh', controller.RefreshToken)
 
-// Blacklisting Token, Set null RefreshToken in DB
-// 정상적인 Access Token이 있어야 Signout이 진행된다
-router.post('/signout', passport.authenticate('jwt', { session: false }), controller.SignOut)
-
 // Reset Password (Check Interests, Create Hash)
 router.patch('/signin/reset/pwd', controller.ResetPassword)
-
-router.patch('/pwd', passport.authenticate('jwt', { session: true }), controller.UpdatePassword)
-
-router.delete('/unregister', passport.authenticate('jwt', { session: false }), controller.Delete)
 
 router.post('/verify', controller.Verify)
 
@@ -43,3 +35,13 @@ router.patch('/noti/team', controller.UpdateNotiTeam)
 router.get('/check-email', controller.CheckEmail)
 
 router.get('/check-snum', controller.CheckSnum)
+
+router.use(passport.authenticate('jwt', { session: false }))
+
+// Blacklisting Token, Set null RefreshToken in DB
+// 정상적인 Access Token이 있어야 Signout이 진행된다
+router.post('/signout', controller.SignOut)
+
+router.patch('/pwd', controller.UpdatePassword)
+
+router.delete('/unregister', controller.Delete)

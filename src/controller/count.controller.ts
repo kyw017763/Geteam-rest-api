@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
-import redisClient from '../lib/redisClient'
 import { SuccessResponse, InternalErrorResponse } from '../lib/responseForm'
+import redisClient from '../lib/redisClient'
 import ICounting from '../ts/ICounting'
 
 export const GetCount = async (req: Request, res: Response) => {

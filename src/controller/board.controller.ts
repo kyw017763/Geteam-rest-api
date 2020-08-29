@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
-import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse';
+import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse'
 import models from '../models'
 import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
 import { sendTeamEmail } from 'src/lib/sendEmail'
@@ -13,7 +13,7 @@ const TeamDB = models.team
 
 export const GetList = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       let { offset, limit, order } = req.query
   
       offset = isNaN(offset) ? 0 : offset
@@ -31,7 +31,7 @@ export const GetList = async (req: Request, res: Response) => {
 
 export const GetListByMe = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       let { offset, limit, order } = req.query
   
       offset = isNaN(offset) ? 0 : offset
@@ -49,7 +49,7 @@ export const GetListByMe = async (req: Request, res: Response) => {
 
 export const GetListByKind = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       let { kind } = req.params
       let { offset, limit, order } = req.query
   
@@ -69,7 +69,7 @@ export const GetListByKind = async (req: Request, res: Response) => {
 
 export const GetListByCategory = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       let { kind, category } = req.params
       let { offset, limit, order } = req.query
   
@@ -90,7 +90,7 @@ export const GetListByCategory = async (req: Request, res: Response) => {
 
 export const GetItem = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       const { id } = req.params
   
       if (!id || id.length !== 24) {
@@ -125,7 +125,7 @@ export const GetItem = async (req: Request, res: Response) => {
 
 export const Create = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       let { kind, category } = req.params
       const {
         writeAccountId,
@@ -170,7 +170,7 @@ export const Create = async (req: Request, res: Response) => {
 
 export const Update = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       const { id } = req.params
       const {
         modifyAuthor,
@@ -210,7 +210,7 @@ export const Update = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       const { id } = req.params
   
       if (!id || id.length !== 24) {
@@ -227,7 +227,7 @@ export const Delete = async (req: Request, res: Response) => {
 
 export const CreateTeam = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       const { id } = req.params
       let { kind } = req.query
       const { teamName, teamMessage } = req.body

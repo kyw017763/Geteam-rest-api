@@ -1,13 +1,13 @@
 import { Request, Response } from 'express'
+import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
+import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse'
+import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from 'src/lib/sendEmail'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import decodeJWT from 'jwt-decode'
 import createKey from './../lib/createKey'
 import createHash from './../lib/createHash'
-import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
-import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse';
 import models from '../models'
-import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from 'src/lib/sendEmail'
 import redisClient from '../lib/redisClient'
 import config from '../../config'
 
@@ -248,7 +248,7 @@ export const ResetPassword = async (req: Request, res: Response) => {
 
 export const UpdatePassword = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       const { oldPwd, newPwd } = req.body
       
       const result = await AccountDB.GetForUpdatePassword({ _id: me })
@@ -331,9 +331,9 @@ export const Verify = async (req: Request, res: Response) => {
 
 export const GetInfo = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
   
-      const result = await AccountDB.GetItem({ me })
+      const result = await AccountDB.GetItem({ _id: me })
   
       res.send(SuccessResponse(result))
     } catch (err) {
@@ -344,7 +344,7 @@ export const GetInfo = async (req: Request, res: Response) => {
 
 export const UpdateInfo = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       const {
         modifyName,
         modifySNum,
@@ -371,7 +371,7 @@ export const UpdateInfo = async (req: Request, res: Response) => {
 
 export const UpdateNotiApplied = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       const { notiApply } = req.body
   
       const result = await AccountDB.UpdateNoti({ _id: me, notiApply })
@@ -391,7 +391,7 @@ export const UpdateNotiApplied = async (req: Request, res: Response) => {
 
 export const UpdateNotiAccepted = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       const { notiAccepted } = req.body
   
       const result = await AccountDB.UpdateNoti({ _id: me, notiAccepted })
@@ -411,7 +411,7 @@ export const UpdateNotiAccepted = async (req: Request, res: Response) => {
 
 export const UpdateNotiTeam = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       const { notiTeam } = req.body
       
       const result = await AccountDB.UpdateNoti({ _id: me, notiTeam })

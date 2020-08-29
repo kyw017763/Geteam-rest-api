@@ -7,8 +7,9 @@ dotenv.config()
 import cookieParser from 'cookie-parser'
 import session from 'express-session'
 import connectRedis from 'connect-redis'
+import './src/models/connection'
 import redisClient from './src/lib/redisClient'
-import { auth, counting, board, apply } from './src/routes'
+import { auth, counting, board, apply, message } from './src/routes'
 
 const app = express()
 
@@ -43,9 +44,10 @@ app.all('/*', function(req, res, next) {
   next()
 })
 
-app.use('/', auth)
-app.use('/', counting)
-app.use('/', passport.authenticate('jwt'), board)
 app.use('/apply', passport.authenticate('jwt'), apply)
+app.use('/', auth)
+app.use('/', board)
+app.use('/', counting)
+app.use('/', passport.authenticate('jwt'), message)
 
 app.listen(process.env.PORT || config.PORT, () => {})

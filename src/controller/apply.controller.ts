@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
-import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse';
+import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse'
 import { validateKind } from '../lib/validateValue'
 import redisClient from '../lib/redisClient'
 import models from '../models'
@@ -10,7 +10,7 @@ const BoardDB = models.board
 
 export const GetMyApplyByKind = async (req: Request, res: Response) => {
     try {
-        const me = req!.session!.passport.user.toString()
+        const { _id: me } = req!.session!.passport.user
         let { kind, offset, limit } = req.query
 
         kind = validateKind(kind) ? kind : 'study'
@@ -35,7 +35,7 @@ export const GetMyApplyByKind = async (req: Request, res: Response) => {
 
 export const GetApplyOnMyBoard = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       let { kind, offset, limit } = req.query
   
       kind = validateKind(kind) ? kind : 'study'
@@ -60,7 +60,7 @@ export const GetApplyOnMyBoard = async (req: Request, res: Response) => {
 
 export const GetMyAcceptedApplyByKind = async (req: Request, res: Response)  => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       let { kind, offset, limit } = req.query
   
       kind = validateKind(kind) ? kind : 'study'
@@ -86,7 +86,7 @@ export const GetMyAcceptedApplyByKind = async (req: Request, res: Response)  => 
 
 export const GetMyUnacceptedApplyByKind = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       let { kind, offset, limit } = req.query
   
       kind = validateKind(kind) ? kind : 'study'
@@ -112,7 +112,7 @@ export const GetMyUnacceptedApplyByKind = async (req: Request, res: Response) =>
 
 export const GetApplyOnMyParticularBoard = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       let { id } = req.query
   
       if (!id || id.length !== 24) {
@@ -135,7 +135,7 @@ export const GetApplyOnMyParticularBoard = async (req: Request, res: Response) =
 
 export const Create = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       let {
         authorAccountId,
         boardId,
@@ -216,7 +216,7 @@ export const Create = async (req: Request, res: Response) => {
 
 export const UpdateAccept = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       const { id } = req.params
       const { applyAccountId } = req.body
   
@@ -250,7 +250,7 @@ export const UpdateAccept = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
     try {
-      const me = req!.session!.passport.user.toString()
+      const { _id: me } = req!.session!.passport.user
       const { boardId, applyId } = req.params
       
       if (!boardId || boardId.length !== 24) {
