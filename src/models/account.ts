@@ -133,9 +133,9 @@ export default {
     )) > 0
   },
   GetItem: (params: any = {}) => {
-    const { me } = params
+    const { _id } = params
     return Account.findOne(
-      { _id: new ObjectId(me) },
+      { _id: new ObjectId(_id) },
       {
         projection: {
           id: true,
@@ -150,6 +150,11 @@ export default {
         }
       }
     )
+  },
+  IsExist: async (param: any = {}) => {
+    const { _id } = param
+
+    return (await Account.countDocuments({ _id: new ObjectId(_id) })) > 0
   },
   UpdatePassword: (params: any = {}) => {
     const { _id } = params

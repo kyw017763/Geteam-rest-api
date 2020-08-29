@@ -1,6 +1,5 @@
 import express from 'express'
-import passport from 'passport'
-import passportConfig from './src/middleware/passport'
+import passport from './src/middleware/passport'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import config from './config'
@@ -34,10 +33,8 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
-// TODO: passport config 고치기
 app.use(passport.initialize())
 app.use(passport.session())
-passportConfig()
 
 app.use(cors())
 
