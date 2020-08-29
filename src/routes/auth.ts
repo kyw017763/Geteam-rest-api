@@ -22,26 +22,22 @@ router.patch('/signin/reset/pwd', controller.ResetPassword)
 
 router.post('/verify', controller.Verify)
 
-router.get('/info', controller.GetInfo)
-
-router.patch('/info', controller.UpdateInfo)
-
-router.patch('/noti/applied', controller.UpdateNotiApplied)
-
-router.patch('/noti/accepted', controller.UpdateNotiAccepted)
-
-router.patch('/noti/team', controller.UpdateNotiTeam)
-
 router.get('/check-email', controller.CheckEmail)
 
 router.get('/check-snum', controller.CheckSnum)
 
 router.use(passport.authenticate('jwt', { session: false }))
 
+router.get('/info', controller.GetInfo)
+
 // Blacklisting Token, Set null RefreshToken in DB
 // 정상적인 Access Token이 있어야 Signout이 진행된다
 router.post('/signout', controller.SignOut)
 
 router.patch('/pwd', controller.UpdatePassword)
+router.patch('/info', controller.UpdateInfo)
+router.patch('/noti/applied', controller.UpdateNotiApplied)
+router.patch('/noti/accepted', controller.UpdateNotiAccepted)
+router.patch('/noti/team', controller.UpdateNotiTeam)
 
 router.delete('/unregister', controller.Delete)
