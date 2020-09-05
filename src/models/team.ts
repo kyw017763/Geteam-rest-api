@@ -13,6 +13,7 @@ interface IMember {
 export default {
     Create: (params: any = {}) => {
         const { name, master, members, content } = params
+        
         return Team.insertOne({
             name,
             master: new ObjectId(master),

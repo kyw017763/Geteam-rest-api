@@ -4,14 +4,21 @@ import config from '../../config'
 import IBoard from '../ts/IBoard'
 import getEmailForm from './emailForm'
 
-AWS.config.loadFromPath('./../aws.json')
+// AWS.config.loadFromPath('./../aws.json')
 
 export async function sendAuthEmail(userEmail: string, key: string) {
   try {
     const transporter = nodemailer.createTransport({
-      SES: new AWS.SES({
-        apiVersion: '2010-12-01',
-      })
+      // SES: new AWS.SES({
+      //   apiVersion: '2010-12-01',
+      // })
+      service: 'Gmail',
+      host :'smtp.gmlail.com',
+      secure: false,
+      auth: {
+        user: process.env.EMAIL || config.EMAIL,
+        pass: process.env.PWD || config.PWD,
+      },
     })
 
     const emailContent = `
@@ -40,9 +47,16 @@ export async function sendAuthEmail(userEmail: string, key: string) {
 export async function sendPwdEmail(subject: string, userEmail: string, userName: string, userTempPwd: string) {
   try {
     const transporter = nodemailer.createTransport({
-      SES: new AWS.SES({
-        apiVersion: '2010-12-01',
-      })
+      // SES: new AWS.SES({
+      //   apiVersion: '2010-12-01',
+      // })
+      service: 'Gmail',
+      host :'smtp.gmlail.com',
+      secure: false,
+      auth: {
+        user: process.env.EMAIL || config.EMAIL,
+        pass: process.env.PWD || config.PWD,
+      },
     })
 
     const emailContent = `${userName}님의 임시 비밀번호는 <span style="background: #efdc05;">${userTempPwd}</span> 입니다.`
@@ -66,9 +80,16 @@ export async function sendPwdEmail(subject: string, userEmail: string, userName:
 export async function sendQuestionEmail (kind: string, title: string, content: string) {
   try {
     const transporter = nodemailer.createTransport({
-      SES: new AWS.SES({
-        apiVersion: '2010-12-01',
-      })
+      // SES: new AWS.SES({
+      //   apiVersion: '2010-12-01',
+      // })
+      service: 'Gmail',
+      host :'smtp.gmlail.com',
+      secure: false,
+      auth: {
+        user: process.env.EMAIL || config.EMAIL,
+        pass: process.env.PWD || config.PWD,
+      },
     })
   
     let message = content
@@ -93,9 +114,16 @@ export async function sendQuestionEmail (kind: string, title: string, content: s
 export async function sendTeamEmail (kind: string, item: IBoard, content: string) {
   try {
     const transporter = nodemailer.createTransport({
-      SES: new AWS.SES({
-        apiVersion: '2010-12-01',
-      })
+      // SES: new AWS.SES({
+      //   apiVersion: '2010-12-01',
+      // })
+      service: 'Gmail',
+      host :'smtp.gmlail.com',
+      secure: false,
+      auth: {
+        user: process.env.EMAIL || config.EMAIL,
+        pass: process.env.PWD || config.PWD,
+      },
     })
 
     

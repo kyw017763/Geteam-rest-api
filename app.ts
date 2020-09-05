@@ -50,4 +50,4 @@ app.use('/', board)
 app.use('/', counting)
 app.use('/', passport.authenticate('jwt'), message)
 
-app.listen(process.env.PORT || config.PORT, () => {})
+app.listen(process.env.PORT || config.PORT, () => { console.log('Server is running!') })

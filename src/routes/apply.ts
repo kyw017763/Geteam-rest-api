@@ -14,4 +14,4 @@ router.post('/', controller.Create)
 
 router.patch('/:id/accept', controller.UpdateAccept)
 
-router.delete('/:boardId/:applyId', controller.Delete)
+router.delete('/:board-id/:apply-id', controller.Delete)

@@ -251,7 +251,8 @@ export const UpdateAccept = async (req: Request, res: Response) => {
 export const Delete = async (req: Request, res: Response) => {
     try {
       const { _id: me } = req!.session!.passport.user
-      const { boardId, applyId } = req.params
+      const boardId = req.query['board-id']
+      const applyId = req.query['apply-id']
       
       if (!boardId || boardId.length !== 24) {
         return res.status(400).send(FailureResponse(INVALID_PARAM))

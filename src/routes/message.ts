@@ -12,4 +12,4 @@ router.post('/message', controller.Create)
 router.patch('/message/read', controller.UpdateIsReaded)
 
 router.delete('/messages', controller.DeleteList)
-router.delete('/message', controller.DeleteItem)
+router.delete('/message/:id', controller.DeleteItem)

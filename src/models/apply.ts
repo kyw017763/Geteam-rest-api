@@ -78,6 +78,7 @@ export default {
     }, {
       $set: {
         isAccepted: true,
+        updatedAt: Date.now()
       }
     })
   },

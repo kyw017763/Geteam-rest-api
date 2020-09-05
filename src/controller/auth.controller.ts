@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
 import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse'
-import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from 'src/lib/sendEmail'
+import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from '../lib/sendEmail'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import decodeJWT from 'jwt-decode'

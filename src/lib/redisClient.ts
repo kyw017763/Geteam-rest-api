@@ -16,21 +16,16 @@ class RedisClient {
   private expireAsync: any
 
 	constructor () {
-    this.client = redis.createClient({
-      host: process.env.REDIS_URL || config.REDIS_URL,
-      port: Number(process.env.REDIS_PORT || config.REDIS_PORT),
-    })
+    this.client = redis.createClient(process.env.REDIS_URL || config.REDIS_URL)
 
-    this.client.auth('', (err) => {
-      if (err) {
-        throw err
-      }
-    })
+    // this.client.auth('', (err) => {
+    //   if (err) console.error(err)
+    // })
+
+    this.client.on('connect', () => console.log('connected'))
     
     this.client.on('error', (err) => {
-      if (err) {
-        throw new Error(err)
-      }
+      if (err) console.error(err)
     })
 
     this.existsAsync = promisify(this.client.EXISTS).bind(this.client)

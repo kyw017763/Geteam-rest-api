@@ -18,6 +18,7 @@ export default {
       wantCnt,
       endDate,
     } = params
+
     return Board.insertOne({
       accountId: new ObjectId(accountId),
       kind,
@@ -34,7 +35,6 @@ export default {
       isCompleted: false,
       active: true,
       hit: 0,
-    
       updatedAt: Date.now(),
     })
   },
@@ -134,6 +134,7 @@ export default {
         position,
         wantCnt,
         endDate,
+        updatedAt: Date.now()
       }
     })
   },
@@ -144,6 +145,7 @@ export default {
     }, {
       $set: {
         isCompleted: true,
+        updatedAt: Date.now()
       }
     })
   },
@@ -153,7 +155,8 @@ export default {
       _id: new ObjectId(_id)
     }, {
       $set: {
-        $inc: { applyCnt: diff }
+        $inc: { applyCnt: diff },
+        updatedAt: Date.now()
       }
     })
   },
@@ -163,7 +166,8 @@ export default {
       _id: new ObjectId(_id)
     }, {
       $set: {
-        $inc: { acceptCnt: diff }
+        $inc: { acceptCnt: diff },
+        updatedAt: Date.now()
       }
     })
   },
@@ -173,7 +177,8 @@ export default {
       _id: new ObjectId(_id)
     }, {
       $set: {
-        $inc: { hit: diff }
+        $inc: { hit: diff },
+        updatedAt: Date.now()
       }
     })
   },

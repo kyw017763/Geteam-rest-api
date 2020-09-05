@@ -3,7 +3,7 @@ import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../li
 import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse'
 import models from '../models'
 import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
-import { sendTeamEmail } from 'src/lib/sendEmail'
+import { sendTeamEmail } from '../lib/sendEmail'
 import redisClient from '../lib/redisClient'
 import IApply from 'src/ts/IApply'
 

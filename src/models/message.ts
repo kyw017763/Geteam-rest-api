@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb'
 import { MESSAGE } from './models'
 import IMessage from '../ts/IMessage'
 
-const Board = connection.collection(MESSAGE)
+const Message = connection.collection(MESSAGE)
 
 export default {
   Create: (params: any = {}) => {
@@ -13,37 +13,39 @@ export default {
       content,
       originalId,
     } = params
-    return Board.insertOne({
+
+    return Message.insertOne({
       originalId: new ObjectId(originalId),
       receiveAccount: new ObjectId(receiveAccount),
       sendAccount: new ObjectId(sendAccount),
       content,
       createdAt: Date.now(),
+      updatedAt: Date.now(),
     })
   },
   GetMessageByReceiveAccount: (params: any = {}) => {
     const { accountId } = params
-    return Board.find({
+    return Message.find({
       receiveAccount: new ObjectId(accountId)
     }).toArray()
 
   },
   GetMessageBySendAccount: (params: any = {}) => {
     const { accountId } = params
-    return Board.find({
+    return Message.find({
       sendAccount: new ObjectId(accountId)
     }).toArray()
   },
   UpdateIsReaded: (params: any = {}) => {
     const { _id, receiveAccount } = params
-    return Board.updateOne(
+    return Message.updateOne(
       { _id: new ObjectId(_id), receiveAccount: new ObjectId(receiveAccount) },
-      { $set: { receiveCheck: 1 } },
+      { $set: { receiveCheck: 1, updatedAt: Date.now() } },
     )
   },
   DeleteList: (params: any = {}) => {
     const { ids, accountId } = params
-    return Board.deleteMany({
+    return Message.deleteMany({
       _id: { $in: ids.map((id: string) => new ObjectId(id)) },
       $or: [
         { receiveAccount: new ObjectId(accountId) },
@@ -53,7 +55,7 @@ export default {
   },
   DeleteItem: (params: any = {}) => {
     const { _id, accountId } = params
-    return Board.deleteOne({
+    return Message.deleteOne({
       _id: new ObjectId(_id),
       $or: [
         { receiveAccount: new ObjectId(accountId) },
