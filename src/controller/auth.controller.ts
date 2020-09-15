@@ -429,10 +429,28 @@ export const UpdateNotiTeam = async (req: Request, res: Response) => {
     }
 }
 
-export const CheckEmail = async (req: Request, res: Response) => { // TODO
+export const CheckIsDuplicatedEmail = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body
 
+    const isDuplicated = await AccountDB.IsExist({ id: email })
+
+    res.send(SuccessResponse({ isDuplicated }))
+  } catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
 }
 
-export const CheckSnum = async (req: Request, res: Response) => { // TODO
+export const CheckIsDuplicatedSnum = async (req: Request, res: Response) => {
+  try {
+    const { sNum } = req.body
+    
+    const isDuplicated = await AccountDB.IsExist({ sNum })
 
+    res.send(SuccessResponse({ isDuplicated }))
+  } catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
 }

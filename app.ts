@@ -45,7 +45,7 @@ app.all('/*', function(req, res, next) {
 })
 
 app.use('/apply', passport.authenticate('jwt'), apply)
-app.use('/', auth)
+app.use('/auth', auth)
 app.use('/', board)
 app.use('/', counting)
 app.use('/', passport.authenticate('jwt'), message)

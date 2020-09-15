@@ -1,4 +1,4 @@
-import { connection } from 'mongoose'
+import { connection, Query } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import { ACCOUNT } from './models'
 import bcrypt from 'bcryptjs'
@@ -9,6 +9,7 @@ const Account = connection.collection(ACCOUNT)
 export default {
   DeleteBeforeSignUp: (params: any = {}) => {
     const { id } = params
+
     return Account.deleteMany({
       id,
       isVerified: false,
@@ -152,9 +153,15 @@ export default {
     )
   },
   IsExist: async (param: any = {}) => {
-    const { _id } = param
+    const { _id, id, sNum } = param
 
-    return (await Account.countDocuments({ _id: new ObjectId(_id) })) > 0
+    const filter: IAccount = {}
+
+    if (_id) filter['_id'] = new ObjectId(_id)
+    if (id) filter['id'] = id
+    if (sNum) filter['sNum'] = sNum
+
+    return (await Account.countDocuments({ ...filter })) > 0
   },
   UpdatePassword: (params: any = {}) => {
     const { _id } = params

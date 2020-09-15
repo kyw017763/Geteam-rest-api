@@ -22,9 +22,9 @@ router.patch('/signin/reset/pwd', controller.ResetPassword)
 
 router.post('/verify', controller.Verify)
 
-router.get('/check-email', controller.CheckEmail)
+router.post('/check-email', controller.CheckIsDuplicatedEmail)
 
-router.get('/check-snum', controller.CheckSnum)
+router.post('/check-snum', controller.CheckIsDuplicatedSnum)
 
 router.use(passport.authenticate('jwt', { session: false }))
 
