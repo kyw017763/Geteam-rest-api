@@ -10,11 +10,7 @@ export default {
   DeleteBeforeSignUp: (params: any = {}) => {
     const { id } = params
 
-    return Account.deleteMany({
-      id,
-      isVerified: false,
-      active: false,
-    })
+    return Account.deleteMany({ id, isVerified: false, active: false })
   },
   SignUp: (params: any = {}) => {
     const {
@@ -52,20 +48,12 @@ export default {
   UpdateRefreshToken: (params: any = {}) => {
     const { id, refreshToken } = params
 
-    return Account.updateOne({
-      id, isVerified: true, active: true
-    }, {
-      $set: { refreshToken }
-    })
+    return Account.updateOne({ id, isVerified: true, active: true }, { $set: { refreshToken } })
   },
   ResetRefreshToken: (params: any = {}) => {
     const { _id } = params
     
-    return Account.updateOne({
-      _id: new ObjectId(_id), active: true
-    }, {
-      $set: { refreshToken: '' }
-    })
+    return Account.updateOne({ _id: new ObjectId(_id), active: true }, { $set: { refreshToken: '' } })
   },
   UpdateIsverified: (params: any = {}) => {
     const { verifyKey } = params
@@ -85,23 +73,16 @@ export default {
   UpdateVerifyKey: (params: any = {}) => {
     const { id, verifyKey } = params
 
-    return Account.updateOne({
-      id,
-      verifyKey,
-      isVerified: false,
-      active: true,
-    }, {
-      $set: {
-        verifyKey,
-      }
-    })
+    return Account.updateOne({ id, verifyKey, isVerified: false, active: true }, { $set: { verifyKey } })
   },
   SignIn: (params: any = {}) => {
     const { id } = params
+
     return Account.findOne({ id, isVerified: true, active: true })
   },
   GetForResetPassword: (params: any = {}) => {
     const { id } = params
+
     return Account.findOne(
       { id, active: true, isVerified: true },
       {
@@ -115,6 +96,7 @@ export default {
   },
   GetForUpdatePassword: (params: any = {}) => {
     const { _id } = params
+
     return Account.findOne(
       { _id: new ObjectId(_id), active: true, isVerified: true },
       {
@@ -129,9 +111,7 @@ export default {
   GetCompareEmail: async (params: any = {}) => {
     const { id } = params
 
-    return (await Account.countDocuments(
-      { id, isVerified: true }
-    )) > 0
+    return (await Account.countDocuments({ id, isVerified: true })) > 0
   },
   GetItem: (params: any = {}) => {
     const { _id } = params
@@ -161,17 +141,14 @@ export default {
     if (id) filter['id'] = id
     if (sNum) filter['sNum'] = sNum
 
-    return (await Account.countDocuments({ ...filter })) > 0
+    return (await Account.countDocuments(filter)) > 0
   },
   UpdatePassword: (params: any = {}) => {
     const { _id } = params
     let { pwd } = params
     pwd = bcrypt.hashSync(pwd)
 
-    return Account.updateOne(
-      { _id: new ObjectId(_id) },
-      { $set: { pwd } }
-    )
+    return Account.updateOne({ _id: new ObjectId(_id) }, { $set: { pwd } })
   },
   UpdateInfo: (params: any = {}) => {
     const { _id, name, sNum, interests, profile, profilePhoto } = params
@@ -204,19 +181,11 @@ export default {
       updateQuery['notiTeam'] = notiTeam
     }
 
-    return Account.updateOne(
-      { _id: new ObjectId(_id) },
-      {
-        $set: updateQuery
-      }
-    )
+    return Account.updateOne({ _id: new ObjectId(_id) }, { $set: updateQuery })
   },
   Delete: (params: any = {}) => {
     const { _id } = params
 
-    return Account.updateOne(
-      { _id: new ObjectId(_id), active: true, isVerified: true },
-      { $set: { active: false } }
-    )
+    return Account.updateOne({ _id: new ObjectId(_id), active: true, isVerified: true }, { $set: { active: false } })
   },
 }

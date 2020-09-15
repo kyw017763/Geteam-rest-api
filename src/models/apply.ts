@@ -28,26 +28,18 @@ export default {
 
     const query: any = {}
     Object.keys(params).forEach(param => {
-      if (param.includes('Id')) {
-        query[param] = new ObjectId(params[param])
-      }
-      query[param] = params[param]
+      if (param.includes('id') || param.includes('Id')) query[param] = new ObjectId(params[param])
+      else query[param] = params[param]
     })
 
-    const list = await Apply
-      .find(query, {
-        skip,
-        limit,
-        sort: { createdAt: -1 },
-      })
-      .toArray()
-
+    const list = await Apply.find(query, { skip, limit, sort: { createdAt: -1 }}).toArray()
     const count = await Apply.countDocuments(query)
 
     return { list, count }
   },
   GetItem: async (params: any = {}) => {
     const { _id } = params
+
     return Apply.findOne({ _id: new ObjectId(_id) })
   },
   IsApplied: async (params: any = {}) => {
@@ -85,12 +77,6 @@ export default {
   Delete: (params: any = {}) => {
     const { _id } = params
     
-    return Apply.updateOne({
-      _id: new ObjectId(_id),
-    }, {
-      $set: {
-        active: false,
-      }
-    })
+    return Apply.updateOne({ _id: new ObjectId(_id) }, { $set: { active: false } })
   },
 }
