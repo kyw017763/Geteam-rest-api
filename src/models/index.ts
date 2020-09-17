@@ -14,5 +14,4 @@ const models = {
 
 export default models
 
-// updateOne updatedAt 처리
 // TODO: list return 형태 {list, count} 로 바꾸기

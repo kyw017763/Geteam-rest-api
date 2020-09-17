@@ -41,8 +41,8 @@ export default {
       notiTeam: false,
 
       active: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: currentDate,
+      updatedAt: currentDate,
     })
   },
   UpdateRefreshToken: (params: any = {}) => {
@@ -55,7 +55,7 @@ export default {
     
     return Account.updateOne({ _id: new ObjectId(_id), active: true }, { $set: { refreshToken: '' } })
   },
-  UpdateIsverified: (params: any = {}) => {
+  UpdateIsVerified: (params: any = {}) => {
     const { verifyKey } = params
 
     return Account.updateOne({
@@ -148,7 +148,7 @@ export default {
     let { pwd } = params
     pwd = bcrypt.hashSync(pwd)
 
-    return Account.updateOne({ _id: new ObjectId(_id) }, { $set: { pwd } })
+    return Account.updateOne({ _id: new ObjectId(_id) }, { $set: { pwd, updatedAt: Date.now() } })
   },
   UpdateInfo: (params: any = {}) => {
     const { _id, name, sNum, interests, profile, profilePhoto } = params
@@ -162,6 +162,7 @@ export default {
           interests,
           profile,
           profilePhoto: profilePhoto || '',
+          updatedAt: Date.now()
         }
       }
     )
@@ -181,7 +182,7 @@ export default {
       updateQuery['notiTeam'] = notiTeam
     }
 
-    return Account.updateOne({ _id: new ObjectId(_id) }, { $set: updateQuery })
+    return Account.updateOne({ _id: new ObjectId(_id) }, { $set: { ...updateQuery, updatedAt: Date.now() } })
   },
   Delete: (params: any = {}) => {
     const { _id } = params

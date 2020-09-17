@@ -68,7 +68,7 @@ export const CompareVerifyKey = async (req: Request, res: Response) => {
     try {
       const { key } = req.params
   
-      const result = await AccountDB.UpdateIsverified({ verifyKey: key })
+      const result = await AccountDB.UpdateIsVerified({ verifyKey: key })
   
       const { matchedCount, modifiedCount } = result
   

@@ -125,17 +125,17 @@ export default {
   UpdateApplyCnt: (params: any = {}) => {
     const { _id, diff } = params
 
-    return Board.updateOne({ _id: new ObjectId(_id) }, { $set: { $inc: { applyCnt: diff }, updatedAt: Date.now() } })
+    return Board.updateOne({ _id: new ObjectId(_id) }, { $inc: { applyCnt: diff }, $set: { updatedAt: Date.now() } })
   },
   UpdateAcceptCnt: (params: any = {}) => {
     const { _id, diff } = params
 
-    return Board.updateOne({ _id: new ObjectId(_id) }, { $set: { $inc: { acceptCnt: diff }, updatedAt: Date.now() } })
+    return Board.updateOne({ _id: new ObjectId(_id) }, { $inc: { acceptCnt: diff }, $set: { updatedAt: Date.now() } })
   },
   UpdateHit: (params: any = {}) => {
     const { _id, diff } = params
 
-    return Board.updateOne({ _id: new ObjectId(_id) }, { $set: { $inc: { hit: diff }, updatedAt: Date.now() } })
+    return Board.updateOne({ _id: new ObjectId(_id) }, { $inc: { hit: diff }, $set: { updatedAt: Date.now() } })
   },
   Delete: (params: any = {}) => {
     const { _id, accountId } = params
