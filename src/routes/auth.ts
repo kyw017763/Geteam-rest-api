@@ -5,10 +5,10 @@ import * as controller from '../controller/auth.controller'
 const router = express.Router()
 export default router
 
-router.post('/register', controller.Create)
-router.post('/register/compare-email', controller.CompareEmail)
-router.post('/register/verify/:key', controller.CompareVerifyKey)
-router.post('/register/verify/new/:key', controller.CreateVerifyKey)
+router.post('/', controller.Create)
+router.post('/compare-email', controller.CompareEmail)
+router.post('/verify/:key', controller.CompareVerifyKey)
+router.post('/verify/new/:key', controller.SetVerifyKey)
 
 // Access Token, Refresh Token 발급
 router.post('/signin', controller.SignIn)
@@ -40,4 +40,4 @@ router.patch('/noti/applied', controller.UpdateNotiApplied)
 router.patch('/noti/accepted', controller.UpdateNotiAccepted)
 router.patch('/noti/team', controller.UpdateNotiTeam)
 
-router.delete('/unregister', controller.Delete)
+router.delete('/', controller.Delete)

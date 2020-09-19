@@ -9,7 +9,7 @@ import session from 'express-session'
 import connectRedis from 'connect-redis'
 import './src/models/connection'
 import redisClient from './src/lib/redisClient'
-import { auth, counting, board, apply, message } from './src/routes'
+import router from './src/routes'
 
 const app = express()
 
@@ -44,10 +44,6 @@ app.all('/*', function(req, res, next) {
   next()
 })
 
-app.use('/apply', passport.authenticate('jwt'), apply)
-app.use('/auth', auth)
-app.use('/', board)
-app.use('/', counting)
-app.use('/', passport.authenticate('jwt'), message)
+app.use('/api', router)
 
 app.listen(process.env.PORT || config.PORT, () => { console.log('Server is running!') })

@@ -23,12 +23,12 @@ export default {
       updatedAt: Date.now(),
     })
   },
-  GetMessageByReceiveAccount: (params: any = {}) => {
+  GetMessageByReceiveAccount: (params: any = {}, options: any = {}) => {
     const { accountId } = params
 
     return Message.find({ receiveAccount: new ObjectId(accountId) }).toArray()
   },
-  GetMessageBySendAccount: (params: any = {}) => {
+  GetMessageBySendAccount: (params: any = {}, options: any = {}) => {
     const { accountId } = params
     
     return Message.find({ sendAccount: new ObjectId(accountId) }).toArray()

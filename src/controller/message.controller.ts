@@ -7,112 +7,120 @@ import IMessage from 'src/ts/IMessage'
 const MessageDB = models.message
 
 export const Create = async (req: Request, res: Response) => {
-    try {
-        const { _id: me } = req!.session!.passport.user
-        const { receiveAccount, content, originalId } = req.body
+  try {
+    const { _id: me } = req!.session!.passport.user
+    const { receiveAccount, content, originalId } = req.body
 
-        if (!receiveAccount || !content) {
-            return res.status(400).send(FailureResponse(INVALID_PARAM))
-        }
-
-        await MessageDB.Create({ receiveAccount, sendAccount: me, content, originalId })
-
-        res.send(SuccessResponse())
+    if (!receiveAccount || !content) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
-    catch (err) {
-        console.log(err)
-        res.status(500).send(InternalErrorResponse)
-    }
+
+    await MessageDB.Create({ receiveAccount, sendAccount: me, content, originalId })
+
+    res.send(SuccessResponse())
+  }
+  catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
 }
 
 export const GetReceiveMessageList = async (req: Request, res: Response) => {
-    try {
-        const { _id: me } = req!.session!.passport.user
+  try {
+    const { _id: me } = req!.session!.passport.user
+    let { offset, limit } = req.query
 
-        const messages = await MessageDB.GetMessageByReceiveAccount({ accountId: me })
+    offset = isNaN(offset) ? 0 : Number(offset)
+    limit = isNaN(limit) ? 16 : Number(limit)
 
-        res.send(SuccessResponse(messages))
-    }
-    catch (err) {
-        console.log(err)
-        res.status(500).send(InternalErrorResponse)
-    }
+    const messages = await MessageDB.GetMessageByReceiveAccount({ accountId: me }, { skip: offset, limit })
+
+    res.send(SuccessResponse(messages))
+  }
+  catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
 }
 
 export const GetSendMessageList = async (req: Request, res: Response) => {
-    try {
-        const { _id: me } = req!.session!.passport.user
+  try {
+    const { _id: me } = req!.session!.passport.user
+    let { offset, limit } = req.query
 
-        const messages = await MessageDB.GetMessageByReceiveAccount({ accountId: me })
+    offset = isNaN(offset) ? 0 : Number(offset)
+    limit = isNaN(limit) ? 16 : Number(limit)
 
-        res.send(SuccessResponse(messages))
-    }
-    catch (err) {
-        console.log(err)
-        res.status(500).send(InternalErrorResponse)
-    }
+    const messages = await MessageDB.GetMessageByReceiveAccount({ accountId: me }, { skip: offset, limit })
+
+    res.send(SuccessResponse(messages))
+  }
+  catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
 }
 
 export const UpdateIsReaded = async (req: Request, res: Response) => {
-    try {
-        const { _id: me } = req!.session!.passport.user
+  try {
+    const { _id: me } = req!.session!.passport.user
 
-        const { id } = req.params
+    const { id } = req.params
 
-        if (!id || id.length !== 24) {
-            return res.status(400).send(FailureResponse(INVALID_PARAM))
-        }
-        
-        await MessageDB.UpdateIsReaded({ _id: id, receiveAccount: me })
-        
-        res.send(SuccessResponse())
+    if (!id || id.length !== 24) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
-    catch (err) {
-        console.log(err)
-        res.status(500).send(InternalErrorResponse)
-    }
+    
+    await MessageDB.UpdateIsReaded({ _id: id, receiveAccount: me })
+    
+    res.send(SuccessResponse())
+  }
+  catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
 }
 
 export const DeleteList = async (req: Request, res: Response) => {
-    try {
-        const { _id: me } = req!.session!.passport.user
+  try {
+    const { _id: me } = req!.session!.passport.user
 
-        const { ids } = req.query
+    const { ids } = req.query
 
-        let isValid = true
-        const messageIdList = String(ids).split('')
+    let isValid = true
+    const messageIdList = String(ids).split('')
 
-        messageIdList.map((id: string) => { if (!id || id.length !== 24) isValid = false })
+    messageIdList.map((id: string) => { if (!id || id.length !== 24) isValid = false })
 
-        if (!messageIdList.length || isValid) {
-            return res.status(400).send(FailureResponse(INVALID_PARAM))
-        }
-
-        await MessageDB.DeleteList({ ids: messageIdList, accountId: me })
-        
-        res.send(SuccessResponse())
+    if (!messageIdList.length || isValid) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
-    catch (err) {
-        console.log(err)
-        res.status(500).send(InternalErrorResponse)
-    }
+
+    await MessageDB.DeleteList({ ids: messageIdList, accountId: me })
+    
+    res.send(SuccessResponse())
+  }
+  catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
 }
 
 export const DeleteItem = async (req: Request, res: Response) => {
-    try {
-        const { _id: me } = req!.session!.passport.user
-        const { id } = req.params
+  try {
+    const { _id: me } = req!.session!.passport.user
+    const { id } = req.params
 
-        if (!id || id.length !== 24) {
-            return res.status(400).send(FailureResponse(INVALID_PARAM))
-        }
+    if (!id || id.length !== 24) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
+    }
 
-        await MessageDB.DeleteItem({ _id: id, accountId: me })
-        
-        res.send(SuccessResponse())
-    }
-    catch (err) {
-        console.log(err)
-        res.status(500).send(InternalErrorResponse)
-    }
+    await MessageDB.DeleteItem({ _id: id, accountId: me })
+    
+    res.send(SuccessResponse())
+  }
+  catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
 }
