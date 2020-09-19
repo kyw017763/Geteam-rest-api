@@ -14,5 +14,3 @@ router.use('/auth', auth)
 router.use('/board', board)
 router.use('/count', count)
 router.use('/message', passport.authenticate('jwt'), message)
-
-// TODO: 3개 이상의 글은 작성하지 못하도록

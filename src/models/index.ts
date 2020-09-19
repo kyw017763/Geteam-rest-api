@@ -13,5 +13,3 @@ const models = {
 }
 
 export default models
-
-// TODO: list return 형태 {list, count} 로 바꾸기

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
-import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse'
+import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST, EXCCED_LIMIT } from '../lib/failureResponse'
 import models from '../models'
 import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
 import { sendTeamEmail } from '../lib/sendEmail'
@@ -143,6 +143,11 @@ export const Create = async (req: Request, res: Response) => {
     if (me !== writeAccountId) {
       return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
+
+    const countBoardByMe = await BoardDB.GetBoardCount({ accountId: me })
+    if (countBoardByMe > 3) {
+      return res.status(400).send(FailureResponse(EXCCED_LIMIT))
+    }
   
     const result = await BoardDB.Create({
       accountId: me,
@@ -240,6 +245,11 @@ export const CreateTeam = async (req: Request, res: Response) => {
   
     if (!teamName || !teamName) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
+    }
+
+    const countTeamByMe = await BoardDB.GetTeamCount({ accountId: me })
+    if (countTeamByMe > 2) {
+      return res.status(400).send(FailureResponse(EXCCED_LIMIT))
     }
   
     const board = await BoardDB.GetItem({ _id: id })

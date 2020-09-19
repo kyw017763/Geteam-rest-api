@@ -78,6 +78,16 @@ export default {
 
     return Board.findOne({ _id: new ObjectId(_id) })
   },
+  GetBoardCount: (params: any = {}) => {
+    const { accountId } = params
+
+    return Board.countDocuments({ accountId: new ObjectId(accountId), endDate: { $le: Date.now() } })
+  },
+  GetTeamCount: (params: any = {}) => {
+    const { accountId } = params
+
+    return Board.countDocuments({ accountId: new ObjectId(accountId), isCompleted: true })
+  },
   IsEnableModify: async (params: any = {}) => {
     const { _id } = params
 
