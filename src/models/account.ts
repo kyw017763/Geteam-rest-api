@@ -1,4 +1,4 @@
-import { connection } from 'mongoose'
+import { connection, Query } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import { ACCOUNT } from './models'
 import bcrypt from 'bcryptjs'
@@ -9,11 +9,8 @@ const Account = connection.collection(ACCOUNT)
 export default {
   DeleteBeforeSignUp: (params: any = {}) => {
     const { id } = params
-    return Account.deleteMany({
-      id,
-      isVerified: false,
-      active: false,
-    })
+
+    return Account.deleteMany({ id, isVerified: false, active: false })
   },
   SignUp: (params: any = {}) => {
     const {
@@ -44,29 +41,21 @@ export default {
       notiTeam: false,
 
       active: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: currentDate,
+      updatedAt: currentDate,
     })
   },
   UpdateRefreshToken: (params: any = {}) => {
     const { id, refreshToken } = params
 
-    return Account.updateOne({
-      id, isVerified: true, active: true
-    }, {
-      $set: { refreshToken }
-    })
+    return Account.updateOne({ id, isVerified: true, active: true }, { $set: { refreshToken } })
   },
   ResetRefreshToken: (params: any = {}) => {
     const { _id } = params
     
-    return Account.updateOne({
-      _id: new ObjectId(_id), active: true
-    }, {
-      $set: { refreshToken: '' }
-    })
+    return Account.updateOne({ _id: new ObjectId(_id), active: true }, { $set: { refreshToken: '' } })
   },
-  UpdateIsverified: (params: any = {}) => {
+  UpdateIsVerified: (params: any = {}) => {
     const { verifyKey } = params
 
     return Account.updateOne({
@@ -84,23 +73,16 @@ export default {
   UpdateVerifyKey: (params: any = {}) => {
     const { id, verifyKey } = params
 
-    return Account.updateOne({
-      id,
-      verifyKey,
-      isVerified: false,
-      active: true,
-    }, {
-      $set: {
-        verifyKey,
-      }
-    })
+    return Account.updateOne({ id, verifyKey, isVerified: false, active: true }, { $set: { verifyKey } })
   },
   SignIn: (params: any = {}) => {
     const { id } = params
+
     return Account.findOne({ id, isVerified: true, active: true })
   },
   GetForResetPassword: (params: any = {}) => {
     const { id } = params
+
     return Account.findOne(
       { id, active: true, isVerified: true },
       {
@@ -114,6 +96,7 @@ export default {
   },
   GetForUpdatePassword: (params: any = {}) => {
     const { _id } = params
+
     return Account.findOne(
       { _id: new ObjectId(_id), active: true, isVerified: true },
       {
@@ -128,9 +111,7 @@ export default {
   GetCompareEmail: async (params: any = {}) => {
     const { id } = params
 
-    return (await Account.countDocuments(
-      { id, isVerified: true }
-    )) > 0
+    return (await Account.countDocuments({ id, isVerified: true })) > 0
   },
   GetItem: (params: any = {}) => {
     const { _id } = params
@@ -152,19 +133,22 @@ export default {
     )
   },
   IsExist: async (param: any = {}) => {
-    const { _id } = param
+    const { _id, id, sNum } = param
 
-    return (await Account.countDocuments({ _id: new ObjectId(_id) })) > 0
+    const filter: IAccount = {}
+
+    if (_id) filter['_id'] = new ObjectId(_id)
+    if (id) filter['id'] = id
+    if (sNum) filter['sNum'] = sNum
+
+    return (await Account.countDocuments(filter)) > 0
   },
   UpdatePassword: (params: any = {}) => {
     const { _id } = params
     let { pwd } = params
     pwd = bcrypt.hashSync(pwd)
 
-    return Account.updateOne(
-      { _id: new ObjectId(_id) },
-      { $set: { pwd } }
-    )
+    return Account.updateOne({ _id: new ObjectId(_id) }, { $set: { pwd, updatedAt: Date.now() } })
   },
   UpdateInfo: (params: any = {}) => {
     const { _id, name, sNum, interests, profile, profilePhoto } = params
@@ -178,6 +162,7 @@ export default {
           interests,
           profile,
           profilePhoto: profilePhoto || '',
+          updatedAt: Date.now()
         }
       }
     )
@@ -197,19 +182,11 @@ export default {
       updateQuery['notiTeam'] = notiTeam
     }
 
-    return Account.updateOne(
-      { _id: new ObjectId(_id) },
-      {
-        $set: updateQuery
-      }
-    )
+    return Account.updateOne({ _id: new ObjectId(_id) }, { $set: { ...updateQuery, updatedAt: Date.now() } })
   },
   Delete: (params: any = {}) => {
     const { _id } = params
 
-    return Account.updateOne(
-      { _id: new ObjectId(_id), active: true, isVerified: true },
-      { $set: { active: false } }
-    )
+    return Account.updateOne({ _id: new ObjectId(_id), active: true, isVerified: true }, { $set: { active: false } })
   },
 }

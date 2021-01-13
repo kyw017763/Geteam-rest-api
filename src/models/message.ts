@@ -23,21 +23,19 @@ export default {
       updatedAt: Date.now(),
     })
   },
-  GetMessageByReceiveAccount: (params: any = {}) => {
+  GetMessageByReceiveAccount: (params: any = {}, options: any = {}) => {
     const { accountId } = params
-    return Message.find({
-      receiveAccount: new ObjectId(accountId)
-    }).toArray()
 
+    return Message.find({ receiveAccount: new ObjectId(accountId) }).toArray()
   },
-  GetMessageBySendAccount: (params: any = {}) => {
+  GetMessageBySendAccount: (params: any = {}, options: any = {}) => {
     const { accountId } = params
-    return Message.find({
-      sendAccount: new ObjectId(accountId)
-    }).toArray()
+    
+    return Message.find({ sendAccount: new ObjectId(accountId) }).toArray()
   },
   UpdateIsReaded: (params: any = {}) => {
     const { _id, receiveAccount } = params
+
     return Message.updateOne(
       { _id: new ObjectId(_id), receiveAccount: new ObjectId(receiveAccount) },
       { $set: { receiveCheck: 1, updatedAt: Date.now() } },
@@ -45,22 +43,28 @@ export default {
   },
   DeleteList: (params: any = {}) => {
     const { ids, accountId } = params
-    return Message.deleteMany({
-      _id: { $in: ids.map((id: string) => new ObjectId(id)) },
-      $or: [
-        { receiveAccount: new ObjectId(accountId) },
-        { sendAccount: new ObjectId(accountId) }
-      ]
-    })
+
+    return Message.deleteMany(
+      {
+        _id: { $in: ids.map((id: string) => new ObjectId(id)) },
+        $or: [
+          { receiveAccount: new ObjectId(accountId) },
+          { sendAccount: new ObjectId(accountId) }
+        ]
+      }
+    )
   },
   DeleteItem: (params: any = {}) => {
     const { _id, accountId } = params
-    return Message.deleteOne({
-      _id: new ObjectId(_id),
-      $or: [
-        { receiveAccount: new ObjectId(accountId) },
-        { sendAccount: new ObjectId(accountId) }
-      ]
-    })
+    
+    return Message.deleteOne(
+      {
+        _id: new ObjectId(_id),
+        $or: [
+          { receiveAccount: new ObjectId(accountId) },
+          { sendAccount: new ObjectId(accountId) }
+        ]
+      }
+    )
   }
 }

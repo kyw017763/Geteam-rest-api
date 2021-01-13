@@ -2,7 +2,6 @@ import { connect } from 'mongoose'
 import config from '../../config'
 
 export default connect(process.env.DB_URL || config.DB_URL, {
-  useUnifiedTopology: true,
   useCreateIndex: true,
   useNewUrlParser: true,
   autoReconnect: true,
