@@ -8,22 +8,19 @@ import models from '../models'
 const ApplyDB = models.apply
 const BoardDB = models.board
 
-export const GetMyApplyByKind = async (req: Request, res: Response) => {
+export const GetList = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
-    let { kind, offset, limit } = req.query
+    const { _id: me } = req!.user!
+    let { kind, author, is_accepted: isAccepted, active, offset, limit, option } = req.query
 
-    kind = validateKind(kind) ? kind : 'study'
+    kind = validateKind(kind)
     offset = isNaN(offset) ? 0 : offset
     limit = isNaN(limit) ? 12 : limit
 
-    const result = await ApplyDB.GetList({
-      accountId: me,
-      boardKind: kind,
-    }, {
-      skip: offset * limit,
-      limit,
-    })
+    const result = await ApplyDB.GetList(
+      { accountId: me, kind, author, isAccepted, active },
+      { skip: offset * limit, limit, option }
+    )
 
     res.send(SuccessResponse(result))
   }
@@ -33,97 +30,16 @@ export const GetMyApplyByKind = async (req: Request, res: Response) => {
   }
 }
 
-export const GetApplyOnMyBoard = async (req: Request, res: Response) => {
+export const GetListOnMyParticularBoard = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
-    let { kind, offset, limit } = req.query
+    const { _id: me } = req!.user!
+    let { boardid: boardId } = req.query
   
-    kind = validateKind(kind) ? kind : 'study'
-    offset = isNaN(offset) ? 0 : offset
-    limit = isNaN(limit) ? 12 : limit
-  
-    const result = await ApplyDB.GetList({
-      authorAccountId: me,
-      boardKind: kind,
-    }, {
-      skip: offset * limit,
-      limit,
-    })
-  
-    res.send(SuccessResponse(result))
-  }
-  catch (err) {
-    console.log(err)
-    res.status(500).send(InternalErrorResponse)
-  }
-}
-
-export const GetMyAcceptedApplyByKind = async (req: Request, res: Response)  => {
-  try {
-    const { _id: me } = req!.session!.passport.user
-    let { kind, offset, limit } = req.query
-  
-    kind = validateKind(kind) ? kind : 'study'
-    offset = isNaN(offset) ? 0 : offset
-    limit = isNaN(limit) ? 12 : limit
-  
-    const result = await ApplyDB.GetList({
-      accountId: me,
-      isAccepted: true,
-      boardKind: kind,
-    }, {
-      skip: offset * limit,
-      limit,
-    })
-  
-    res.send(SuccessResponse(result))
-  }
-  catch (err) {
-    console.log(err)
-    res.status(500).send(InternalErrorResponse)
-  }
-}
-
-export const GetMyUnacceptedApplyByKind = async (req: Request, res: Response) => {
-  try {
-    const { _id: me } = req!.session!.passport.user
-    let { kind, offset, limit } = req.query
-  
-    kind = validateKind(kind) ? kind : 'study'
-    offset = isNaN(offset) ? 0 : offset
-    limit = isNaN(limit) ? 12 : limit
-  
-    const result = await ApplyDB.GetList({
-      accountId: me,
-      isAccepted: false,
-      boardKind: kind,
-    }, {
-      skip: offset * limit,
-      limit,
-    })
-  
-    res.send(SuccessResponse(result))
-  }
-  catch (err) {
-    console.log(err)
-    res.status(500).send(InternalErrorResponse)
-  }
-}
-
-export const GetApplyOnMyParticularBoard = async (req: Request, res: Response) => {
-  try {
-    const { _id: me } = req!.session!.passport.user
-    let { id } = req.query
-  
-    if (!id || id.length !== 24) {
+    if (!boardId || boardId.length !== 24) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
   
-    const result = await ApplyDB.GetList({
-      authorAccountId: me,
-      boardId: id,
-      active: true,
-    })
+    const result = await ApplyDB.GetList({ author: me, boardId })
   
     res.send(SuccessResponse(result))
   }
@@ -135,73 +51,29 @@ export const GetApplyOnMyParticularBoard = async (req: Request, res: Response) =
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
-    let {
-      authorAccountId,
-      boardId,
-      boardKind,
-      applyAccountId,
-      applyPosition, // only contest
-      applyPortfolio, // only contest
-      applyPortfolioText, // only contest
-      wantedText,
-    } = req.body
-  
-    if (me !== applyAccountId) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
-    }
-  
-    if (authorAccountId === me) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
-    }
-  
-    if (!boardId || boardId.length !== 24) {
+    const { _id: me } = req!.user!
+    const { author, boardId, wantedText } = req.body
+    let { kind, position, portfolio, portfolioText } = req.body
+
+    if (!author || author.length !== 24 || !boardId || boardId.length !== 24 || !wantedText) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
   
-    if (!boardKind || !validateKind(boardKind)) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
-    }
-  
-    if (boardKind === 'study' && (applyPosition || applyPortfolio || applyPortfolioText)) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
-    }
-  
-    if (!applyAccountId || applyAccountId.length !== 24) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
-    }
-  
-    wantedText = wantedText || ''
-  
-    const isApplied = await ApplyDB.IsApplied({
-      accountId: me,
-      boardId,
-    })
-  
+    const isApplied = await ApplyDB.IsApplied({ accountId: me, boardId })
     if (isApplied) {
       return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
-  
+
     const contestObj: any = {}
-    if (boardKind === 'contest') {
-      contestObj['applyPosition'] = applyPosition
-      contestObj['applyPortfolio'] = applyPortfolio
-      contestObj['applyPortfolioText'] = applyPortfolioText
+    kind = validateKind(kind)
+    if (kind === 'contest') {
+      contestObj.position = position
+      contestObj.portfolio = portfolio
+      contestObj.portfolioText = portfolioText
     }
-  
-    const result = await ApplyDB.Create({
-      accountId: me,
-      boardId,
-      boardKind,
-      authorAccountId,
-      wantedText,
-      ...contestObj,
-    })
-  
-    if (!result || !result.insertedId) {
-      throw new Error()
-    }
-  
+
+    const result = await ApplyDB.Create({ accountId: me, author, boardId, wantedText, ...contestObj })
+
     await BoardDB.UpdateApplyCnt({ _id: boardId, diff: 1 })
   
     await redisClient.incCnt('applyCnt')
@@ -216,31 +88,28 @@ export const Create = async (req: Request, res: Response) => {
 
 export const UpdateAccept = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
-    const { id } = req.params
-    const { applyAccountId } = req.body
-  
-    if (!id || id.length !== 24) {
+    const { _id: me } = req!.user!
+    const { boardid: boardId, applyid: applyId } = req.params
+
+    if (!boardId || boardId.length !== 24 || !applyId || applyId.length !== 24) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
-  
-    if (!applyAccountId || applyAccountId.length !== 24) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
-    }
-  
-    if (await ApplyDB.IsAccepted({ accountId: applyAccountId, boardId: id })) {
+
+    if (await ApplyDB.IsAccepted({ _id: applyId, boardId })) {
       return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
+
+    const updateIsAcceptedResult = await ApplyDB.UpdateIsAccepted({ _id: applyId, boardId, author: me })
+    if (updateIsAcceptedResult.matchedCount === 0) {
+      return res.status(404).send(FailureResponse(NOT_FOUND))
+    }
   
-    await ApplyDB.UpdateApplyIsAccepted({
-      accountId: applyAccountId,
-      authorAccountId: me,
-      boardId: id,
-    })
+    const updateAcceptCntResult = await BoardDB.UpdateAcceptCnt({ _id: boardId, diff: 1 })
+    if (updateAcceptCntResult.matchedCount === 0) {
+      return res.status(404).send(FailureResponse(NOT_FOUND))
+    }
   
-    await BoardDB.UpdateAcceptCnt({ _id: id, diff: 1 })
-  
-    res.send(SuccessResponse({ _id: id }))
+    res.send(SuccessResponse())
   }
   catch (err) {
     console.log(err)
@@ -250,37 +119,23 @@ export const UpdateAccept = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
-    const boardId = req.query['board-id']
-    const applyId = req.query['apply-id']
-    
-    if (!boardId || boardId.length !== 24) {
+    const { _id: me } = req!.user!
+    const { boardid: boardId, applyid: applyId } = req.params
+
+    if (!boardId || boardId.length !== 24 || !applyId || applyId.length !== 24) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
-  
-    if (!applyId || applyId.length !== 24) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
-    }
-  
-    const boardDoc = await BoardDB.GetItem({ _id: boardId })
-    const applyDoc = await ApplyDB.GetItem({ _id: applyId })
-  
-    if (boardDoc.endDate < Date.now()) {
+
+    const result = await ApplyDB.Delete({ _id: applyId, boardId })
+    if (result === false) {
       return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
-  
-    if (boardDoc.active === false) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+    if (result.matchedCount === 0) {
+      return res.status(404).send(FailureResponse(NOT_FOUND))
     }
-  
-    if (applyDoc.isAccepted === true) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
-    }
-  
-    await ApplyDB.Delete({ _id: applyId })
-  
+
     await BoardDB.UpdateApplyCnt({ _id: boardId, diff: -1 })
-  
+    
     res.send(SuccessResponse())
   }
   catch (err) {

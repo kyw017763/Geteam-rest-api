@@ -4,12 +4,10 @@ import board from './board'
 import message from './message'
 import team from './team'
 
-const models = {
+export default {
   account,
   apply,
   board,
   message,
-  team,
+  team
 }
-
-export default models

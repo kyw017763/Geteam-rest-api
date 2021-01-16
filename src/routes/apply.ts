@@ -4,14 +4,11 @@ import * as controller from '../controller/apply.controller'
 const router = express.Router()
 export default router
 
-router.get('/', controller.GetMyApplyByKind)
-router.get('/applied', controller.GetApplyOnMyBoard)
-router.get('/accepted', controller.GetMyAcceptedApplyByKind)
-router.get('/unaccpeted', controller.GetMyUnacceptedApplyByKind)
-router.get('/:id', controller.GetApplyOnMyParticularBoard)
+router.get('/', controller.GetList)
+router.get('/:boardid', controller.GetListOnMyParticularBoard)
 
 router.post('/', controller.Create)
 
-router.patch('/:id/accept', controller.UpdateAccept)
+router.patch('/:applyid/accept', controller.UpdateAccept)
 
-router.delete('/:board-id/:apply-id', controller.Delete)
+router.delete('/:boardid/:applyid', controller.Delete)
