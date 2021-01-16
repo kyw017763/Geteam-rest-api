@@ -1,8 +1,8 @@
-import { connection, Query } from 'mongoose'
+import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import { ACCOUNT } from './models'
-import bcrypt from 'bcryptjs'
 import IAccount from '../ts/IAccount'
+import bcrypt from 'bcryptjs'
 
 const Account = connection.collection(ACCOUNT)
 

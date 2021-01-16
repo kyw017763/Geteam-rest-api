@@ -1,5 +1,5 @@
 export default interface IAccount {
-  _id?: any
+  _id: string
 
   id?: string
   name?: string

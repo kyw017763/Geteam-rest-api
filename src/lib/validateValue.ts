@@ -1,9 +1,9 @@
 const validateKind = (kind: string) => {
   switch (kind) {
-    case 'study': case 'contest':
-      return true
+    case 'all': case 'study': case 'contest':
+      return kind
     default:
-      return false
+      return 'study'
   }
 }
 
@@ -11,9 +11,9 @@ const validateCategory = (kind: string, category: string) => {
   if (kind === 'study') {
     switch (category) {
       case 'develop': case 'design': case 'etc':
-        return true
+        return category
       default:
-        return false
+        return 'develop'
     }
   } else if (kind === 'contest') {
     switch (category) {
