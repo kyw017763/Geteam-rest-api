@@ -1,7 +1,8 @@
+import { ObjectId } from 'mongodb'
 import IAccount from './IAccount'
 
 export default interface IBoard {
-  _id: string
+  _id: ObjectId
 
   accountId: IAccount['_id']
   kind: string // study or contest
@@ -9,7 +10,7 @@ export default interface IBoard {
   topic: string
   title: string
   content: string
-  position?: { // only contest
+  position: { // only contest
     title: [string]
     description: [string]
     cnt: number

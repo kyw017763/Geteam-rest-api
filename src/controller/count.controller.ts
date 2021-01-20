@@ -5,7 +5,7 @@ import ICounting from '../ts/ICounting'
 
 export const GetCount = async (req: Request, res: Response) => {
   try {
-    let counting: ICounting = {}
+    let counting: ICounting = { visit: 0, account: 0, list: 0, apply: 0, team: 0 }
 
     await redisClient.incCnt('visitCnt')
 

@@ -1,26 +1,28 @@
+import { ObjectId } from 'mongodb'
+
 export default interface IAccount {
-  _id: string
+  _id: ObjectId
 
-  id?: string
-  name?: string
-  pwd?: string
-  sNum?: number
-  interests?: [string]
-  profile?: string
-  profilePhoto?: string // TODO?: 프로필사진 처리
+  id: string
+  name: string
+  pwd: string
+  sNum: number
+  interests: [string]
+  profile: string
+  notifications: {
+    applied: boolean
+    accepted: boolean
+    team: boolean
+  }
   
-  notiApplied?: boolean // apply
-  notiAccepted?: boolean // apply acception
-  notiTeam?: boolean // team
+  active: boolean
+  createdAt: Date
+  updatedAt: Date
 
-  refreshToken?: string
+  refreshToken: string
 
-  active?: boolean
-  createdAt?: Date
-  updatedAt?: Date
-
-  isVerified?: boolean // 인증여부
-  verifyKey?: string // 인증코드
-  verifyExpireAt?: Date // 인증코드 만료일시
-  verifiedAt?: Date
+  isVerified: boolean // 인증여부
+  verifyKey: string // 인증코드
+  verifyExpireAt: Date // 인증코드 만료일시
+  verifiedAt: Date
 }

@@ -7,8 +7,8 @@ import jwt from 'jsonwebtoken'
 import decodeJWT from 'jwt-decode'
 import createKey from './../lib/createKey'
 import createHash from './../lib/createHash'
-import models from '../models'
 import redisClient from '../lib/redisClient'
+import models from '../models'
 import config from '../../config'
 
 const AccountDB = models.account
@@ -20,16 +20,9 @@ interface IDecodedAccessToken {
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const {
-      SignUpEmail: id,
-      SignUpName: name,
-      SignUpPwd: pwd,
-      SignUpSNum: sNum,
-      SignUpInterests: interests,
-      SignUpProfile: profile,
-    } = req.body
+    const { id, name, pwd, sNum, interests, profile } = req.body
 
-    if (!id || !name || !pwd || !sNum || !interests.length || !profile) {
+    if (!id || !name || !pwd || isNaN(sNum) || !interests || !Array.isArray(interests) || !profile) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
   
@@ -37,16 +30,7 @@ export const Create = async (req: Request, res: Response) => {
     await sendAuthEmail(id, verifyKey)
   
     await AccountDB.DeleteBeforeSignUp({ id })
-  
-    await AccountDB.SignUp({
-      id,
-      name,
-      pwd,
-      sNum,
-      interests,
-      profile,
-      verifyKey
-    })
+    await AccountDB.SignUp({ id, name, pwd, sNum, interests, profile, verifyKey })
     
     res.status(201).end(SuccessResponse())
   } catch (err) {
@@ -74,20 +58,17 @@ export const CompareEmail = async (req: Request, res: Response) => {
 
 export const CompareVerifyKey = async (req: Request, res: Response) => {
   try {
-    const { key } = req.params
+    const { key } = req.body
 
     if (!key) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
   
     const result = await AccountDB.UpdateIsVerified({ verifyKey: key })
-  
-    const { matchedCount, modifiedCount } = result
-  
-    if (!matchedCount && !modifiedCount) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+    if (result.matchedCount === 0) {
+      return res.status(404).send(FailureResponse(NOT_FOUND))
     }
-  
+
     await redisClient.incCnt('accountCnt')
   
     res.send(SuccessResponse())
@@ -99,23 +80,18 @@ export const CompareVerifyKey = async (req: Request, res: Response) => {
 
 export const SetVerifyKey = async (req: Request, res: Response) => {
   try {
-    const { key } = req.params
-    const { email } = req.body
+    const { key, email } = req.body
 
-    if (!key || email) {
+    if (!key || !email) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
   
     const verifyKey = createKey()
-  
     const result = await AccountDB.UpdateVerifyKey({ id: email, verifyKey: key })
-  
-    const { matchedCount, modifiedCount } = result
-  
-    if (!matchedCount && !modifiedCount) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+    if (result.matchedCount === 0) {
+      return res.status(404).send(FailureResponse(NOT_FOUND))
     }
-    
+  
     sendAuthEmail(email, verifyKey)
   
     res.send(SuccessResponse())
@@ -127,21 +103,16 @@ export const SetVerifyKey = async (req: Request, res: Response) => {
 
 export const SignIn = async (req: Request, res: Response) => {
   try {
-    const {
-      SignInEmail: id,
-      SignInPwd: pwd,
-    } = req.body
+    const { id, pwd } = req.body
 
     if (!id || !pwd) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
   
     const result = await AccountDB.SignIn({ id })
-  
     if (!result) {
       return res.status(400).send(FailureResponse(NOT_FOUND))
     }
-  
     if (bcrypt.compareSync(pwd, result.pwd)) {
       return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
@@ -149,12 +120,12 @@ export const SignIn = async (req: Request, res: Response) => {
     const payload = { _id: result._id }
   
     const accessOptions = {
-      issuer: 'geteam',
+      issuer: config.JWT_ISSUER,
       expiresIn: Number(process.env.ACCESS_EXPIRE || config.ACCESS_EXPIRE),
     }
   
     const refreshOptions = {
-      issuer: 'geteam',
+      issuer: config.JWT_ISSUER,
       expiresIn: process.env.REFRESH_EXPIRE || config.REFRESH_EXPIRE, 
     }
   
@@ -165,7 +136,7 @@ export const SignIn = async (req: Request, res: Response) => {
   
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
   
-    res.send(SuccessResponse({ accessToken, exp: decodedAccessToken.exp * 1000 }))
+    res.send(SuccessResponse({ token: accessToken, exp: decodedAccessToken.exp * 1000 }))
   } catch (err) {
     console.log(err)
     res.status(500).send(InternalErrorResponse)
@@ -174,19 +145,19 @@ export const SignIn = async (req: Request, res: Response) => {
 
 export const RefreshToken = async (req: Request, res: Response) => {
   try {
-    const oldAccessToken = req.header('Authorization')?.replace(/^Bearer\s/, '')
+    const oldAccessToken = (req.header('Authorization') || '').replace('Bearer ', '')
     let decodedOldAccessToken: IDecodedAccessToken
     if (oldAccessToken) {
       decodedOldAccessToken = decodeJWT(oldAccessToken)
-    if (decodedOldAccessToken.exp * 1000 > new Date().getTime()) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+      if (decodedOldAccessToken.exp * 1000 > new Date().getTime()) {
+        return res.status(400).send(FailureResponse(BAD_REQUEST))
+      }
     }
-    } else {
+    else {
       return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
   
     const result = await AccountDB.SignIn({ id: decodedOldAccessToken._id })
-  
     if (!result) {
       return res.status(400).send(FailureResponse(NOT_FOUND))
     }
@@ -197,14 +168,14 @@ export const RefreshToken = async (req: Request, res: Response) => {
     const payload = { _id: result._id }
     
     const accessOptions = {
-      issuer: 'geteam',
+      issuer: config.JWT_ISSUER,
       expiresIn: Number(process.env.ACCESS_EXPIRE || config.ACCESS_EXPIRE),
     }
   
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET || config.JWT_SECRET, accessOptions)
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
   
-    res.send(SuccessResponse({ accessToken, exp: decodedAccessToken.exp * 1000 }))
+    res.send(SuccessResponse({ token: accessToken, exp: decodedAccessToken.exp * 1000 }))
   } catch (err) {
     console.log(err)
     res.status(500).send(InternalErrorResponse)
@@ -213,24 +184,17 @@ export const RefreshToken = async (req: Request, res: Response) => {
 
 export const SignOut = async (req: Request, res: Response) => {
   try {
-    const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '')
-  
-    if (!accessToken) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
-    }
+    const { _id: me } = req.user
+    const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
   
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
-  
     if (!decodedAccessToken || !decodedAccessToken._id || decodedAccessToken.exp) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
   
-    const result = await AccountDB.ResetRefreshToken({ _id: decodedAccessToken._id })
-  
-    const { matchedCount, modifiedCount } = result
-  
-    if (!matchedCount && !modifiedCount) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+    const result = await AccountDB.ResetRefreshToken({ _id: me })
+    if (result.matchedCount === 0) {
+      return res.status(404).send(FailureResponse(NOT_FOUND))
     }
   
     // Blacklisting Token
@@ -245,14 +209,13 @@ export const SignOut = async (req: Request, res: Response) => {
 
 export const ResetPassword = async (req: Request, res: Response) => {
   try {
-    const { findEmail: email, findHint: hint } = req.body
+    const { email, hint } = req.body
 
     if (!email || !hint) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
   
-    const result = await AccountDB.GetForResetPassword({ id: email })
-  
+    const result = await AccountDB.GetInterests({ id: email })
     if (!result || !result.interests) {
       return res.status(400).send(FailureResponse(NOT_FOUND))
     }
@@ -272,11 +235,10 @@ export const ResetPassword = async (req: Request, res: Response) => {
 
 export const UpdatePassword = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
+    const { _id: me } = req.user
     const { oldPwd, newPwd } = req.body
     
-    const result = await AccountDB.GetForUpdatePassword({ _id: me })
-    
+    const result = await AccountDB.GetPassword({ _id: me })
     if (!result || !result.pwd) {
       return res.status(400).send(FailureResponse(NOT_FOUND))
     }
@@ -287,7 +249,7 @@ export const UpdatePassword = async (req: Request, res: Response) => {
 
     await AccountDB.UpdatePassword({ _id: result._id, pwd: newPwd })
     
-    const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '')
+    const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
   
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken!)
     
@@ -303,24 +265,17 @@ export const UpdatePassword = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
   try {
-    const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '')
-  
-    if (!accessToken) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
-    }
+    const { _id: me } = req.user
+    const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
   
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
-  
     if (!decodedAccessToken || !decodedAccessToken._id) {
       return res.status(400).send(FailureResponse(BAD_REQUEST))
     }
   
     const result = await AccountDB.Delete({ _id: decodedAccessToken._id })
-  
-    const { matchedCount, modifiedCount } = result
-  
-    if (!matchedCount && !modifiedCount) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+    if (result.matchedCount === 0) {
+      return res.status(404).send(FailureResponse(NOT_FOUND))
     }
   
     // Blacklisting Token
@@ -335,14 +290,13 @@ export const Delete = async (req: Request, res: Response) => {
 
 export const Verify = async (req: Request, res: Response) => {
   try {
-    const accessToken = req.header('Authorization')?.replace(/^Bearer\s/, '')
+    const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
   
     if (await redisClient.checkToken(accessToken!)) {
       return res.status(400).send(FailureResponse(BAD_REQUEST)) // Signout 처리된 Access Token
     }
     
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken!)
-  
     if ((decodedAccessToken.exp * 1000) <= new Date().getTime()) {
       return res.status(400).send(FailureResponse(BAD_REQUEST)) // 만료된 Access Token입니다
     }
@@ -354,9 +308,43 @@ export const Verify = async (req: Request, res: Response) => {
   }
 }
 
+export const CheckIsDuplicatedEmail = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
+    }
+
+    const isDuplicated = await AccountDB.IsExist({ id: email })
+
+    res.send(SuccessResponse({ isDuplicated }))
+  } catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
+}
+
+export const CheckIsDuplicatedSnum = async (req: Request, res: Response) => {
+  try {
+    const { sNum } = req.body
+
+    if (isNaN(sNum)) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
+    }
+    
+    const isDuplicated = await AccountDB.IsExist({ sNum })
+
+    res.send(SuccessResponse({ isDuplicated }))
+  } catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
+}
+
 export const GetInfo = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
+    const { _id: me } = req.user
   
     const result = await AccountDB.GetItem({ _id: me })
   
@@ -369,23 +357,10 @@ export const GetInfo = async (req: Request, res: Response) => {
 
 export const UpdateInfo = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
-    const {
-      modifyName,
-      modifySNum,
-      modifyInterests,
-      modifyProfile,
-      modifyProfilePhoto,
-    } = req.body
+    const { _id: me } = req.user
+    const { name, sNum, interests, profile } = req.body
 
-    await AccountDB.UpdateInfo({
-      _id: me,
-      name: modifyName,
-      sNum: modifySNum,
-      interests: modifyInterests,
-      profile: modifyProfile,
-      profilePhoto: modifyProfilePhoto,
-    })
+    await AccountDB.UpdateInfo({ _id: me, name, sNum, interests, profile })
   
     res.send(SuccessResponse())
   } catch (err) {
@@ -394,96 +369,23 @@ export const UpdateInfo = async (req: Request, res: Response) => {
   }
 }
 
-export const UpdateNotiApplied = async (req: Request, res: Response) => {
+export const UpdateNotifications = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
-    const { notiApply } = req.body
-  
-    const result = await AccountDB.UpdateNoti({ _id: me, notiApply })
-  
-    const { matchedCount, modifiedCount } = result
-  
-    if (!matchedCount && !modifiedCount) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+    const { _id: me } = req.user
+    const { notifications } = req.body
+
+    if (!notifications) {
+      return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
     
-    res.send(SuccessResponse(notiApply))
-  } catch (err) {
-    console.log(err)
-    res.status(500).send(InternalErrorResponse)
-  }
-}
-
-export const UpdateNotiAccepted = async (req: Request, res: Response) => {
-  try {
-    const { _id: me } = req!.session!.passport.user
-    const { notiAccepted } = req.body
-  
-    const result = await AccountDB.UpdateNoti({ _id: me, notiAccepted })
-  
-    const { matchedCount, modifiedCount } = result
-  
-    if (!matchedCount && !modifiedCount) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+    const result = await AccountDB.UpdateNotifications({ _id: me, notifications })
+    if (result.matchedCount === 0) {
+      return res.status(404).send(FailureResponse(NOT_FOUND))
     }
-  
-    res.send(SuccessResponse(notiAccepted))
+
+    res.send(SuccessResponse())
   } catch (err) {
     console.log(err)
     res.status(500).send(InternalErrorResponse)
-  }
-}
-
-export const UpdateNotiTeam = async (req: Request, res: Response) => {
-  try {
-    const { _id: me } = req!.session!.passport.user
-    const { notiTeam } = req.body
-    
-    const result = await AccountDB.UpdateNoti({ _id: me, notiTeam })
-  
-    const { matchedCount, modifiedCount } = result
-  
-    if (!matchedCount && !modifiedCount) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
-    }
-  
-    res.send(SuccessResponse(notiTeam))
-  } catch (err) {
-    console.log(err)
-    res.status(500).send(InternalErrorResponse)
-  }
-}
-
-export const CheckIsDuplicatedEmail = async (req: Request, res: Response) => {
-  try {
-  const { email } = req.body
-
-  if (!email) {
-    return res.status(400).send(FailureResponse(INVALID_PARAM))
-  }
-
-  const isDuplicated = await AccountDB.IsExist({ id: email })
-
-  res.send(SuccessResponse({ isDuplicated }))
-  } catch (err) {
-  console.log(err)
-  res.status(500).send(InternalErrorResponse)
-  }
-}
-
-export const CheckIsDuplicatedSnum = async (req: Request, res: Response) => {
-  try {
-  const { sNum } = req.body
-
-  if (!sNum) {
-    return res.status(400).send(FailureResponse(INVALID_PARAM))
-  }
-  
-  const isDuplicated = await AccountDB.IsExist({ sNum })
-
-  res.send(SuccessResponse({ isDuplicated }))
-  } catch (err) {
-  console.log(err)
-  res.status(500).send(InternalErrorResponse)
   }
 }

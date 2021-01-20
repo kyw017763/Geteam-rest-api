@@ -1,10 +1,11 @@
+import { ObjectId } from 'mongodb'
 import IAccount from './IAccount'
 
 export default interface IMessage {
-  _id: string
+  _id: ObjectId
   
-  recvAccountId: IAccount['_id']
-  sendAccountId: IAccount['_id']
+  recvId: IAccount['_id']
+  sendId: IAccount['_id']
   content: string
   isRead: boolean
   readAt: Date

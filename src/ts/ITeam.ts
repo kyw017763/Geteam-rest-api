@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb'
 import IAccount from './IAccount'
 
 interface IMember {
@@ -6,7 +7,7 @@ interface IMember {
 }
 
 export default interface ITeam {
-  _id: string
+  _id: ObjectId
 
   name: string
   master: IAccount['_id']
