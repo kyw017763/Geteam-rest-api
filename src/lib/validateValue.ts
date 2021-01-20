@@ -8,21 +8,21 @@ const validateKind = (kind: string) => {
 }
 
 const validateCategory = (kind: string, category: string) => {
+  let result = 'develop'
+
   if (kind === 'study') {
     switch (category) {
       case 'develop': case 'design': case 'etc':
-        return category
-      default:
-        return 'develop'
+        result = category 
     }
   } else if (kind === 'contest') {
     switch (category) {
       case 'develop': case 'design': case 'idea': case 'etc':
-        return true
-      default:
-        return false
+        return category
     }
   }
+  
+  return result
 }
 
 const validateModifyOrder = (order: string) => {

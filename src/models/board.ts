@@ -3,10 +3,10 @@ import { ObjectId } from 'mongodb'
 import { BOARD } from './models'
 import IBoard from '../ts/IBoard'
 
-const Board = connection.collection(BOARD)
+const boardColl = connection.collection(BOARD)
 
 export default {
-  Create: async (params: any = {}) => {
+  Create: (params: any = {}) => {
     const {
       accountId,
       kind,
@@ -14,29 +14,37 @@ export default {
       topic,
       title,
       content,
-      position,
+      positionTitle,
+      positionDescription,
+      positionCnt,
       wantCnt,
       endDate,
     } = params
 
-    return Board.insertOne({
-      accountId: new ObjectId(accountId),
+    const item: IBoard = {
+      accountId,
       kind,
       category,
       topic,
       title,
       content,
-      position,
       wantCnt,
-      applyCnt: 0,
-      acceptCnt: 0,
-      startDate: Date.now(),
+      startDate: new Date(),
       endDate,
-      isCompleted: false,
       active: true,
       hit: 0,
-      updatedAt: Date.now(),
-    })
+      updatedAt: new Date()
+    }
+
+    if (kind === 'contest') {
+      item['position'] = {
+        title: positionTitle,
+        description: positionDescription,
+        cnt: positionCnt
+      }
+    }
+
+    return boardColl.insertOne(item)
   },
   GetListByMe: async (params: any = {}, options: any = {}) => {
     const { me } = params
@@ -52,24 +60,24 @@ export default {
     const { skip, limit, sort, searchText } = options
 
     // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
-    const query: any = { active: true, isCompleted: false }
+    const filter: any = { active: true, isCompleted: false }
 
     if (me) {
-      query['$or'] = [
+      filter['$or'] = [
         { accountId: new ObjectId(me) || null, endDay: { $lt: Date.now() } },
         { endDay: { $gt: Date.now() } }
       ]
     }
     else {
-      query['endDay'] = { $gt: Date.now() }
+      filter['endDay'] = { $gt: Date.now() }
     }
 
-    if (kind) query['kind'] = kind
-    if (category) query['category'] = category
-    if (searchText) query['$text'] = { $search: searchText }
+    if (kind) filter['kind'] = kind
+    if (category) filter['category'] = category
+    if (searchText) filter['$text'] = { $search: searchText }
 
-    const list = await Board.find(query, { skip, limit, sort }).toArray()
-    const count = await Board.countDocuments(query)
+    const list = await Board.find(filter, { skip, limit, sort }).toArray()
+    const count = await Board.countDocuments(filter)
 
     return { list, count }
   },
@@ -88,49 +96,49 @@ export default {
 
     return Board.countDocuments({ accountId: new ObjectId(accountId), isCompleted: true })
   },
-  IsEnableModify: async (params: any = {}) => {
-    const { _id } = params
-
-    const board = await Board.findOne({ _id: new ObjectId(_id) })
-    return board.applyCnt === 0
-  },
-  IsEnableApply: async (params: any = {}) => {
-    const { _id } = params
-
-    const board = await Board.findOne({ _id: new ObjectId(_id) })
-    return !board.isCompleted
-  },
   UpdateItem: (params: any = {}) => {
     const {
       _id,
+      accountId,
+      kind,
       category,
       topic,
       title,
       content,
-      position,
+      positionTitle,
+      positionDescription,
+      positionCnt,
       wantCnt,
       endDate,
     } = params
 
-    return Board.updateOne({ _id: new ObjectId(_id) },
-      {
-        $set: {
-          category,
-          topic,
-          title,
-          content,
-          position,
-          wantCnt,
-          endDate,
-          updatedAt: Date.now()
-        }
+    const updateQuery: any = {
+      $set: {
+        kind,
+        category,
+        topic,
+        title,
+        content,
+        wantCnt,
+        endDate,
+        updatedAt: new Date()
       }
-    )
+    }
+
+    if (kind === 'contest') {
+      updateQuery['$set']['position'] = {
+        title: positionTitle,
+        description: positionDescription,
+        cnt: positionCnt
+      }
+    }
+
+    return boardColl.updateOne({ _id: new ObjectId(_id), acceptCnt: { $lte: 0 } }, updateQuery)
   },
   UpdateIsCompleted: (params: any = {}) => {
     const { _id } = params
 
-    return Board.updateOne({ _id: new ObjectId(_id) }, { $set: { isCompleted: true, updatedAt: Date.now() } })
+    return boardColl.updateOne({ _id: new ObjectId(_id) }, { $set: { isCompleted: true, updatedAt: new Date() } })
   },
   UpdateApplyCnt: (params: any = {}) => {
     const { _id, diff } = params
@@ -150,6 +158,9 @@ export default {
   Delete: (params: any = {}) => {
     const { _id, accountId } = params
 
-    return Board.updateOne({ _id: new ObjectId(_id), accountId: new ObjectId(accountId) }, { $set: { active: false } })
+    return boardColl.updateOne(
+      { _id: new ObjectId(_id), accountId: new ObjectId(accountId) },
+      { $set: { active: false } }
+    )
   },
 }

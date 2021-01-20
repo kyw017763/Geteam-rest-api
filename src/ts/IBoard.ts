@@ -2,27 +2,26 @@ import { ObjectId } from 'mongodb'
 import IAccount from './IAccount'
 
 export default interface IBoard {
-  _id: ObjectId
+  _id?: ObjectId
 
   accountId: IAccount['_id']
-  kind: string // study or contest
+  kind: string
   category: string
   topic: string
   title: string
   content: string
-  position: { // only contest
+  position?: { // only contest
     title: [string]
     description: [string]
     cnt: number
   }
   wantCnt: number
-  applyCnt: number
-  acceptCnt: number
+  applyCnt?: number
+  acceptCnt?: number
   startDate: Date
   endDate: Date
-  isCompleted: boolean
+  isCompleted?: boolean
   active: boolean
   hit: number
-  
   updatedAt: Date
 }
