@@ -7,38 +7,33 @@ const Message = connection.collection(MESSAGE)
 
 export default {
   Create: (params: any = {}) => {
-    const {
-      receiveAccount,
-      sendAccount,
-      content,
-      originalId,
-    } = params
+    const { recvAccountId, sendAccountId, content, originalId } = params
 
     return Message.insertOne({
       originalId: new ObjectId(originalId),
-      receiveAccount: new ObjectId(receiveAccount),
-      sendAccount: new ObjectId(sendAccount),
+      receiveAccount: new ObjectId(recvAccountId),
+      sendAccount: new ObjectId(sendAccountId),
       content,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     })
   },
-  GetMessageByReceiveAccount: (params: any = {}, options: any = {}) => {
-    const { accountId } = params
+  GetList: (params: any = {}, options: any = {}) => {
+    const { recvAccountId, sendAccountId } = params
+    const { skip, limit } = options
 
-    return Message.find({ receiveAccount: new ObjectId(accountId) }).toArray()
-  },
-  GetMessageBySendAccount: (params: any = {}, options: any = {}) => {
-    const { accountId } = params
-    
-    return Message.find({ sendAccount: new ObjectId(accountId) }).toArray()
+    const filter: any = {}
+    if (recvAccountId) filter['recvAccountId'] = new ObjectId(recvAccountId)
+    if (sendAccountId) filter['sendAccountId'] = new ObjectId(sendAccountId)
+
+    return Message.find(filter, { skip, limit }).toArray()
   },
   UpdateIsReaded: (params: any = {}) => {
-    const { _id, receiveAccount } = params
+    const { _id, recvAccountId } = params
 
     return Message.updateOne(
-      { _id: new ObjectId(_id), receiveAccount: new ObjectId(receiveAccount) },
-      { $set: { receiveCheck: 1, updatedAt: Date.now() } },
+      { _id: new ObjectId(_id), recvAccountId: new ObjectId(recvAccountId) },
+      { $set: { isRead: 1, updatedAt: Date.now() } },
     )
   },
   DeleteList: (params: any = {}) => {
@@ -48,8 +43,8 @@ export default {
       {
         _id: { $in: ids.map((id: string) => new ObjectId(id)) },
         $or: [
-          { receiveAccount: new ObjectId(accountId) },
-          { sendAccount: new ObjectId(accountId) }
+          { recvAccountId: new ObjectId(accountId) },
+          { sendAccountId: new ObjectId(accountId) }
         ]
       }
     )
@@ -61,8 +56,8 @@ export default {
       {
         _id: new ObjectId(_id),
         $or: [
-          { receiveAccount: new ObjectId(accountId) },
-          { sendAccount: new ObjectId(accountId) }
+          { recvAccountId: new ObjectId(accountId) },
+          { sendAccountId: new ObjectId(accountId) }
         ]
       }
     )

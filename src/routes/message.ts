@@ -1,15 +1,18 @@
 import express from 'express'
 import * as controller from '../controller/message.controller'
+import passport from 'passport'
 
 const router = express.Router()
 export default router
 
-router.get('/messages/recv', controller.GetReceiveMessageList)
-router.get('/messages/send', controller.GetSendMessageList)
+router.use(passport.authenticate('jwt'))
 
-router.post('/message', controller.Create)
+router.get('/recv', controller.GetReceiveMessageList)
+router.get('/send', controller.GetSendMessageList)
 
-router.patch('/message/read', controller.UpdateIsReaded)
+router.post('/', controller.Create)
 
-router.delete('/messages', controller.DeleteList)
-router.delete('/message/:id', controller.DeleteItem)
+router.patch('/read', controller.UpdateIsRead)
+
+router.delete('/', controller.DeleteList)
+router.delete('/:id', controller.DeleteItem)

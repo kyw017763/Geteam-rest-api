@@ -8,14 +8,14 @@ const MessageDB = models.message
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
-    const { receiveAccount, content, originalId } = req.body
+    const { _id: me } = req.user
+    const { recvAccountId, content, originalId } = req.body
 
-    if (!receiveAccount || !content) {
+    if (!recvAccountId || recvAccountId.length !== 24 || !content || (originalId && originalId.length !== 24)) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
 
-    await MessageDB.Create({ receiveAccount, sendAccount: me, content, originalId })
+    await MessageDB.Create({ recvAccountId, sendAccountId: me, content, originalId })
 
     res.send(SuccessResponse())
   }
@@ -27,13 +27,13 @@ export const Create = async (req: Request, res: Response) => {
 
 export const GetReceiveMessageList = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
+    const { _id: me } = req.user
     let { offset, limit } = req.query
 
     offset = isNaN(offset) ? 0 : Number(offset)
-    limit = isNaN(limit) ? 16 : Number(limit)
+    limit = isNaN(limit) ? 50 : Number(limit)
 
-    const messages = await MessageDB.GetMessageByReceiveAccount({ accountId: me }, { skip: offset, limit })
+    const messages = await MessageDB.GetList({ recvAccountId: me }, { skip: offset, limit })
 
     res.send(SuccessResponse(messages))
   }
@@ -45,13 +45,13 @@ export const GetReceiveMessageList = async (req: Request, res: Response) => {
 
 export const GetSendMessageList = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
+    const { _id: me } = req.user
     let { offset, limit } = req.query
 
     offset = isNaN(offset) ? 0 : Number(offset)
-    limit = isNaN(limit) ? 16 : Number(limit)
+    limit = isNaN(limit) ? 50 : Number(limit)
 
-    const messages = await MessageDB.GetMessageByReceiveAccount({ accountId: me }, { skip: offset, limit })
+    const messages = await MessageDB.GetList({ sendAccountId: me }, { skip: offset, limit })
 
     res.send(SuccessResponse(messages))
   }
@@ -61,9 +61,9 @@ export const GetSendMessageList = async (req: Request, res: Response) => {
   }
 }
 
-export const UpdateIsReaded = async (req: Request, res: Response) => {
+export const UpdateIsRead = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
+    const { _id: me } = req.user
 
     const { id } = req.params
 
@@ -71,7 +71,7 @@ export const UpdateIsReaded = async (req: Request, res: Response) => {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
     }
     
-    await MessageDB.UpdateIsReaded({ _id: id, receiveAccount: me })
+    await MessageDB.UpdateIsReaded({ _id: id, recvAccountId: me })
     
     res.send(SuccessResponse())
   }
@@ -83,7 +83,7 @@ export const UpdateIsReaded = async (req: Request, res: Response) => {
 
 export const DeleteList = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
+    const { _id: me } = req.user
 
     const { ids } = req.query
 
@@ -108,7 +108,7 @@ export const DeleteList = async (req: Request, res: Response) => {
 
 export const DeleteItem = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.session!.passport.user
+    const { _id: me } = req.user
     const { id } = req.params
 
     if (!id || id.length !== 24) {
