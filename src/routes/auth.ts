@@ -1,6 +1,6 @@
 import express from 'express'
-import passport from 'passport'
 import * as controller from '../controller/auth.controller'
+import passport from 'passport'
 
 const router = express.Router()
 export default router

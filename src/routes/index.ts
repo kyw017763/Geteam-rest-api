@@ -1,5 +1,4 @@
 import express from 'express'
-import passport from '../middleware/passport'
 import apply from './apply'
 import auth from './auth'
 import board from './board'
@@ -9,8 +8,10 @@ import message from './message'
 const router = express.Router()
 export default router
 
-router.use('/apply', passport.authenticate('jwt'), apply)
-router.use('/auth', auth)
-router.use('/board', board)
-router.use('/count', count)
-router.use('/message', passport.authenticate('jwt'), message)
+router.use('applies', apply)
+router.use('auth', auth)
+router.use('boards', board)
+router.use('count', count)
+router.use('messages', message)
+
+module.exports = router

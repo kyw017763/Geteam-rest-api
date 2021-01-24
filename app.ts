@@ -39,7 +39,7 @@ app.use(passport.session())
 
 app.use(cors())
 
-app.all('/*', function(req, res, next) {
+app.all('/*', (req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE')
   next()
 })
