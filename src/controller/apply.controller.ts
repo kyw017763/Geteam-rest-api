@@ -10,7 +10,7 @@ const BoardDB = models.board
 
 export const GetList = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.user!
+    const { _id: me } = req.user
     let { kind, author, is_accepted: isAccepted, active, offset, limit, option } = req.query
 
     kind = validateKind(kind)
@@ -32,8 +32,8 @@ export const GetList = async (req: Request, res: Response) => {
 
 export const GetListOnMyParticularBoard = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.user!
-    let { boardid: boardId } = req.query
+    const { _id: me } = req.user
+    let { boardid: boardId } = req.params
   
     if (!boardId || boardId.length !== 24) {
       return res.status(400).send(FailureResponse(INVALID_PARAM))
@@ -51,7 +51,7 @@ export const GetListOnMyParticularBoard = async (req: Request, res: Response) =>
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.user!
+    const { _id: me } = req.user
     const { author, boardId, wantedText } = req.body
     let { kind, position, portfolio, portfolioText } = req.body
 
@@ -88,7 +88,7 @@ export const Create = async (req: Request, res: Response) => {
 
 export const UpdateAccept = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.user!
+    const { _id: me } = req.user
     const { boardid: boardId, applyid: applyId } = req.params
 
     if (!boardId || boardId.length !== 24 || !applyId || applyId.length !== 24) {
@@ -119,7 +119,7 @@ export const UpdateAccept = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req!.user!
+    const { _id: me } = req.user
     const { boardid: boardId, applyid: applyId } = req.params
 
     if (!boardId || boardId.length !== 24 || !applyId || applyId.length !== 24) {
