@@ -1,13 +1,16 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
-import { TEAM } from './models'
+import models from './models'
 import ITeam from '../ts/ITeam'
 
-const Team = connection.collection(TEAM)
+const Team = connection.collection(models.TEAM)
 
 interface IMember {
   accountId: string
-  position: string
+  position?: {
+    title: string
+    description: string
+  }
 }
 
 export default {
@@ -16,15 +19,18 @@ export default {
     
     return Team.insertOne({
       name,
-      master: new ObjectId(master),
-      members: members.map((elem: IMember) => {
+      leader: new ObjectId(master),
+      members: members.map((member: IMember) => {
         return {
-          accountId: new ObjectId(elem.accountId),
-          position: elem.position
+          accountId: new ObjectId(member.accountId),
+          position: {
+            title: member.position?.title,
+            description: member.position?.description
+          }
         } 
       }),
       content,
-      createdAt: Date.now(),
+      createdAt: new Date(),
     })
   },
 }

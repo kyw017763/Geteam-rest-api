@@ -8,8 +8,7 @@ export default interface IMessage {
   recvAccountId: IAccount['_id']
   sendAccountId: IAccount['_id']
   content: string
-  isRead: boolean
-  readAt: Date
+  isRead?: boolean
+  readAt?: Date
   createdAt: Date
-  updatedAt: Date
 }

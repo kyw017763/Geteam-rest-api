@@ -1,5 +1,7 @@
-export const ACCOUNT = 'accounts'
-export const APPLY = 'applies'
-export const BOARD = 'boards'
-export const MESSAGE = 'messages'
-export const TEAM = 'teams'
+export default {
+    ACCOUNT: 'accounts',
+    APPLY: 'applies',
+    BOARD: 'boards',
+    MESSAGE: 'messages',
+    TEAM: 'teams'
+}

@@ -1,9 +1,9 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
-import { MESSAGE } from './models'
+import models from './models'
 import IMessage from '../ts/IMessage'
 
-const Message = connection.collection(MESSAGE)
+const Message = connection.collection(models.MESSAGE)
 
 export default {
   Create: (params: any = {}) => {
@@ -11,11 +11,10 @@ export default {
 
     return Message.insertOne({
       originalId: new ObjectId(originalId),
-      receiveAccount: new ObjectId(recvAccountId),
+      recvAccount: new ObjectId(recvAccountId),
       sendAccount: new ObjectId(sendAccountId),
       content,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: new Date()
     })
   },
   GetList: (params: any = {}, options: any = {}) => {
@@ -33,7 +32,7 @@ export default {
 
     return Message.updateOne(
       { _id: new ObjectId(_id), recvAccountId: new ObjectId(recvAccountId) },
-      { $set: { isRead: 1, updatedAt: Date.now() } },
+      { $set: { isRead: true, readAt: new Date() } },
     )
   },
   DeleteList: (params: any = {}) => {

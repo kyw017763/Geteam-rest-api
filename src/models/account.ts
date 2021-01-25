@@ -1,10 +1,10 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
-import { ACCOUNT } from './models'
+import models from './models'
 import IAccount from '../ts/IAccount'
 import bcrypt from 'bcryptjs'
 
-const accountColl = connection.collection(ACCOUNT)
+const accountColl = connection.collection(models.ACCOUNT)
 
 export default {
   DeleteBeforeSignUp: (params: any = {}) => {
@@ -17,7 +17,7 @@ export default {
     let { pwd } = params
     pwd = bcrypt.hashSync(pwd)
 
-    const currentDate = Date.now()
+    const currentDate = new Date()
 
     return accountColl.insertOne({
       id,
@@ -26,16 +26,16 @@ export default {
       sNum,
       interests,
       profile,
+      notifications: {
+        applied: false,
+        accepted: false,
+        team: false
+      },
       verifyKey,
-      verifyExpireAt: currentDate + (3600000), // 1 hour
-
-      notiApplied: false,
-      notiAccepted: false,
-      notiTeam: false,
-
+      verifyExpireAt: new Date(currentDate.getTime() + (3600000)), // 1 hour
       active: false,
-      createdAt: currentDate,
-      updatedAt: currentDate,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     })
   },
 
@@ -110,14 +110,14 @@ export default {
     let { pwd } = params
     pwd = bcrypt.hashSync(pwd)
 
-    return accountColl.updateOne({ _id: new ObjectId(_id) }, { $set: { pwd, updatedAt: Date.now() } })
+    return accountColl.updateOne({ _id: new ObjectId(_id) }, { $set: { pwd, updatedAt: new Date() } })
   },
   UpdateInfo: (params: any = {}) => {
     const { _id, name, sNum, interests, profile } = params
 
     return accountColl.updateOne(
       { _id: new ObjectId(_id) },
-      { $set: { name, sNum, interests, profile, updatedAt: Date.now() } }
+      { $set: { name, sNum, interests, profile, updatedAt: new Date() } }
     )
   },
   UpdateNotifications: (params: any = {}) => {
@@ -125,10 +125,10 @@ export default {
 
     const updateQuery: any = { notifications: {} }
     if (applied) updateQuery.notifications.applied = applied
-    if (accepted)updateQuery.notifications.accepted = accepted
+    if (accepted) updateQuery.notifications.accepted = accepted
     if (team) updateQuery.notifications.team = team
 
-    return accountColl.updateOne({ _id: new ObjectId(_id) }, { $set: { updateQuery, updatedAt: Date.now() } })
+    return accountColl.updateOne({ _id: new ObjectId(_id) }, { $set: { ...updateQuery, updatedAt: new Date() } })
   },
   Delete: (params: any = {}) => {
     const { _id } = params

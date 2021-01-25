@@ -1,10 +1,10 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
-import { APPLY, BOARD } from './models'
+import models from './models'
 import { IOption } from '../ts/common'
 
-const applyColl = connection.collection(APPLY)
-const boardColl = connection.collection(BOARD)
+const applyColl = connection.collection(models.APPLY)
+const boardColl = connection.collection(models.BOARD)
 
 export default {
   Create: (params: any = {}) => {
@@ -21,10 +21,9 @@ export default {
       boardId,
       wantedText,
       ...contestObj,
-
       active: true,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
+      createdAt: new Date(),
+      updatedAt: new Date()
     })
   },
 
@@ -68,20 +67,12 @@ export default {
   IsApplied: async (params: any = {}) => {
     const { accountId, boardId } = params
 
-    return (await applyColl.countDocuments({
-      accountId: new ObjectId(accountId),
-      boardId: new ObjectId(boardId),
-      active: true
-    })) > 0
+    return (await applyColl.countDocuments({ accountId: new ObjectId(accountId), boardId: new ObjectId(boardId), active: true })) > 0
   },
   IsAccepted: async (params: any = {}) => {
     const { _id, boardId } = params
 
-    return (await applyColl.countDocuments({
-      _id: new ObjectId(_id),
-      boardId: new ObjectId(boardId),
-      isAccepted: true
-    })) > 0
+    return (await applyColl.countDocuments({ _id: new ObjectId(_id), boardId: new ObjectId(boardId), isAccepted: true })) > 0
   },
 
   UpdateIsAccepted: (params: any = {}) => {
@@ -89,14 +80,14 @@ export default {
     
     return applyColl.updateOne(
       { _id: new ObjectId(_id), boardId: new ObjectId(boardId), author: new ObjectId(author) },
-      { $set: { isAccepted: true, updatedAt: Date.now() }
+      { $set: { isAccepted: true, updatedAt: new Date() }
     })
   },
 
   Delete: async (params: any = {}) => {
     const { _id, boardId } = params
 
-    const boardCount = (await boardColl.countDocuments({ _id: new ObjectId(boardId), $or: [{ endDate: { $lte: Date.now() } }, { active: true }]})) > 0
+    const boardCount = (await boardColl.countDocuments({ _id: new ObjectId(boardId), $or: [{ endDate: { $lte: new Date() } }, { active: true }]})) > 0
     const applyCount = (await applyColl.countDocuments({ _id: new ObjectId(_id), boardId: new ObjectId(boardId), $or: [{ isAccepted: true }, { active: false }] })) > 0
     if (boardCount || applyCount) return false
     
