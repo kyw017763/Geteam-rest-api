@@ -11,7 +11,7 @@ export default interface ITeam {
 
   name: string
   master: IAccount['_id']
-  members: [IMember]
+  members: IMember[]
   content: string
   
   createdAt: Date

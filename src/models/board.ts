@@ -2,6 +2,7 @@ import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import models from './models'
 import IBoard from '../ts/IBoard'
+import IPosition from '../ts/IPosition';
 
 const boardColl = connection.collection(models.BOARD)
 
@@ -14,9 +15,7 @@ export default {
       topic,
       title,
       content,
-      positionTitle,
-      positionDescription,
-      positionCnt,
+      positions,
       wantCnt,
       endDate,
     } = params
@@ -28,6 +27,7 @@ export default {
       topic,
       title,
       content,
+      positions: [],
       wantCnt,
       startDate: new Date(),
       endDate,
@@ -37,11 +37,9 @@ export default {
     }
 
     if (kind === 'contest') {
-      item['position'] = {
-        title: positionTitle,
-        description: positionDescription,
-        cnt: positionCnt
-      }
+      positions.forEach((position: IPosition) => {
+        if (position.title && position.description) item.positions.push(position)
+      })
     }
 
     return boardColl.insertOne(item)
@@ -54,18 +52,18 @@ export default {
     const filter: any = { active: true, isCompleted: false }
 
     if (me) {
-      filter['$or'] = [
+      filter.$or = [
         { accountId: new ObjectId(me) || null, endDay: { $lte: new Date() } },
         { endDay: { $gte: new Date() } }
       ]
     }
     else {
-      filter['endDay'] = { $gte: new Date() }
+      filter.endDay = { $gte: new Date() }
     }
 
-    if (kind) filter['kind'] = kind
-    if (category) filter['category'] = category
-    if (searchText) filter['$text'] = { $search: searchText }
+    if (kind) filter.kind = kind
+    if (category) filter.category = category
+    if (searchText) filter.$text = { $search: searchText }
 
     const list = await boardColl.find(filter, { skip, limit, sort }).toArray()
     const count = await boardColl.countDocuments(filter)
@@ -96,9 +94,7 @@ export default {
       topic,
       title,
       content,
-      positionTitle,
-      positionDescription,
-      positionCnt,
+      positions,
       wantCnt,
       endDate,
     } = params
@@ -117,11 +113,9 @@ export default {
     }
 
     if (kind === 'contest') {
-      updateQuery['$set']['position'] = {
-        title: positionTitle,
-        description: positionDescription,
-        cnt: positionCnt
-      }
+      positions.forEach((position: IPosition) => {
+        if (position.title && position.description) updateQuery.$set.positions.push(position)
+      })
     }
 
     return boardColl.updateOne({ _id: new ObjectId(_id), accountId: new ObjectId(accountId), acceptCnt: { $lte: 0 } }, updateQuery)

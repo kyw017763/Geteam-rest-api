@@ -7,7 +7,7 @@ export default interface IAccount {
   name: string
   pwd: string
   sNum: number
-  interests: [string]
+  interests: string[]
   profile: string
   notifications: {
     applied: boolean

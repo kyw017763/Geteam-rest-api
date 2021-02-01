@@ -75,9 +75,9 @@ export default {
 
     const filter: any = {}
 
-    if (_id) filter['_id'] = new ObjectId(_id)
-    if (id) filter['id'] = id
-    if (sNum) filter['sNum'] = sNum
+    if (_id) filter._id = new ObjectId(_id)
+    if (id) filter.id = id
+    if (sNum) filter.sNum = sNum
 
     return (await accountColl.countDocuments(filter)) > 0
   },

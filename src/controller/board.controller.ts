@@ -92,9 +92,7 @@ export const Create = async (req: Request, res: Response) => {
       topic,
       title,
       content,
-      positionTitle,
-      positionDescription,
-      positionCnt,
+      positions,
       wantCnt,
       endDate
     } = req.body
@@ -104,14 +102,7 @@ export const Create = async (req: Request, res: Response) => {
 
     if (
       !kind || !category || !topic || !title || !content || isNaN(wantCnt) || isNaN(Date.parse(endDate)) ||
-      (positionTitle && !Array.isArray(positionTitle)) ||
-      (positionDescription && !Array.isArray(positionDescription)) ||
-      (positionCnt && !Array.isArray(positionCnt)) ||
-      (
-        positionTitle && positionDescription && positionCnt && 
-        positionTitle.length === positionDescription.length &&
-        positionDescription.length === positionCnt.length
-      ) ||
+      (positions && !Array.isArray(positions)) ||
       kind !== validatedKind ||
       category !== validatedCategory
     ) {
@@ -130,9 +121,7 @@ export const Create = async (req: Request, res: Response) => {
       topic,
       title,
       content,
-      positionTitle,
-      positionDescription,
-      positionCnt,
+      positions,
       wantCnt,
       endDate
     })
@@ -155,9 +144,7 @@ export const Update = async (req: Request, res: Response) => {
       topic,
       title,
       content,
-      positionTitle,
-      positionDescription,
-      positionCnt,
+      positions,
       wantCnt,
       endDate
     } = req.body
@@ -168,14 +155,7 @@ export const Update = async (req: Request, res: Response) => {
     if (
       (!id || id.length !== 24) ||
       !kind || !category || !topic || !title || !content || isNaN(wantCnt) || isNaN(Date.parse(endDate)) ||
-      (positionTitle && !Array.isArray(positionTitle)) ||
-      (positionDescription && !Array.isArray(positionDescription)) ||
-      (positionCnt && !Array.isArray(positionCnt)) ||
-      (
-        positionTitle && positionDescription && positionCnt && 
-        positionTitle.length === positionDescription.length &&
-        positionDescription.length === positionCnt.length
-      ) ||
+      (positions && !Array.isArray(positions)) ||
       kind !== validatedKind ||
       category !== validatedCategory
     ) {
@@ -189,9 +169,7 @@ export const Update = async (req: Request, res: Response) => {
       topic,
       title,
       content,
-      positionTitle,
-      positionDescription,
-      positionCnt,
+      positions,
       wantCnt,
       endDate
     })
@@ -226,10 +204,7 @@ export const CreateTeam = async (req: Request, res: Response) => {
   try {
     const { _id: me } = req.user
     const { id } = req.params
-    let { kind } = req.body
     const { name, content, message } = req.body
-  
-    kind = validateKind(kind)
   
     if (
       (!id || id.length !== 24) ||
@@ -263,7 +238,7 @@ export const CreateTeam = async (req: Request, res: Response) => {
     
     await redisClient.incCnt('teamCnt')
   
-    sendTeamEmail(kind, board, message)
+    sendTeamEmail(board.kind, board, message)
     
     res.send(SuccessResponse())
   }

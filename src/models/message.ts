@@ -22,8 +22,8 @@ export default {
     const { skip, limit } = options
 
     const filter: any = {}
-    if (recvAccountId) filter['recvAccountId'] = new ObjectId(recvAccountId)
-    if (sendAccountId) filter['sendAccountId'] = new ObjectId(sendAccountId)
+    if (recvAccountId) filter.recvAccountId = new ObjectId(recvAccountId)
+    if (sendAccountId) filter.sendAccountId = new ObjectId(sendAccountId)
 
     return Message.find(filter, { skip, limit }).toArray()
   },
