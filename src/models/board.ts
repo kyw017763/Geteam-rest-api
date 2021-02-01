@@ -131,10 +131,10 @@ export default {
 
     return boardColl.updateOne({ _id: new ObjectId(_id), accountId: new ObjectId(accountId) }, { $set: { isCompleted: true, updatedAt: new Date() } })
   },
-  UpdateApplyCnt: (params: any = {}) => {
+  UpdateApplicationCnt: (params: any = {}) => {
     const { _id, diff } = params
 
-    return boardColl.updateOne({ _id: new ObjectId(_id) }, { $inc: { applyCnt: diff }, $set: { updatedAt: new Date() } })
+    return boardColl.updateOne({ _id: new ObjectId(_id) }, { $inc: { applicationCnt: diff }, $set: { updatedAt: new Date() } })
   },
   UpdateAcceptCnt: (params: any = {}) => {
     const { _id, diff } = params

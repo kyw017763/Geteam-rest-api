@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 import IAccount from './IAccount'
 import IBoard from './IBoard'
 
-export default interface IApply {
+export default interface IApplication {
   _id: ObjectId
 
   accountId: IAccount['_id']

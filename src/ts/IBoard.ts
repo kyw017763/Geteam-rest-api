@@ -16,7 +16,7 @@ export default interface IBoard {
     cnt: number
   }
   wantCnt: number
-  applyCnt?: number
+  applicationCnt?: number
   acceptCnt?: number
   startDate: Date
   endDate: Date

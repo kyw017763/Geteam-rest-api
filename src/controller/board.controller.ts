@@ -7,10 +7,10 @@ import models from '../models'
 import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
 import { sendTeamEmail } from '../lib/sendEmail'
 import redisClient from '../lib/redisClient'
-import IApply from 'src/ts/IApply'
+import IApplication from 'src/ts/IApplication'
 
 const BoardDB = models.board
-const ApplyDB = models.apply
+const ApplicationDB = models.application
 const TeamDB = models.team
 
 export const GetList = async (req: Request, res: Response) => {
@@ -119,8 +119,8 @@ export const GetItem = async (req: Request, res: Response) => {
     await BoardDB.UpdateHit({ _id: id, diff: 1 })
 
     if (me) {
-      isApplied = await ApplyDB.IsApplied({ accountId: me, boardId: id })
-      isAccepted = await ApplyDB.IsAccepted({ accountId: me, boardId: id })
+      isApplied = await ApplicationDB.IsApplied({ accountId: me, boardId: id })
+      isAccepted = await ApplicationDB.IsAccepted({ accountId: me, boardId: id })
     }
 
     const data: any = { board }
@@ -309,7 +309,7 @@ export const CreateTeam = async (req: Request, res: Response) => {
   
     await BoardDB.UpdateIsCompleted({ _id: id })
 
-    const result = await ApplyDB.GetList({ author: me, active: true, boardId: id })
+    const result = await ApplicationDB.GetList({ author: me, active: true, boardId: id })
     const { list } = result
 
     await TeamDB.Create({ name, master: me, members: list, content })

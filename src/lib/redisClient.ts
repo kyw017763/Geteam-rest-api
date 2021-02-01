@@ -2,12 +2,6 @@ import redis from 'redis'
 import { promisify } from 'util'
 import config from '../../config'
 
-// 'visitCnt'
-// 'accountCnt'
-// 'listCnt'
-// 'applyCnt'
-// 'teamCnt'
-
 class RedisClient {
   public client: redis.RedisClient
   private existsAsync: any

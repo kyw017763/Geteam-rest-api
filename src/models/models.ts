@@ -1,6 +1,6 @@
 export default {
     ACCOUNT: 'accounts',
-    APPLY: 'applies',
+    APPLICATION: 'applications',
     BOARD: 'boards',
     MESSAGE: 'messages',
     TEAM: 'teams'

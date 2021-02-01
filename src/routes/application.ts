@@ -1,5 +1,5 @@
 import express from 'express'
-import * as controller from '../controller/apply.controller'
+import * as controller from '../controller/application.controller'
 import passport from 'passport'
 
 const router = express.Router()
@@ -12,6 +12,6 @@ router.get('/:boardid', controller.GetListOnMyParticularBoard)
 
 router.post('/', controller.Create)
 
-router.patch('/:applyid/accept', controller.UpdateAccept)
+router.patch('/:applicationid/accept', controller.UpdateAccept)
 
-router.delete('/:boardid/:applyid', controller.Delete)
+router.delete('/:boardid/:applicationid', controller.Delete)
