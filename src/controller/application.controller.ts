@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from '../lib/responseForm'
-import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse'
+import FAILURE_RESPONSE from '../lib/failureResponse'
 import { validateKind } from '../lib/validateValue'
 import redisClient from '../lib/redisClient'
 import models from '../models'
@@ -36,7 +36,7 @@ export const GetListOnMyParticularBoard = async (req: Request, res: Response) =>
     let { boardid: boardId } = req.params
   
     if (!boardId || boardId.length !== 24) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
     const result = await ApplicationDB.GetList({ author: me, boardId })
@@ -56,12 +56,12 @@ export const Create = async (req: Request, res: Response) => {
     let { kind, position, portfolio, portfolioText } = req.body
 
     if (!author || author.length !== 24 || !boardId || boardId.length !== 24 || !wantedText) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
     const isApplied = await ApplicationDB.IsApplied({ accountId: me, boardId })
     if (isApplied) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
 
     const contestObj: any = {}
@@ -92,21 +92,21 @@ export const UpdateAccept = async (req: Request, res: Response) => {
     const { boardid: boardId, applicationid: applicationId } = req.params
 
     if (!boardId || boardId.length !== 24 || !applicationId || applicationId.length !== 24) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
 
     if (await ApplicationDB.IsAccepted({ _id: applicationId, boardId })) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
 
     const updateIsAcceptedResult = await ApplicationDB.UpdateIsAccepted({ _id: applicationId, boardId, author: me })
     if (updateIsAcceptedResult.matchedCount === 0) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
+      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
   
     const updateAcceptCntResult = await BoardDB.UpdateAcceptCnt({ _id: boardId, diff: 1 })
     if (updateAcceptCntResult.matchedCount === 0) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
+      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
   
     res.send(SuccessResponse())
@@ -123,15 +123,15 @@ export const Delete = async (req: Request, res: Response) => {
     const { boardid: boardId, applicationid: applicationId } = req.params
 
     if (!boardId || boardId.length !== 24 || !applicationId || applicationId.length !== 24) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
 
     const result = await ApplicationDB.Delete({ _id: applicationId, boardId })
     if (result === false) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
     if (result.matchedCount === 0) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
+      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
 
     await BoardDB.UpdateApplicationCnt({ _id: boardId, diff: -1 })

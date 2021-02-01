@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
-import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse';
+import FAILURE_RESPONSE from '../lib/failureResponse';
 import models from '../models'
 import IMessage from 'src/ts/IMessage'
 
@@ -12,7 +12,7 @@ export const Create = async (req: Request, res: Response) => {
     const { recvAccountId, content, originalId } = req.body
 
     if (!recvAccountId || recvAccountId.length !== 24 || !content || (originalId && originalId.length !== 24)) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
 
     await MessageDB.Create({ recvAccountId, sendAccountId: me, content, originalId })
@@ -68,7 +68,7 @@ export const UpdateIsRead = async (req: Request, res: Response) => {
     const { id } = req.params
 
     if (!id || id.length !== 24) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
     
     await MessageDB.UpdateIsReaded({ _id: id, recvAccountId: me })
@@ -93,7 +93,7 @@ export const DeleteList = async (req: Request, res: Response) => {
     messageIdList.map((id: string) => { if (!id || id.length !== 24) isValid = false })
 
     if (!messageIdList.length || isValid) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
 
     await MessageDB.DeleteList({ ids: messageIdList, accountId: me })
@@ -112,7 +112,7 @@ export const DeleteItem = async (req: Request, res: Response) => {
     const { id } = req.params
 
     if (!id || id.length !== 24) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
 
     await MessageDB.DeleteItem({ _id: id, accountId: me })

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
-import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST, EXCCED_LIMIT } from '../lib/failureResponse'
+import FAILURE_RESPONSE from '../lib/failureResponse'
 import jwt from 'jsonwebtoken'
 import config from '../../config'
 import models from '../models'
@@ -47,7 +47,7 @@ export const GetItem = async (req: Request, res: Response) => {
     const { id } = req.params
   
     if (!id || id.length !== 24) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
     
     let me, payload, isApplied, isAccepted
@@ -60,7 +60,7 @@ export const GetItem = async (req: Request, res: Response) => {
 
     const board = await BoardDB.GetItem({ _id: id })
     if (!board) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
+      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
   
     await BoardDB.UpdateHit({ _id: id, diff: 1 })
@@ -106,12 +106,12 @@ export const Create = async (req: Request, res: Response) => {
       kind !== validatedKind ||
       category !== validatedCategory
     ) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
     const countBoardByMe = await BoardDB.GetBoardCount({ accountId: me })
     if (countBoardByMe > 3) {
-      return res.status(400).send(FailureResponse(EXCCED_LIMIT))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.EXCCED_LIMIT))
     }
   
     const result = await BoardDB.Create({
@@ -159,7 +159,7 @@ export const Update = async (req: Request, res: Response) => {
       kind !== validatedKind ||
       category !== validatedCategory
     ) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
 
     const result = await BoardDB.UpdateItem({
@@ -174,7 +174,7 @@ export const Update = async (req: Request, res: Response) => {
       endDate
     })
     if (result.matchedCount === 0) {
-      return res.status(404).send(NOT_FOUND)
+      return res.status(404).send(FAILURE_RESPONSE.NOT_FOUND)
     }
 
     res.send(SuccessResponse())
@@ -189,7 +189,7 @@ export const Delete = async (req: Request, res: Response) => {
     const { id } = req.params
   
     if (!id || id.length !== 24) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
     
     await BoardDB.Delete({ _id: id, accountId: me })
@@ -212,21 +212,21 @@ export const CreateTeam = async (req: Request, res: Response) => {
       !content ||
       !message
     ) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
     const countTeamByMe = await BoardDB.GetTeamCount({ accountId: me })
     if (countTeamByMe > 2) {
-      return res.status(400).send(FailureResponse(EXCCED_LIMIT))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.EXCCED_LIMIT))
     }
   
     const board = await BoardDB.GetItem({ _id: id })
     if (!board) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
+      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
   
     if (me !== board.accountId || board.isCompleted) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
   
     await BoardDB.UpdateIsCompleted({ _id: id })

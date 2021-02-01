@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
-import { INVALID_PARAM, NOT_FOUND, BAD_REQUEST } from '../lib/failureResponse'
+import FAILURE_RESPONSE from '../lib/failureResponse'
 import { sendAuthEmail, sendPwdEmail, sendQuestionEmail } from '../lib/sendEmail'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
@@ -23,7 +23,7 @@ export const Create = async (req: Request, res: Response) => {
     const { id, name, pwd, sNum, interests, profile } = req.body
 
     if (!id || !name || !pwd || isNaN(sNum) || !interests || !Array.isArray(interests) || !profile) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
     const verifyKey = createKey()
@@ -44,7 +44,7 @@ export const CompareEmail = async (req: Request, res: Response) => {
     const { email: id } = req.body
 
     if (!id) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
     const result = await AccountDB.GetCompareEmail({ id })
@@ -61,12 +61,12 @@ export const CompareVerifyKey = async (req: Request, res: Response) => {
     const { key } = req.body
 
     if (!key) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
     const result = await AccountDB.UpdateIsVerified({ verifyKey: key })
     if (result.matchedCount === 0) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
+      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
 
     await redisClient.incCnt('accountCnt')
@@ -83,13 +83,13 @@ export const SetVerifyKey = async (req: Request, res: Response) => {
     const { key, email } = req.body
 
     if (!key || !email) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
     const verifyKey = createKey()
     const result = await AccountDB.UpdateVerifyKey({ id: email, verifyKey: key })
     if (result.matchedCount === 0) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
+      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
   
     sendAuthEmail(email, verifyKey)
@@ -106,15 +106,15 @@ export const SignIn = async (req: Request, res: Response) => {
     const { id, pwd } = req.body
 
     if (!id || !pwd) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
     const result = await AccountDB.SignIn({ id })
     if (!result) {
-      return res.status(400).send(FailureResponse(NOT_FOUND))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
     if (bcrypt.compareSync(pwd, result.pwd)) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
   
     const payload = { _id: result._id }
@@ -150,16 +150,16 @@ export const RefreshToken = async (req: Request, res: Response) => {
     if (oldAccessToken) {
       decodedOldAccessToken = decodeJWT(oldAccessToken)
       if (decodedOldAccessToken.exp * 1000 > new Date().getTime()) {
-        return res.status(400).send(FailureResponse(BAD_REQUEST))
+        return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
       }
     }
     else {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
   
     const result = await AccountDB.SignIn({ id: decodedOldAccessToken._id })
     if (!result) {
-      return res.status(400).send(FailureResponse(NOT_FOUND))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
   
     // Verify refresh token
@@ -189,12 +189,12 @@ export const SignOut = async (req: Request, res: Response) => {
   
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
     if (!decodedAccessToken || !decodedAccessToken._id || decodedAccessToken.exp) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
   
     const result = await AccountDB.ResetRefreshToken({ _id: me })
     if (result.matchedCount === 0) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
+      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
   
     // Blacklisting Token
@@ -212,12 +212,12 @@ export const ResetPassword = async (req: Request, res: Response) => {
     const { email, hint } = req.body
 
     if (!email || !hint) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
     const result = await AccountDB.GetInterests({ id: email })
     if (!result || !result.interests) {
-      return res.status(400).send(FailureResponse(NOT_FOUND))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
   
     if (result.interests.includes(hint)) {
@@ -240,11 +240,11 @@ export const UpdatePassword = async (req: Request, res: Response) => {
     
     const result = await AccountDB.GetPassword({ _id: me })
     if (!result || !result.pwd) {
-      return res.status(400).send(FailureResponse(NOT_FOUND))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
     
     if (!bcrypt.compareSync(result.pwd, bcrypt.hashSync(oldPwd))) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
 
     await AccountDB.UpdatePassword({ _id: result._id, pwd: newPwd })
@@ -270,12 +270,12 @@ export const Delete = async (req: Request, res: Response) => {
   
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
     if (!decodedAccessToken || !decodedAccessToken._id) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
   
     const result = await AccountDB.Delete({ _id: decodedAccessToken._id })
     if (result.matchedCount === 0) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
+      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
   
     // Blacklisting Token
@@ -293,12 +293,12 @@ export const Verify = async (req: Request, res: Response) => {
     const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
   
     if (await redisClient.checkToken(accessToken!)) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST)) // Signout 처리된 Access Token
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST)) // Signout 처리된 Access Token
     }
     
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken!)
     if ((decodedAccessToken.exp * 1000) <= new Date().getTime()) {
-      return res.status(400).send(FailureResponse(BAD_REQUEST)) // 만료된 Access Token입니다
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST)) // 만료된 Access Token입니다
     }
   
     res.send(SuccessResponse(decodedAccessToken))
@@ -313,7 +313,7 @@ export const CheckIsDuplicatedEmail = async (req: Request, res: Response) => {
     const { email } = req.body
 
     if (!email) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
 
     const isDuplicated = await AccountDB.IsExist({ id: email })
@@ -330,7 +330,7 @@ export const CheckIsDuplicatedSnum = async (req: Request, res: Response) => {
     const { sNum } = req.body
 
     if (isNaN(sNum)) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
     
     const isDuplicated = await AccountDB.IsExist({ sNum })
@@ -375,12 +375,12 @@ export const UpdateNotifications = async (req: Request, res: Response) => {
     const { notifications } = req.body
 
     if (!notifications) {
-      return res.status(400).send(FailureResponse(INVALID_PARAM))
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
     
     const result = await AccountDB.UpdateNotifications({ _id: me, notifications })
     if (result.matchedCount === 0) {
-      return res.status(404).send(FailureResponse(NOT_FOUND))
+      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
 
     res.send(SuccessResponse())
