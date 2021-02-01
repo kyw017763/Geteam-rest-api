@@ -4,4 +4,4 @@ import * as controller from '../controller/count.controller'
 const router = express.Router()
 export default router
 
-router.get('/count', controller.GetCount)
+router.get('/', controller.GetCount)

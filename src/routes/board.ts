@@ -6,8 +6,6 @@ const router = express.Router()
 export default router
 
 router.get('/', controller.GetList)
-router.get('/:kind', controller.GetListByKind)
-router.get('/:kind/:category', controller.GetListByCategory)
 router.get('/:id', controller.GetItem)
 
 router.use(passport.authenticate('jwt'))

@@ -15,62 +15,8 @@ const TeamDB = models.team
 
 export const GetList = async (req: Request, res: Response) => {
   try {
-    let { searchText, offset, limit, order } = req.query
-  
-    offset = isNaN(offset) ? 0 : offset
-    limit = isNaN(limit) ? 12 : limit
-    order = validateModifyOrder(order)
-
-    let me, payload
-    try {
-        const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
-        payload = jwt.verify(accessToken, config.JWT_SECRET, { issuer: config.JWT_ISSUER })
-        me = payload._id
-    }
-    catch (e) {}
-  
-    const result = await BoardDB.GetList({ me }, { offset, limit, order, searchText })
-    
-    res.send(SuccessResponse(result))
-  }
-  catch (err) {
-    console.log(err)
-    res.status(500).send(InternalErrorResponse)
-  }
-}
-
-export const GetListByKind = async (req: Request, res: Response) => {
-  try {
-    let { kind } = req.params
-    let { offset, limit, order } = req.query
-  
-    kind = validateKind(kind) ? kind : 'study'
-    offset = isNaN(offset) ? 0 : offset
-    limit = isNaN(limit) ? 12 : limit
-    order = validateModifyOrder(order)
-
-    let me, payload
-    try {
-        const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
-        payload = jwt.verify(accessToken, config.JWT_SECRET, { issuer: config.JWT_ISSUER })
-        me = payload._id
-    }
-    catch (e) {}
-  
-    const result = await BoardDB.GetList({ me, kind }, { offset, limit, order })
-
-    res.send(SuccessResponse(result))
-  }
-  catch (err) {
-    console.log(err)
-    res.status(500).send(InternalErrorResponse)
-  }
-}
-
-export const GetListByCategory = async (req: Request, res: Response) => {
-  try {
     let { kind, category } = req.params
-    let { offset, limit, order } = req.query
+    let { searchText, offset, limit, order } = req.query
   
     kind = validateKind(kind) ? kind : 'study'
     category = validateCategory(kind, category)
@@ -86,7 +32,8 @@ export const GetListByCategory = async (req: Request, res: Response) => {
     }
     catch (e) {}
   
-    const result = await BoardDB.GetList({ me, kind, category }, { offset, limit, order })
+    const result = await BoardDB.GetList({ me, kind, category }, { offset, limit, order, searchText })
+    
     res.send(SuccessResponse(result))
   }
   catch (err) {
