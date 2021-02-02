@@ -64,6 +64,9 @@ export const Create = async (req: Request, res: Response) => {
     if (!board) {
       return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
+    if (me === board.author) {
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
+    }
 
     const isApplied = await ApplicationDB.IsApplied({ applicant: me, boardId })
     if (isApplied) {
@@ -132,7 +135,7 @@ export const Delete = async (req: Request, res: Response) => {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
 
-    const result = await ApplicationDB.Delete({ _id: applicationId, boardId })
+    const result = await ApplicationDB.Delete({ _id: applicationId, boardId, author: me })
     if (result === false) {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }

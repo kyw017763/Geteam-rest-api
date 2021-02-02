@@ -23,7 +23,7 @@ export default {
     } = params
 
     const item: IBoard = {
-      author,
+      author: new ObjectId(author),
       kind,
       category,
       topic,
@@ -50,12 +50,11 @@ export default {
     const { kind, category, author } = params
     const { skip, limit, order, searchText } = options
 
-    // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
     const filter: any = { active: true, isCompleted: false }
 
-    if (author) {
+    if (author) { // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
       filter.$or = [
-        { author: new ObjectId(author) || null, endDay: { $lte: new Date() } },
+        { author: new ObjectId(author), endDay: { $lte: new Date() } },
         { endDay: { $gte: new Date() } }
       ]
     }

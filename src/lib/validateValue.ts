@@ -29,12 +29,13 @@ const validateCategory = (kind: string, category: string) => {
 }
 
 const validateModifyOrder = (order: string) => {
+  let result
   switch (order) {
     case 'createdAt': case 'endDay': case 'hit':
-      order = `-${order} title`
+      result = { order: -1, title: 1 }
       break
     case 'title':
-      order = `${order} -createdAt`
+      result = { order: -1, createdAt: -1 }
       break
     default: throw new Error('해당 속성으로 정렬할 수 없습니다')
   }

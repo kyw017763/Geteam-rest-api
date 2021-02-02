@@ -1,7 +1,7 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import models from './models'
-import { IOption } from '../ts/IOption'
+import IOption from '../ts/IOption'
 
 const applicationColl = connection.collection(models.APPLICATION)
 const boardColl = connection.collection(models.BOARD)
@@ -16,9 +16,9 @@ export default {
     if (portfolioText) contestObj.portfolioText = portfolioText
 
     return applicationColl.insertOne({
-      applicant,
-      author,
-      boardId,
+      applicant: new ObjectId(applicant),
+      author: new ObjectId(author),
+      boardId: new ObjectId(boardId),
       wantedText,
       ...contestObj,
       active: true,
@@ -49,11 +49,11 @@ export default {
     if (kind && kind !== 'all') {
       let boardIds, listByKind
       if (filter.author) {
-        listByKind = await boardColl.find({ author: filter.author, kind }, { projection: { _id: true } }).toArray()
+        listByKind = await boardColl.find({ author: new ObjectId(filter.author), kind }, { projection: { _id: true } }).toArray()
         filter.boardId = listByKind.map(board => new ObjectId(board._id))
       }
       if (filter.applicant) {
-        boardIds = await applicationColl.find({ applicant: filter.applicant }, { projection: { boardId: true } }).toArray()
+        boardIds = await applicationColl.find({ applicant: new ObjectId(filter.applicant) }, { projection: { boardId: true } }).toArray()
         listByKind = await boardColl.find({ _id: boardIds.map(board => new ObjectId(board._id)), kind }, { projection: { _id: true } }).toArray()
         filter.boardId = listByKind.map(board => new ObjectId(board._id))
       }
@@ -85,10 +85,10 @@ export default {
   },
 
   Delete: async (params: any = {}) => {
-    const { _id, boardId } = params
+    const { _id, boardId, author } = params
 
-    const boardCount = (await boardColl.countDocuments({ _id: new ObjectId(boardId), $or: [{ endDate: { $lte: new Date() } }, { active: true }]})) > 0
-    const applicationCount = (await applicationColl.countDocuments({ _id: new ObjectId(_id), boardId: new ObjectId(boardId), $or: [{ isAccepted: true }, { active: false }] })) > 0
+    const boardCount = (await boardColl.countDocuments({ _id: new ObjectId(boardId), author: new ObjectId(author), $or: [{ endDate: { $lte: new Date() } }, { active: true }]})) > 0
+    const applicationCount = (await applicationColl.countDocuments({ _id: new ObjectId(_id), boardId: new ObjectId(boardId) })) > 0
     if (boardCount || applicationCount) return false
     
     return await applicationColl.updateOne({ _id: new ObjectId(_id) }, { $set: { active: false } })

@@ -207,12 +207,7 @@ export const CreateTeam = async (req: Request, res: Response) => {
     const { id } = req.params
     const { name, content, message } = req.body
   
-    if (
-      (!id || id.length !== 24) ||
-      !name ||
-      !content ||
-      !message
-    ) {
+    if ((!id || id.length !== 24) || !name || !content || !message) {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
