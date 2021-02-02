@@ -1,13 +1,13 @@
 import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
 import FAILURE_RESPONSE from '../lib/failureResponse'
+import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
+import { sendTeamEmail } from '../lib/sendEmail'
+import KIND_TYPE from '../lib/kindType'
+import redisClient from '../lib/redisClient'
 import jwt from 'jsonwebtoken'
 import config from '../../config'
 import models from '../models'
-import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
-import { sendTeamEmail } from '../lib/sendEmail'
-import redisClient from '../lib/redisClient'
-import IApplication from 'src/ts/IApplication'
 
 const BoardDB = models.board
 const ApplicationDB = models.application
@@ -18,7 +18,7 @@ export const GetList = async (req: Request, res: Response) => {
     let { kind, category } = req.params
     let { searchText, offset, limit, order } = req.query
   
-    kind = validateKind(kind) ? kind : 'study'
+    kind = validateKind(kind)
     category = validateCategory(kind, category)
     offset = isNaN(offset) ? 0 : offset
     limit = isNaN(limit) ? 12 : limit

@@ -1,8 +1,9 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
+import KIND_TYPE from '../lib/kindType'
 import models from './models'
 import IBoard from '../ts/IBoard'
-import IPosition from '../ts/IPosition';
+import IPosition from '../ts/IPosition'
 
 const boardColl = connection.collection(models.BOARD)
 
@@ -36,7 +37,7 @@ export default {
       updatedAt: new Date()
     }
 
-    if (kind === 'contest') {
+    if (kind === KIND_TYPE.Contest) {
       positions.forEach((position: IPosition) => {
         if (position.title && position.description) item.positions.push(position)
       })
@@ -112,7 +113,7 @@ export default {
       }
     }
 
-    if (kind === 'contest') {
+    if (kind === KIND_TYPE.Contest) {
       positions.forEach((position: IPosition) => {
         if (position.title && position.description) updateQuery.$set.positions.push(position)
       })

@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from '../lib/responseForm'
 import FAILURE_RESPONSE from '../lib/failureResponse'
 import { validateKind } from '../lib/validateValue'
+import KIND_TYPE from '../lib/kindType'
 import redisClient from '../lib/redisClient'
 import models from '../models'
 
@@ -66,7 +67,7 @@ export const Create = async (req: Request, res: Response) => {
 
     const contestObj: any = {}
     kind = validateKind(kind)
-    if (kind === 'contest') {
+    if (kind === KIND_TYPE.Contest) {
       contestObj.position = position
       contestObj.portfolio = portfolio
       contestObj.portfolioText = portfolioText
