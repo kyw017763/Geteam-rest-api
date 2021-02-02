@@ -1,4 +1,4 @@
-export interface IOption {
+export default interface IOption {
     skip?: number
     limit?: number
     option?: string

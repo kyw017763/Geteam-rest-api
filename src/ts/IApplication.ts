@@ -5,7 +5,7 @@ import IBoard from './IBoard'
 export default interface IApplication {
   _id: ObjectId
 
-  accountId: IAccount['_id']
+  applicant: IAccount['_id']
   boardId: IBoard['_id']
   author: IAccount['_id']
   position?: string // only contest

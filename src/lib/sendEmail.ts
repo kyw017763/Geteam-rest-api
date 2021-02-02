@@ -128,7 +128,7 @@ export async function sendTeamEmail (kind: string, item: IBoard, content: string
 
     
     const message = content.replace(/(?:\r\n|\r|\n)/g, '<br />')
-    const emailContent = `<h5>팀 모집자님(${item.accountId})이 보내셨습니다<h5><br>${message}`
+    const emailContent = `<h5>팀 모집자님(${item.author})이 보내셨습니다<h5><br>${message}`
   
     const mailOptions = {
       from: process.env.EMAIL || config.EMAIL,

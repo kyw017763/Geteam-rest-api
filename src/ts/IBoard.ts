@@ -5,7 +5,7 @@ import IPosition from './IPosition'
 export default interface IBoard {
   _id?: ObjectId
 
-  accountId: IAccount['_id']
+  author: IAccount['_id']
   kind: string
   category: string
   topic: string

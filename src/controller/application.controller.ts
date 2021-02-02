@@ -19,7 +19,7 @@ export const GetList = async (req: Request, res: Response) => {
     limit = isNaN(limit) ? 12 : limit
 
     const result = await ApplicationDB.GetList(
-      { accountId: me, kind, author, isAccepted, active },
+      { applicant: me, kind, author, isAccepted, active },
       { skip: offset * limit, limit, option }
     )
 
@@ -53,14 +53,19 @@ export const GetListOnMyParticularBoard = async (req: Request, res: Response) =>
 export const Create = async (req: Request, res: Response) => {
   try {
     const { _id: me } = req.user
-    const { author, boardId, wantedText } = req.body
+    const { boardId, wantedText } = req.body
     let { kind, position, portfolio, portfolioText } = req.body
 
-    if (!author || author.length !== 24 || !boardId || boardId.length !== 24 || !wantedText) {
+    if (!boardId || boardId.length !== 24 || !wantedText) {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
-    const isApplied = await ApplicationDB.IsApplied({ accountId: me, boardId })
+    const board = await BoardDB.GetItem({ _id: boardId })
+    if (!board) {
+      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
+    }
+
+    const isApplied = await ApplicationDB.IsApplied({ applicant: me, boardId })
     if (isApplied) {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
@@ -73,7 +78,7 @@ export const Create = async (req: Request, res: Response) => {
       contestObj.portfolioText = portfolioText
     }
 
-    const result = await ApplicationDB.Create({ accountId: me, author, boardId, wantedText, ...contestObj })
+    const result = await ApplicationDB.Create({ applicant: me, author: board.author, boardId, wantedText, ...contestObj })
 
     await BoardDB.UpdateApplicationCnt({ _id: boardId, diff: 1 })
   

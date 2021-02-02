@@ -1,14 +1,14 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import models from './models'
-import { IOption } from '../ts/common'
+import { IOption } from '../ts/IOption'
 
 const applicationColl = connection.collection(models.APPLICATION)
 const boardColl = connection.collection(models.BOARD)
 
 export default {
   Create: (params: any = {}) => {
-    const { accountId, author, boardId, wantedText, position, portfolio, portfolioText } = params
+    const { applicant, author, boardId, wantedText, position, portfolio, portfolioText } = params
 
     const contestObj: any = {}
     if (position) contestObj.position = position
@@ -16,7 +16,7 @@ export default {
     if (portfolioText) contestObj.portfolioText = portfolioText
 
     return applicationColl.insertOne({
-      accountId,
+      applicant,
       author,
       boardId,
       wantedText,
@@ -28,7 +28,7 @@ export default {
   },
 
   GetList: async (params: any = {}, options: IOption = {}) => {
-    const { accountId, kind, author, isAccepted, active, boardId } = params
+    const { applicant, kind, author, isAccepted, active, boardId } = params
     const { skip, limit, option } = options
 
     const filter: any = {}
@@ -41,7 +41,7 @@ export default {
         if (author) filter.author = new ObjectId(author)
         break
       case 'accepted': case 'unaccpeted':
-        if (accountId) filter.accountId = new ObjectId(accountId)
+        if (applicant) filter.applicant = new ObjectId(applicant)
         break
       default: break
     }
@@ -49,11 +49,11 @@ export default {
     if (kind && kind !== 'all') {
       let boardIds, listByKind
       if (filter.author) {
-        listByKind = await boardColl.find({ accountId: filter.author, kind }, { projection: { _id: true } }).toArray()
+        listByKind = await boardColl.find({ author: filter.author, kind }, { projection: { _id: true } }).toArray()
         filter.boardId = listByKind.map(board => new ObjectId(board._id))
       }
-      if (filter.accountId) {
-        boardIds = await applicationColl.find({ accountId: filter.accountId }, { projection: { boardId: true } }).toArray()
+      if (filter.applicant) {
+        boardIds = await applicationColl.find({ applicant: filter.applicant }, { projection: { boardId: true } }).toArray()
         listByKind = await boardColl.find({ _id: boardIds.map(board => new ObjectId(board._id)), kind }, { projection: { _id: true } }).toArray()
         filter.boardId = listByKind.map(board => new ObjectId(board._id))
       }
@@ -65,9 +65,9 @@ export default {
     return { list, count }
   },
   IsApplied: async (params: any = {}) => {
-    const { accountId, boardId } = params
+    const { applicant, boardId } = params
 
-    return (await applicationColl.countDocuments({ accountId: new ObjectId(accountId), boardId: new ObjectId(boardId), active: true })) > 0
+    return (await applicationColl.countDocuments({ applicant: new ObjectId(applicant), boardId: new ObjectId(boardId), active: true })) > 0
   },
   IsAccepted: async (params: any = {}) => {
     const { _id, boardId } = params

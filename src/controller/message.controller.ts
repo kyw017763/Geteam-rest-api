@@ -33,7 +33,7 @@ export const GetReceiveMessageList = async (req: Request, res: Response) => {
     offset = isNaN(offset) ? 0 : Number(offset)
     limit = isNaN(limit) ? 50 : Number(limit)
 
-    const messages = await MessageDB.GetList({ recvAccountId: me }, { skip: offset, limit })
+    const messages = await MessageDB.GetList({ recvAccountId: me }, { skip: limit * offset, limit })
 
     res.send(SuccessResponse(messages))
   }
@@ -51,7 +51,7 @@ export const GetSendMessageList = async (req: Request, res: Response) => {
     offset = isNaN(offset) ? 0 : Number(offset)
     limit = isNaN(limit) ? 50 : Number(limit)
 
-    const messages = await MessageDB.GetList({ sendAccountId: me }, { skip: offset, limit })
+    const messages = await MessageDB.GetList({ sendAccountId: me }, { skip: limit * offset, limit })
 
     res.send(SuccessResponse(messages))
   }

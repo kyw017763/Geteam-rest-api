@@ -4,13 +4,14 @@ import KIND_TYPE from '../lib/kindType'
 import models from './models'
 import IBoard from '../ts/IBoard'
 import IPosition from '../ts/IPosition'
+import IOption from '../ts/IOption'
 
 const boardColl = connection.collection(models.BOARD)
 
 export default {
   Create: (params: any = {}) => {
     const {
-      accountId,
+      author,
       kind,
       category,
       topic,
@@ -22,7 +23,7 @@ export default {
     } = params
 
     const item: IBoard = {
-      accountId,
+      author,
       kind,
       category,
       topic,
@@ -45,28 +46,26 @@ export default {
 
     return boardColl.insertOne(item)
   },
-  GetList: async (params: any = {}, options: any = {}) => {
-    const { kind, category, me } = params
-    const { skip, limit, sort, searchText } = options
+  GetList: async (params: any = {}, options: IOption = {}) => {
+    const { kind, category, author } = params
+    const { skip, limit, order, searchText } = options
 
     // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
     const filter: any = { active: true, isCompleted: false }
 
-    if (me) {
+    if (author) {
       filter.$or = [
-        { accountId: new ObjectId(me) || null, endDay: { $lte: new Date() } },
+        { author: new ObjectId(author) || null, endDay: { $lte: new Date() } },
         { endDay: { $gte: new Date() } }
       ]
     }
-    else {
-      filter.endDay = { $gte: new Date() }
-    }
+    else filter.endDay = { $gte: new Date() }
 
     if (kind) filter.kind = kind
     if (category) filter.category = category
     if (searchText) filter.$text = { $search: searchText }
 
-    const list = await boardColl.find(filter, { skip, limit, sort }).toArray()
+    const list = await boardColl.find(filter, { skip, limit, sort: order }).toArray()
     const count = await boardColl.countDocuments(filter)
 
     return { list, count }
@@ -77,19 +76,19 @@ export default {
     return boardColl.findOne({ _id: new ObjectId(_id) })
   },
   GetBoardCount: (params: any = {}) => {
-    const { accountId } = params
+    const { author } = params
 
-    return boardColl.countDocuments({ accountId: new ObjectId(accountId), endDate: { $lte: new Date() } })
+    return boardColl.countDocuments({ author: new ObjectId(author), endDate: { $lte: new Date() } })
   },
   GetTeamCount: (params: any = {}) => {
-    const { accountId } = params
+    const { author } = params
 
-    return boardColl.countDocuments({ accountId: new ObjectId(accountId), isCompleted: true })
+    return boardColl.countDocuments({ author: new ObjectId(author), isCompleted: true })
   },
   UpdateItem: (params: any = {}) => {
     const {
       _id,
-      accountId,
+      author,
       kind,
       category,
       topic,
@@ -119,12 +118,12 @@ export default {
       })
     }
 
-    return boardColl.updateOne({ _id: new ObjectId(_id), accountId: new ObjectId(accountId), acceptCnt: { $lte: 0 } }, updateQuery)
+    return boardColl.updateOne({ _id: new ObjectId(_id), author: new ObjectId(author), acceptCnt: { $lte: 0 } }, updateQuery)
   },
   UpdateIsCompleted: (params: any = {}) => {
-    const { _id, accountId } = params
+    const { _id, author } = params
 
-    return boardColl.updateOne({ _id: new ObjectId(_id), accountId: new ObjectId(accountId) }, { $set: { isCompleted: true, updatedAt: new Date() } })
+    return boardColl.updateOne({ _id: new ObjectId(_id), author: new ObjectId(author) }, { $set: { isCompleted: true, updatedAt: new Date() } })
   },
   UpdateApplicationCnt: (params: any = {}) => {
     const { _id, diff } = params
@@ -142,8 +141,8 @@ export default {
     return boardColl.updateOne({ _id: new ObjectId(_id) }, { $inc: { hit: diff }, $set: { updatedAt: new Date() } })
   },
   Delete: (params: any = {}) => {
-    const { _id, accountId } = params
+    const { _id, author } = params
 
-    return boardColl.updateOne({ _id: new ObjectId(_id), accountId: new ObjectId(accountId) }, { $set: { active: false } })
+    return boardColl.updateOne({ _id: new ObjectId(_id), author: new ObjectId(author) }, { $set: { active: false } })
   },
 }

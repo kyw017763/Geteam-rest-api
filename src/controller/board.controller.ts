@@ -32,7 +32,7 @@ export const GetList = async (req: Request, res: Response) => {
     }
     catch (e) {}
   
-    const result = await BoardDB.GetList({ me, kind, category }, { offset, limit, order, searchText })
+    const result = await BoardDB.GetList({ kind, category, author: me }, { skip: limit * offset, limit, order, searchText })
     
     res.send(SuccessResponse(result))
   }
@@ -66,8 +66,8 @@ export const GetItem = async (req: Request, res: Response) => {
     await BoardDB.UpdateHit({ _id: id, diff: 1 })
 
     if (me) {
-      isApplied = await ApplicationDB.IsApplied({ accountId: me, boardId: id })
-      isAccepted = await ApplicationDB.IsAccepted({ accountId: me, boardId: id })
+      isApplied = await ApplicationDB.IsApplied({ applicant: me, boardId: id })
+      isAccepted = await ApplicationDB.IsAccepted({ applicant: me, boardId: id })
     }
 
     const data: any = { board }
@@ -109,13 +109,13 @@ export const Create = async (req: Request, res: Response) => {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
-    const countBoardByMe = await BoardDB.GetBoardCount({ accountId: me })
+    const countBoardByMe = await BoardDB.GetBoardCount({ author: me })
     if (countBoardByMe > 3) {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.EXCCED_LIMIT))
     }
   
     const result = await BoardDB.Create({
-      accountId: me,
+      author: me,
       kind,
       category,
       topic,
@@ -164,6 +164,7 @@ export const Update = async (req: Request, res: Response) => {
 
     const result = await BoardDB.UpdateItem({
       _id: id,
+      author: me,
       kind,
       category,
       topic,
@@ -192,7 +193,7 @@ export const Delete = async (req: Request, res: Response) => {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
     
-    await BoardDB.Delete({ _id: id, accountId: me })
+    await BoardDB.Delete({ _id: id, author: me })
   
     res.send(SuccessResponse())
   } catch (err) {
@@ -215,7 +216,7 @@ export const CreateTeam = async (req: Request, res: Response) => {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
-    const countTeamByMe = await BoardDB.GetTeamCount({ accountId: me })
+    const countTeamByMe = await BoardDB.GetTeamCount({ author: me })
     if (countTeamByMe > 2) {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.EXCCED_LIMIT))
     }
@@ -225,7 +226,7 @@ export const CreateTeam = async (req: Request, res: Response) => {
       return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
   
-    if (me !== board.accountId || board.isCompleted) {
+    if (me !== board.author || board.isCompleted) {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
   
