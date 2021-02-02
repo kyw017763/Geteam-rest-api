@@ -233,8 +233,10 @@ export const CreateTeam = async (req: Request, res: Response) => {
     await TeamDB.Create({ name, master: me, members: list, content })
     
     await redisClient.incCnt('teamCnt')
-  
-    sendTeamEmail(board.kind, board, message)
+
+    for (let i = 0; i < list.length; i++) {
+      sendTeamEmail(list[i].applicant, board.kind, board, message)
+    }
     
     res.send(SuccessResponse())
   }
