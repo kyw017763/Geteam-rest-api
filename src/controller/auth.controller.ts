@@ -58,13 +58,13 @@ export const CompareEmail = async (req: Request, res: Response) => {
 
 export const CompareVerifyKey = async (req: Request, res: Response) => {
   try {
-    const { key } = req.body
+    const { email: id, key } = req.body
 
-    if (!key) {
+    if (!id || !key) {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
-    const result = await AccountDB.UpdateIsVerified({ verifyKey: key })
+    const result = await AccountDB.UpdateIsVerified({ id, verifyKey: key })
     if (result.matchedCount === 0) {
       return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
@@ -80,19 +80,19 @@ export const CompareVerifyKey = async (req: Request, res: Response) => {
 
 export const SetVerifyKey = async (req: Request, res: Response) => {
   try {
-    const { key, email } = req.body
+    const { email: id } = req.body
 
-    if (!key || !email) {
+    if (!id) {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
   
     const verifyKey = createKey()
-    const result = await AccountDB.UpdateVerifyKey({ id: email, verifyKey: key })
+    const result = await AccountDB.UpdateVerifyKey({ id, verifyKey })
     if (result.matchedCount === 0) {
       return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
     }
   
-    sendAuthEmail(email, verifyKey)
+    sendAuthEmail(id, verifyKey)
   
     res.send(SuccessResponse())
   } catch (err) {
@@ -182,6 +182,26 @@ export const RefreshToken = async (req: Request, res: Response) => {
   }
 }
 
+export const VerifyToken = async (req: Request, res: Response) => {
+  try {
+    const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
+  
+    if (await redisClient.checkToken(accessToken!)) {
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST)) // Signout 처리된 Access Token
+    }
+    
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken!)
+    if ((decodedAccessToken.exp * 1000) <= new Date().getTime()) {
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST)) // 만료된 Access Token입니다
+    }
+  
+    res.send(SuccessResponse(decodedAccessToken))
+  } catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
+}
+
 export const SignOut = async (req: Request, res: Response) => {
   try {
     const { _id: me } = req.user
@@ -193,10 +213,7 @@ export const SignOut = async (req: Request, res: Response) => {
     }
   
     const result = await AccountDB.ResetRefreshToken({ _id: me })
-    if (result.matchedCount === 0) {
-      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
-    }
-  
+    
     // Blacklisting Token
     await redisClient.blacklistToken(accessToken, decodedAccessToken.exp)
     
@@ -233,81 +250,6 @@ export const ResetPassword = async (req: Request, res: Response) => {
   }
 }
 
-export const UpdatePassword = async (req: Request, res: Response) => {
-  try {
-    const { _id: me } = req.user
-    const { oldPwd, newPwd } = req.body
-    
-    const result = await AccountDB.GetPassword({ _id: me })
-    if (!result || !result.pwd) {
-      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
-    }
-    
-    if (!bcrypt.compareSync(result.pwd, bcrypt.hashSync(oldPwd))) {
-      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
-    }
-
-    await AccountDB.UpdatePassword({ _id: result._id, pwd: newPwd })
-    
-    const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
-  
-    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken!)
-    
-    // Blacklisting Token
-    await redisClient.blacklistToken(accessToken!, decodedAccessToken.exp)
-  
-    res.send(SuccessResponse())
-  } catch (err) {
-    console.log(err)
-    res.status(500).send(InternalErrorResponse)
-  }
-}
-
-export const Delete = async (req: Request, res: Response) => {
-  try {
-    const { _id: me } = req.user
-    const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
-  
-    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
-    if (!decodedAccessToken || !decodedAccessToken._id) {
-      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
-    }
-  
-    const result = await AccountDB.Delete({ _id: decodedAccessToken._id })
-    if (result.matchedCount === 0) {
-      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
-    }
-  
-    // Blacklisting Token
-    await redisClient.blacklistToken(accessToken, decodedAccessToken.exp)
-    
-    res.send(SuccessResponse())
-  } catch (err) {
-    console.log(err)
-    res.status(500).send(InternalErrorResponse)
-  }
-}
-
-export const Verify = async (req: Request, res: Response) => {
-  try {
-    const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
-  
-    if (await redisClient.checkToken(accessToken!)) {
-      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST)) // Signout 처리된 Access Token
-    }
-    
-    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken!)
-    if ((decodedAccessToken.exp * 1000) <= new Date().getTime()) {
-      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST)) // 만료된 Access Token입니다
-    }
-  
-    res.send(SuccessResponse(decodedAccessToken))
-  } catch (err) {
-    console.log(err)
-    res.status(500).send(InternalErrorResponse)
-  }
-}
-
 export const CheckIsDuplicatedEmail = async (req: Request, res: Response) => {
   try {
     const { email } = req.body
@@ -336,6 +278,36 @@ export const CheckIsDuplicatedSnum = async (req: Request, res: Response) => {
     const isDuplicated = await AccountDB.IsExist({ sNum })
 
     res.send(SuccessResponse({ isDuplicated }))
+  } catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
+}
+
+export const UpdatePassword = async (req: Request, res: Response) => {
+  try {
+    const { _id: me } = req.user
+    const { oldPwd, newPwd } = req.body
+    
+    const result = await AccountDB.GetPassword({ _id: me })
+    if (!result || !result.pwd) {
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
+    }
+    
+    if (!bcrypt.compareSync(result.pwd, bcrypt.hashSync(oldPwd))) {
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
+    }
+
+    await AccountDB.UpdatePassword({ _id: me, pwd: newPwd })
+    
+    const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
+  
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken!)
+    
+    // Blacklisting Token
+    await redisClient.blacklistToken(accessToken!, decodedAccessToken.exp)
+  
+    res.send(SuccessResponse())
   } catch (err) {
     console.log(err)
     res.status(500).send(InternalErrorResponse)
@@ -378,11 +350,30 @@ export const UpdateNotifications = async (req: Request, res: Response) => {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
     
-    const result = await AccountDB.UpdateNotifications({ _id: me, notifications })
-    if (result.matchedCount === 0) {
-      return res.status(404).send(FailureResponse(FAILURE_RESPONSE.NOT_FOUND))
-    }
+    await AccountDB.UpdateNotifications({ _id: me, notifications })
 
+    res.send(SuccessResponse())
+  } catch (err) {
+    console.log(err)
+    res.status(500).send(InternalErrorResponse)
+  }
+}
+
+export const Delete = async (req: Request, res: Response) => {
+  try {
+    const { _id: me } = req.user
+    const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
+  
+    const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
+    if (!decodedAccessToken || !decodedAccessToken._id) {
+      return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
+    }
+  
+    await AccountDB.Delete({ _id: me })
+  
+    // Blacklisting Token
+    await redisClient.blacklistToken(accessToken, decodedAccessToken.exp)
+    
     res.send(SuccessResponse())
   } catch (err) {
     console.log(err)

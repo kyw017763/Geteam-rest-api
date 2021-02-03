@@ -1,5 +1,5 @@
 import passport from 'passport'
-import JwtStratery from './jwtStrategy'
+import JwtStratery from './strategy/jwtStrategy'
 
 passport.use('jwt', JwtStratery)
 

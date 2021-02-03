@@ -34,8 +34,8 @@ export default {
       verifyKey,
       verifyExpireAt: new Date(currentDate.getTime() + (3600000)), // 1 hour
       active: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: currentDate,
+      updatedAt: currentDate,
     })
   },
 
@@ -73,7 +73,7 @@ export default {
   IsExist: async (param: any = {}) => {
     const { _id, id, sNum } = param
 
-    const filter: any = {}
+    const filter = {}
 
     if (_id) filter._id = new ObjectId(_id)
     if (id) filter.id = id
@@ -90,7 +90,7 @@ export default {
   ResetRefreshToken: (params: any = {}) => {
     const { _id } = params
     
-    return accountColl.updateOne({ _id: new ObjectId(_id), active: true }, { $unset: { refreshToken: true } })
+    return accountColl.updateOne({ _id: new ObjectId(_id), isVerified: true, active: true }, { $unset: { refreshToken: true } })
   },
   UpdateIsVerified: (params: any = {}) => {
     const { verifyKey } = params
@@ -103,7 +103,7 @@ export default {
   UpdateVerifyKey: (params: any = {}) => {
     const { id, verifyKey } = params
 
-    return accountColl.updateOne({ id, verifyKey, isVerified: false, active: true }, { $set: { verifyKey } })
+    return accountColl.updateOne({ id, isVerified: false, active: false }, { $set: { verifyKey } })
   },
   UpdatePassword: (params: any = {}) => {
     const { _id } = params

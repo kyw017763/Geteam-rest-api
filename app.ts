@@ -1,15 +1,15 @@
 import express from 'express'
-import passport from './src/middleware/passport'
+import cookieParser from 'cookie-parser'
+import session from 'express-session'
+import connectRedis from 'connect-redis'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import config from './config'
 dotenv.config()
-import cookieParser from 'cookie-parser'
-import session from 'express-session'
-import connectRedis from 'connect-redis'
-import './src/models/connection'
-import redisClient from './src/lib/redisClient'
 import router from './src/routes'
+import passport from './src/middleware/passport'
+import redisClient from './src/lib/redisClient'
+import './src/models/connection'
 
 const app = express()
 
