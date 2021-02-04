@@ -42,6 +42,7 @@
     "jwt-decode": "^2.2.0",
     "mongodb": "^3.6.3",
     "mongoose": "^5.9.28",
+    "morgan": "^1.10.0",
     "nodemailer": "^6.3.0",
     "nodemailer-smtp-transport": "^2.7.4",
     "nodemon": "^2.0.4",
@@ -55,6 +56,7 @@
   "devDependencies": {
     "@types/connect-redis": "0.0.13",
     "@types/cookie-parser": "^1.4.2",
-    "@types/express-session": "^1.17.0"
+    "@types/express-session": "^1.17.0",
+    "@types/morgan": "^1.9.2"
   }
 }

@@ -2,6 +2,7 @@ import express from 'express'
 import cookieParser from 'cookie-parser'
 import session from 'express-session'
 import connectRedis from 'connect-redis'
+import morgan from 'morgan'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import config from './config'
@@ -39,10 +40,7 @@ app.use(passport.session())
 
 app.use(cors())
 
-app.all('/*', (req, res, next) => {
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE')
-  next()
-})
+app.use(morgan('dev'))
 
 app.use('/api', router)
 
