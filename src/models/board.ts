@@ -4,11 +4,24 @@ import KIND_TYPE from '../lib/kindType'
 import models from './models'
 import Board, { Position } from '../ts/Board'
 import Option from '../ts/Option'
+import {
+  Create,
+  GetList,
+  GetItem,
+  GetBoardCount,
+  GetTeamCount,
+  UpdateItem,
+  UpdateIsCompleted,
+  UpdateApplicationCnt,
+  UpdateAcceptCnt,
+  UpdateHit,
+  Delete
+} from '../ts/models/board'
 
 const boardColl = connection.collection(models.BOARD)
 
 export default {
-  Create: (params = {}) => {
+  Create: (params: Create) => {
     const {
       author,
       kind,
@@ -45,7 +58,7 @@ export default {
 
     return boardColl.insertOne(item)
   },
-  GetList: async (params = {}, options: Option = {}) => {
+  GetList: async (params: GetList, options: Option) => {
     const { kind, category, author } = params
     const { skip, limit, order, searchText } = options
 
@@ -68,22 +81,22 @@ export default {
 
     return { list, count }
   },
-  GetItem: async (params = {}) => {
+  GetItem: async (params: GetItem) => {
     const { _id } = params
 
     return boardColl.findOne({ _id: new ObjectId(_id) })
   },
-  GetBoardCount: (params = {}) => {
+  GetBoardCount: (params: GetBoardCount) => {
     const { author } = params
 
     return boardColl.countDocuments({ author: new ObjectId(author), endDate: { $lte: new Date() } })
   },
-  GetTeamCount: (params = {}) => {
+  GetTeamCount: (params: GetTeamCount) => {
     const { author } = params
 
     return boardColl.countDocuments({ author: new ObjectId(author), isCompleted: true })
   },
-  UpdateItem: (params = {}) => {
+  UpdateItem: (params: UpdateItem) => {
     const {
       _id,
       author,
@@ -118,27 +131,27 @@ export default {
 
     return boardColl.updateOne({ _id: new ObjectId(_id), author: new ObjectId(author), acceptCnt: { $lte: 0 } }, updateQuery)
   },
-  UpdateIsCompleted: (params = {}) => {
+  UpdateIsCompleted: (params: UpdateIsCompleted) => {
     const { _id, author } = params
 
     return boardColl.updateOne({ _id: new ObjectId(_id), author: new ObjectId(author) }, { $set: { isCompleted: true, updatedAt: new Date() } })
   },
-  UpdateApplicationCnt: (params = {}) => {
+  UpdateApplicationCnt: (params: UpdateApplicationCnt) => {
     const { _id, diff } = params
 
     return boardColl.updateOne({ _id: new ObjectId(_id) }, { $inc: { applicationCnt: diff }, $set: { updatedAt: new Date() } })
   },
-  UpdateAcceptCnt: (params = {}) => {
+  UpdateAcceptCnt: (params: UpdateAcceptCnt) => {
     const { _id, diff } = params
 
     return boardColl.updateOne({ _id: new ObjectId(_id) }, { $inc: { acceptCnt: diff }, $set: { updatedAt: new Date() } })
   },
-  UpdateHit: (params = {}) => {
+  UpdateHit: (params: UpdateHit) => {
     const { _id, diff } = params
 
     return boardColl.updateOne({ _id: new ObjectId(_id) }, { $inc: { hit: diff }, $set: { updatedAt: new Date() } })
   },
-  Delete: (params = {}) => {
+  Delete: (params: Delete) => {
     const { _id, author } = params
 
     return boardColl.updateOne({ _id: new ObjectId(_id), author: new ObjectId(author) }, { $set: { active: false } })
