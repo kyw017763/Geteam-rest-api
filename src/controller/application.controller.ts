@@ -6,19 +6,19 @@ import KIND_TYPE from '../lib/kindType'
 import redisClient from '../lib/redisClient'
 import models from '../models'
 import PassportUser from '../ts/PassportUser'
+import QueryString from '../ts/QueryString'
 
 const ApplicationDB = models.application
 const BoardDB = models.board
 
-export const GetList = async (req: Request, res: Response) => {
+export const GetList = async (req: Request<{}, {}, {}, QueryString>, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     let { kind, author, is_accepted: isAccepted, active, offset, limit, option } = req.query
 
     kind = validateKind(kind)
-    offset = isNaN(offset) ? 0 : offset
-    limit = isNaN(limit) ? 12 : limit
+    offset = isNaN(Number(offset)) ? 0 : offset as number
+    limit = isNaN(Number(limit)) ? 12 : limit as number
 
     const result = await ApplicationDB.GetList(
       { applicant: me, kind, author, isAccepted, active },
@@ -35,8 +35,7 @@ export const GetList = async (req: Request, res: Response) => {
 
 export const GetListOnMyParticularBoard = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     let { boardid: boardId } = req.params
   
     if (!boardId || boardId.length !== 24) {
@@ -55,8 +54,7 @@ export const GetListOnMyParticularBoard = async (req: Request, res: Response) =>
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { boardId, wantedText } = req.body
     let { kind, position, portfolio, portfolioText } = req.body
 
@@ -101,8 +99,7 @@ export const Create = async (req: Request, res: Response) => {
 
 export const UpdateAccept = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { boardid: boardId, applicationid: applicationId } = req.params
 
     if (!boardId || boardId.length !== 24 || !applicationId || applicationId.length !== 24) {
@@ -133,8 +130,7 @@ export const UpdateAccept = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { boardid: boardId, applicationid: applicationId } = req.params
 
     if (!boardId || boardId.length !== 24 || !applicationId || applicationId.length !== 24) {

@@ -7,27 +7,29 @@ import redisClient from '../lib/redisClient'
 import jwt from 'jsonwebtoken'
 import models from '../models'
 import PassportUser from '../ts/PassportUser'
+import QueryString from '../ts/QueryString'
+import AccessTokenPayload from '../ts/AccessTokenPayload'
 import config from '../../config'
 
 const BoardDB = models.board
 const ApplicationDB = models.application
 const TeamDB = models.team
 
-export const GetList = async (req: Request, res: Response) => {
+export const GetList = async (req: Request<any, {}, {}, QueryString>, res: Response) => {
   try {
     let { kind, category } = req.params
     let { searchText, offset, limit, order } = req.query
   
     kind = validateKind(kind)
     category = validateCategory(kind, category)
-    offset = isNaN(offset) ? 0 : offset
-    limit = isNaN(limit) ? 12 : limit
+    offset = isNaN(Number(offset)) ? 0 : offset as number
+    limit = isNaN(Number(limit)) ? 12 : limit as number
     order = validateModifyOrder(order)
 
-    let me, payload
+    let me, payload: AccessTokenPayload | null = null
     try {
         const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
-        payload = jwt.verify(accessToken, config.JWT_SECRET, { issuer: config.JWT_ISSUER })
+        payload = jwt.verify(accessToken, config.JWT_SECRET, { issuer: config.JWT_ISSUER }) as AccessTokenPayload
         me = payload._id
     }
     catch (e) {}
@@ -50,10 +52,10 @@ export const GetItem = async (req: Request, res: Response) => {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
     
-    let me, payload, isApplied, isAccepted
+    let me, payload: AccessTokenPayload | null = null, isApplied, isAccepted
     try {
         const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
-        payload = jwt.verify(accessToken, config.JWT_SECRET, { issuer: config.JWT_ISSUER })
+        payload = jwt.verify(accessToken, config.JWT_SECRET, { issuer: config.JWT_ISSUER }) as AccessTokenPayload
         me = payload._id
     }
     catch (e) {}
@@ -85,8 +87,7 @@ export const GetItem = async (req: Request, res: Response) => {
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const {
       kind,
       category,
@@ -137,8 +138,7 @@ export const Create = async (req: Request, res: Response) => {
 
 export const Update = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { id } = req.params
     const {
       kind,
@@ -188,8 +188,7 @@ export const Update = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { id } = req.params
   
     if (!id || id.length !== 24) {
@@ -206,8 +205,7 @@ export const Delete = async (req: Request, res: Response) => {
 
 export const CreateTeam = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { id } = req.params
     const { name, content, message } = req.body
   

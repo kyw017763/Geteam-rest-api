@@ -205,9 +205,7 @@ export const VerifyToken = async (req: Request, res: Response) => {
 
 export const SignOut = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
-
+    const { _id: me } = req.user as PassportUser
     const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
   
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)
@@ -289,7 +287,7 @@ export const CheckIsDuplicatedSnum = async (req: Request, res: Response) => {
 
 export const UpdatePassword = async (req: Request, res: Response) => {
   try {
-    const _id = 
+    const { _id: me } = req.user as PassportUser
     const { oldPwd, newPwd } = req.body
     
     const result = await AccountDB.GetPassword({ _id: me })
@@ -319,8 +317,7 @@ export const UpdatePassword = async (req: Request, res: Response) => {
 
 export const GetInfo = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
   
     const result = await AccountDB.GetItem({ _id: me })
   
@@ -333,8 +330,7 @@ export const GetInfo = async (req: Request, res: Response) => {
 
 export const UpdateInfo = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { name, sNum, interests, profile } = req.body
 
     await AccountDB.UpdateInfo({ _id: me, name, sNum, interests, profile })
@@ -348,8 +344,7 @@ export const UpdateInfo = async (req: Request, res: Response) => {
 
 export const UpdateNotifications = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { notifications } = req.body
 
     if (!notifications) {
@@ -367,8 +362,7 @@ export const UpdateNotifications = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
   
     const decodedAccessToken: IDecodedAccessToken = decodeJWT(accessToken)

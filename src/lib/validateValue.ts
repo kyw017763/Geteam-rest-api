@@ -1,7 +1,7 @@
 import KIND_TYPE from './kindType'
 import CATEGORY_TYPE from './categoryType'
 
-const validateKind = (kind: string) => {
+const validateKind = (kind: string | undefined) => {
   switch (kind) {
     case KIND_TYPE.All: case KIND_TYPE.Study: case KIND_TYPE.Contest:
       return kind
@@ -10,7 +10,7 @@ const validateKind = (kind: string) => {
   }
 }
 
-const validateCategory = (kind: string, category: string) => {
+const validateCategory = (kind: string | undefined, category: string | undefined) => {
   let result = CATEGORY_TYPE.Development
 
   if (kind === KIND_TYPE.Study) {
@@ -28,7 +28,7 @@ const validateCategory = (kind: string, category: string) => {
   return result
 }
 
-const validateModifyOrder = (order: string) => {
+const validateModifyOrder = (order: string | undefined) => {
   let result
   switch (order) {
     case 'createdAt': case 'endDay': case 'hit':

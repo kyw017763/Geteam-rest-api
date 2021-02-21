@@ -3,14 +3,13 @@ import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../li
 import FAILURE_RESPONSE from '../lib/failureResponse';
 import models from '../models'
 import PassportUser from '../ts/PassportUser'
-import Message from '../ts/Message'
+import QueryString from '../ts/QueryString'
 
 const MessageDB = models.message
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { recvAccountId, content, originalId } = req.body
 
     if (!recvAccountId || recvAccountId.length !== 24 || !content || (originalId && originalId.length !== 24)) {
@@ -27,14 +26,13 @@ export const Create = async (req: Request, res: Response) => {
   }
 }
 
-export const GetReceiveMessageList = async (req: Request, res: Response) => {
+export const GetReceiveMessageList = async (req: Request<{}, {}, {}, QueryString>, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     let { offset, limit } = req.query
 
-    offset = isNaN(offset) ? 0 : Number(offset)
-    limit = isNaN(limit) ? 50 : Number(limit)
+    offset = isNaN(Number(offset)) ? 0 : Number(offset) as number
+    limit = isNaN(Number(limit)) ? 50 : Number(limit) as number
 
     const messages = await MessageDB.GetList({ recvAccountId: me }, { skip: limit * offset, limit })
 
@@ -46,14 +44,13 @@ export const GetReceiveMessageList = async (req: Request, res: Response) => {
   }
 }
 
-export const GetSendMessageList = async (req: Request, res: Response) => {
+export const GetSendMessageList = async (req: Request<{}, {}, {}, QueryString>, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     let { offset, limit } = req.query
 
-    offset = isNaN(offset) ? 0 : Number(offset)
-    limit = isNaN(limit) ? 50 : Number(limit)
+    offset = isNaN(Number(offset)) ? 0 : Number(offset) as number
+    limit = isNaN(Number(limit)) ? 50 : Number(limit) as number
 
     const messages = await MessageDB.GetList({ sendAccountId: me }, { skip: limit * offset, limit })
 
@@ -67,8 +64,7 @@ export const GetSendMessageList = async (req: Request, res: Response) => {
 
 export const UpdateIsRead = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { id } = req.params
 
     if (!id || id.length !== 24) {
@@ -87,8 +83,7 @@ export const UpdateIsRead = async (req: Request, res: Response) => {
 
 export const DeleteList = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { ids } = req.query
 
     let isValid = true
@@ -112,8 +107,7 @@ export const DeleteList = async (req: Request, res: Response) => {
 
 export const DeleteItem = async (req: Request, res: Response) => {
   try {
-    const user = req.user as PassportUser
-    const { _id: me } = user
+    const { _id: me } = req.user as PassportUser
     const { id } = req.params
 
     if (!id || id.length !== 24) {
