@@ -2,13 +2,14 @@ import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
 import FAILURE_RESPONSE from '../lib/failureResponse';
 import models from '../models'
-import Message from 'src/ts/Message'
+import PassportUser from '../ts/PassportUser'
+import Message from '../ts/Message'
 
 const MessageDB = models.message
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { recvAccountId, content, originalId } = req.body
 
@@ -28,7 +29,7 @@ export const Create = async (req: Request, res: Response) => {
 
 export const GetReceiveMessageList = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     let { offset, limit } = req.query
 
@@ -47,7 +48,7 @@ export const GetReceiveMessageList = async (req: Request, res: Response) => {
 
 export const GetSendMessageList = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     let { offset, limit } = req.query
 
@@ -66,7 +67,7 @@ export const GetSendMessageList = async (req: Request, res: Response) => {
 
 export const UpdateIsRead = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { id } = req.params
 
@@ -86,7 +87,7 @@ export const UpdateIsRead = async (req: Request, res: Response) => {
 
 export const DeleteList = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { ids } = req.query
 
@@ -111,7 +112,7 @@ export const DeleteList = async (req: Request, res: Response) => {
 
 export const DeleteItem = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { id } = req.params
 

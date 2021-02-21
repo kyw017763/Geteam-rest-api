@@ -5,8 +5,9 @@ import { validateKind, validateCategory, validateModifyOrder } from '../lib/vali
 import { sendTeamEmail } from '../lib/sendEmail'
 import redisClient from '../lib/redisClient'
 import jwt from 'jsonwebtoken'
-import config from '../../config'
 import models from '../models'
+import PassportUser from '../ts/PassportUser'
+import config from '../../config'
 
 const BoardDB = models.board
 const ApplicationDB = models.application
@@ -84,7 +85,7 @@ export const GetItem = async (req: Request, res: Response) => {
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const {
       kind,
@@ -136,7 +137,7 @@ export const Create = async (req: Request, res: Response) => {
 
 export const Update = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { id } = req.params
     const {
@@ -187,7 +188,7 @@ export const Update = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { id } = req.params
   
@@ -205,7 +206,7 @@ export const Delete = async (req: Request, res: Response) => {
 
 export const CreateTeam = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { id } = req.params
     const { name, content, message } = req.body

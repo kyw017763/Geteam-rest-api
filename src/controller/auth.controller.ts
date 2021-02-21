@@ -9,6 +9,7 @@ import createKey from './../lib/createKey'
 import createHash from './../lib/createHash'
 import redisClient from '../lib/redisClient'
 import models from '../models'
+import PassportUser from '../ts/PassportUser'
 import config from '../../config'
 
 const AccountDB = models.account
@@ -204,7 +205,7 @@ export const VerifyToken = async (req: Request, res: Response) => {
 
 export const SignOut = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
 
     const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
@@ -318,7 +319,7 @@ export const UpdatePassword = async (req: Request, res: Response) => {
 
 export const GetInfo = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
   
     const result = await AccountDB.GetItem({ _id: me })
@@ -332,7 +333,7 @@ export const GetInfo = async (req: Request, res: Response) => {
 
 export const UpdateInfo = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { name, sNum, interests, profile } = req.body
 
@@ -347,7 +348,7 @@ export const UpdateInfo = async (req: Request, res: Response) => {
 
 export const UpdateNotifications = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { notifications } = req.body
 
@@ -366,7 +367,7 @@ export const UpdateNotifications = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
   

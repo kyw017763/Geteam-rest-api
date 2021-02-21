@@ -5,13 +5,14 @@ import { validateKind } from '../lib/validateValue'
 import KIND_TYPE from '../lib/kindType'
 import redisClient from '../lib/redisClient'
 import models from '../models'
+import PassportUser from '../ts/PassportUser'
 
 const ApplicationDB = models.application
 const BoardDB = models.board
 
 export const GetList = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     let { kind, author, is_accepted: isAccepted, active, offset, limit, option } = req.query
 
@@ -34,7 +35,7 @@ export const GetList = async (req: Request, res: Response) => {
 
 export const GetListOnMyParticularBoard = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     let { boardid: boardId } = req.params
   
@@ -54,7 +55,7 @@ export const GetListOnMyParticularBoard = async (req: Request, res: Response) =>
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { boardId, wantedText } = req.body
     let { kind, position, portfolio, portfolioText } = req.body
@@ -100,7 +101,7 @@ export const Create = async (req: Request, res: Response) => {
 
 export const UpdateAccept = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { boardid: boardId, applicationid: applicationId } = req.params
 
@@ -132,7 +133,7 @@ export const UpdateAccept = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
   try {
-    const user = req.user!
+    const user = req.user as PassportUser
     const { _id: me } = user
     const { boardid: boardId, applicationid: applicationId } = req.params
 
