@@ -1,7 +1,7 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import models from './models'
-import IMessage from '../ts/IMessage'
+import Message from '../ts/Message'
 
 const Message = connection.collection(models.MESSAGE)
 

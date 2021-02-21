@@ -1,11 +1,11 @@
 import { Request, Response } from 'express'
 import { SuccessResponse, InternalErrorResponse } from '../lib/responseForm'
 import redisClient from '../lib/redisClient'
-import ICounting from '../ts/ICounting'
+import Counting from '../ts/Counting'
 
 export const GetCount = async (req: Request, res: Response) => {
   try {
-    let counting: ICounting = { visit: 0, account: 0, list: 0, application: 0, team: 0 }
+    let counting: Counting = { visit: 0, account: 0, list: 0, application: 0, team: 0 }
 
     await redisClient.incCnt('visitCnt')
 

@@ -1,7 +1,7 @@
 import { Strategy as JWTStrategy, ExtractJwt } from 'passport-jwt'
 import models from '../../../models'
 import config from '../../../../config'
-import IToken from '../../../ts/IToken'
+import AccessToken from '../../../ts/AccessToken'
 
 const AccountDB = models.account
 
@@ -10,7 +10,7 @@ export default new JWTStrategy(
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: config.JWT_SECRET,
     issuer: config.JWT_ISSUER
-  }, (async (payload: IToken, done: any) => {
+  }, (async (payload: AccessToken, done: any) => {
     try {
       const isExist = await AccountDB.IsExist({ _id: payload._id })
 

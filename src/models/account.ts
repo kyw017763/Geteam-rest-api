@@ -1,7 +1,7 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import models from './models'
-import IAccount from '../ts/IAccount'
+import Account from '../ts/Account'
 import bcrypt from 'bcryptjs'
 
 const accountColl = connection.collection(models.ACCOUNT)

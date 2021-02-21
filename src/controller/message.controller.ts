@@ -2,13 +2,14 @@ import { Request, Response } from 'express'
 import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../lib/responseForm'
 import FAILURE_RESPONSE from '../lib/failureResponse';
 import models from '../models'
-import IMessage from 'src/ts/IMessage'
+import Message from 'src/ts/Message'
 
 const MessageDB = models.message
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req.user
+    const user = req.user!
+    const { _id: me } = user
     const { recvAccountId, content, originalId } = req.body
 
     if (!recvAccountId || recvAccountId.length !== 24 || !content || (originalId && originalId.length !== 24)) {
@@ -27,7 +28,8 @@ export const Create = async (req: Request, res: Response) => {
 
 export const GetReceiveMessageList = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req.user
+    const user = req.user!
+    const { _id: me } = user
     let { offset, limit } = req.query
 
     offset = isNaN(offset) ? 0 : Number(offset)
@@ -45,7 +47,8 @@ export const GetReceiveMessageList = async (req: Request, res: Response) => {
 
 export const GetSendMessageList = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req.user
+    const user = req.user!
+    const { _id: me } = user
     let { offset, limit } = req.query
 
     offset = isNaN(offset) ? 0 : Number(offset)
@@ -63,8 +66,8 @@ export const GetSendMessageList = async (req: Request, res: Response) => {
 
 export const UpdateIsRead = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req.user
-
+    const user = req.user!
+    const { _id: me } = user
     const { id } = req.params
 
     if (!id || id.length !== 24) {
@@ -83,8 +86,8 @@ export const UpdateIsRead = async (req: Request, res: Response) => {
 
 export const DeleteList = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req.user
-
+    const user = req.user!
+    const { _id: me } = user
     const { ids } = req.query
 
     let isValid = true
@@ -108,7 +111,8 @@ export const DeleteList = async (req: Request, res: Response) => {
 
 export const DeleteItem = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req.user
+    const user = req.user!
+    const { _id: me } = user
     const { id } = req.params
 
     if (!id || id.length !== 24) {

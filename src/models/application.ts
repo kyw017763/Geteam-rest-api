@@ -1,7 +1,7 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import models from './models'
-import IOption from '../ts/IOption'
+import Option from '../ts/Option'
 
 const applicationColl = connection.collection(models.APPLICATION)
 const boardColl = connection.collection(models.BOARD)
@@ -27,7 +27,7 @@ export default {
     })
   },
 
-  GetList: async (params: any = {}, options: IOption = {}) => {
+  GetList: async (params: any = {}, options: Option = {}) => {
     const { applicant, kind, author, isAccepted, active, boardId } = params
     const { skip, limit, option } = options
 

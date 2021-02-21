@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import AWS from 'aws-sdk'
 import config from '../../config'
-import IBoard from '../ts/IBoard'
+import Board from '../ts/Board'
 import getEmailForm from './emailForm'
 
 // AWS.config.loadFromPath('./../aws.json')
@@ -111,7 +111,7 @@ export async function sendQuestionEmail (kind: string, title: string, content: s
   }
 }
 
-export async function sendTeamEmail (email: string, kind: string, item: IBoard, content: string) {
+export async function sendTeamEmail (email: string, kind: string, item: Board, content: string) {
   try {
     const transporter = nodemailer.createTransport({
       // SES: new AWS.SES({

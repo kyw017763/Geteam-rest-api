@@ -1,7 +1,7 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import models from './models'
-import ITeam from '../ts/ITeam'
+import Team from '../ts/Team'
 
 const Team = connection.collection(models.TEAM)
 

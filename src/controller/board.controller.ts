@@ -3,7 +3,6 @@ import { SuccessResponse, FailureResponse, InternalErrorResponse } from './../li
 import FAILURE_RESPONSE from '../lib/failureResponse'
 import { validateKind, validateCategory, validateModifyOrder } from '../lib/validateValue'
 import { sendTeamEmail } from '../lib/sendEmail'
-import KIND_TYPE from '../lib/kindType'
 import redisClient from '../lib/redisClient'
 import jwt from 'jsonwebtoken'
 import config from '../../config'
@@ -85,7 +84,8 @@ export const GetItem = async (req: Request, res: Response) => {
 
 export const Create = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req.user
+    const user = req.user!
+    const { _id: me } = user
     const {
       kind,
       category,
@@ -136,7 +136,8 @@ export const Create = async (req: Request, res: Response) => {
 
 export const Update = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req.user
+    const user = req.user!
+    const { _id: me } = user
     const { id } = req.params
     const {
       kind,
@@ -186,7 +187,8 @@ export const Update = async (req: Request, res: Response) => {
 
 export const Delete = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req.user
+    const user = req.user!
+    const { _id: me } = user
     const { id } = req.params
   
     if (!id || id.length !== 24) {
@@ -203,7 +205,8 @@ export const Delete = async (req: Request, res: Response) => {
 
 export const CreateTeam = async (req: Request, res: Response) => {
   try {
-    const { _id: me } = req.user
+    const user = req.user!
+    const { _id: me } = user
     const { id } = req.params
     const { name, content, message } = req.body
   

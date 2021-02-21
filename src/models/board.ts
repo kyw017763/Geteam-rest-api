@@ -2,9 +2,9 @@ import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import KIND_TYPE from '../lib/kindType'
 import models from './models'
-import IBoard from '../ts/IBoard'
-import IPosition from '../ts/IPosition'
-import IOption from '../ts/IOption'
+import Board from '../ts/Board'
+import Position from '../ts/Position'
+import Option from '../ts/Option'
 
 const boardColl = connection.collection(models.BOARD)
 
@@ -22,7 +22,7 @@ export default {
       endDate,
     } = params
 
-    const item: IBoard = {
+    const item: Board = {
       author: new ObjectId(author),
       kind,
       category,
@@ -39,14 +39,14 @@ export default {
     }
 
     if (kind === KIND_TYPE.Contest) {
-      positions.forEach((position: IPosition) => {
+      positions.forEach((position: Position) => {
         if (position.title && position.description) item.positions.push(position)
       })
     }
 
     return boardColl.insertOne(item)
   },
-  GetList: async (params: any = {}, options: IOption = {}) => {
+  GetList: async (params: any = {}, options: Option = {}) => {
     const { kind, category, author } = params
     const { skip, limit, order, searchText } = options
 
@@ -112,7 +112,7 @@ export default {
     }
 
     if (kind === KIND_TYPE.Contest) {
-      positions.forEach((position: IPosition) => {
+      positions.forEach((position: Position) => {
         if (position.title && position.description) updateQuery.$set.positions.push(position)
       })
     }
