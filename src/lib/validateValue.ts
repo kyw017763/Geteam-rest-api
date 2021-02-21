@@ -1,5 +1,6 @@
 import KIND_TYPE from './kindType'
 import CATEGORY_TYPE from './categoryType'
+import OrderOption from '../ts/OrderOption'
 
 const validateKind = (kind: string | undefined) => {
   switch (kind) {
@@ -28,18 +29,18 @@ const validateCategory = (kind: string | undefined, category: string | undefined
   return result
 }
 
-const validateModifyOrder = (order: string | undefined) => {
+const validateModifyOrder = (order: string | undefined): OrderOption => {
   let result
   switch (order) {
     case 'createdAt': case 'endDay': case 'hit':
-      result = { order: -1, title: 1 }
+      result = { [order]: -1, title: 1 }
       break
     case 'title':
-      result = { order: -1, createdAt: -1 }
+      result = { [order]: -1, createdAt: -1 }
       break
     default: throw new Error('해당 속성으로 정렬할 수 없습니다')
   }
-  return order
+  return result
 }
 
 export { validateKind, validateCategory, validateModifyOrder }

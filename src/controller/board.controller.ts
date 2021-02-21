@@ -8,7 +8,9 @@ import jwt from 'jsonwebtoken'
 import models from '../models'
 import PassportUser from '../ts/PassportUser'
 import QueryString from '../ts/QueryString'
+import OrderOption from '../ts/OrderOption'
 import AccessTokenPayload from '../ts/AccessTokenPayload'
+import BoardGetItemResponse from '../ts/BoardGetItemResponse'
 import config from '../../config'
 
 const BoardDB = models.board
@@ -20,11 +22,11 @@ export const GetList = async (req: Request<any, {}, {}, QueryString>, res: Respo
     let { kind, category } = req.params
     let { searchText, offset, limit, order } = req.query
   
-    kind = validateKind(kind)
-    category = validateCategory(kind, category)
+    kind = validateKind(kind) as string
+    category = validateCategory(kind, category) as string
     offset = isNaN(Number(offset)) ? 0 : offset as number
     limit = isNaN(Number(limit)) ? 12 : limit as number
-    order = validateModifyOrder(order)
+    order = validateModifyOrder(order as string | undefined) as OrderOption
 
     let me, payload: AccessTokenPayload | null = null
     try {
@@ -67,15 +69,13 @@ export const GetItem = async (req: Request, res: Response) => {
   
     await BoardDB.UpdateHit({ _id: id, diff: 1 })
 
+    const data: BoardGetItemResponse = { board }
+
     if (me) {
       isApplied = await ApplicationDB.IsApplied({ applicant: me, boardId: id })
       isAccepted = await ApplicationDB.IsAccepted({ applicant: me, boardId: id })
-    }
-
-    const data: any = { board }
-    if (isApplied || isApplied) {
-      data['isApplied'] = isApplied
-      data['isAccepted'] = isAccepted
+      data.isApplied = isApplied as boolean
+      data.isAccepted = isAccepted as boolean
     }
 
     res.send(SuccessResponse(data))

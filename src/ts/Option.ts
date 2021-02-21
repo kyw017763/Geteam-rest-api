@@ -1,7 +1,9 @@
+import OrderOption from './OrderOption'
+
 export default interface Option {
-    skip?: number;
-    limit?: number;
+    skip?: string | number;
+    limit?: string | number;
     option?: string;
-    order?: object;
+    order?: string | OrderOption;
     searchText?: string;
 }

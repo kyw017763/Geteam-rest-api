@@ -10,7 +10,7 @@ export default new JWTStrategy(
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: config.JWT_SECRET,
     issuer: config.JWT_ISSUER
-  }, (async (payload: AccessTokenPayload, done: any) => {
+  }, (async (payload: AccessTokenPayload, done) => {
     try {
       const isExist = await AccountDB.IsExist({ _id: payload._id })
 

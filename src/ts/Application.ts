@@ -2,15 +2,21 @@ import { ObjectId } from 'mongodb'
 import Account from './Account'
 import Board from './Board'
 
+interface ContestApplication {
+  position?: string; // only contest
+  portfolio?: string; // link. only contest
+  portfolioText?: string; // only contest
+}
+
 export default interface Application {
   _id: ObjectId;
 
   applicant: Account['_id'];
   boardId: Board['_id'];
   author: Account['_id'];
-  position?: string; // only contest
-  portfolio?: string; // link. only contest
-  portfolioText?: string; // only contest
+  position: ContestApplication['position'];
+  portfolio: ContestApplication['portfolio'];
+  portfolioText: ContestApplication['portfolioText'];
   wantedText: string;
   isAccepted: boolean;
   acceptedAt: Date;
@@ -19,3 +25,5 @@ export default interface Application {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export { ContestApplication }

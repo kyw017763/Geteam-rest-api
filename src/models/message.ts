@@ -2,12 +2,19 @@ import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import models from './models'
 import Message from '../ts/Message'
+import MessageModelCreate from '../ts/MessageModelCreate'
+import MessageModelGetList from '../ts/MessageModelGetList'
+import MessageModelFilter from '../ts/MessageModelFilter'
+import MessageModelUpdateIsReaded from '../ts/MessageModelUpdateIsReaded'
+import MessageModelDeleteList from '../ts/MessageModelDeleteList'
+import MessageModelDeleteItem from '../ts/MessageModelDeleteItem'
+import PaginationOption from '../ts/PaginationOption'
 
 const Message = connection.collection(models.MESSAGE)
 
 export default {
-  Create: (params: any = {}) => {
-    const { recvAccountId, sendAccountId, content, originalId } = params
+  Create: (params: MessageModelCreate) => {
+    const { originalId, recvAccountId, sendAccountId, content } = params
 
     return Message.insertOne({
       originalId: new ObjectId(originalId),
@@ -17,17 +24,17 @@ export default {
       createdAt: new Date()
     })
   },
-  GetList: (params: any = {}, options: any = {}) => {
+  GetList: (params: MessageModelGetList, options: PaginationOption) => {
     const { recvAccountId, sendAccountId } = params
     const { skip, limit } = options
 
-    const filter: any = {}
+    const filter: MessageModelFilter = {}
     if (recvAccountId) filter.recvAccountId = new ObjectId(recvAccountId)
     if (sendAccountId) filter.sendAccountId = new ObjectId(sendAccountId)
 
     return Message.find(filter, { skip, limit }).toArray()
   },
-  UpdateIsReaded: (params: any = {}) => {
+  UpdateIsReaded: (params: MessageModelUpdateIsReaded) => {
     const { _id, recvAccountId } = params
 
     return Message.updateOne(
@@ -35,7 +42,7 @@ export default {
       { $set: { isRead: true, readAt: new Date() } },
     )
   },
-  DeleteList: (params: any = {}) => {
+  DeleteList: (params: MessageModelDeleteList) => {
     const { ids, accountId } = params
 
     return Message.deleteMany(
@@ -48,7 +55,7 @@ export default {
       }
     )
   },
-  DeleteItem: (params: any = {}) => {
+  DeleteItem: (params: MessageModelDeleteItem) => {
     const { _id, accountId } = params
     
     return Message.deleteOne(

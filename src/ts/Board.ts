@@ -1,6 +1,11 @@
 import { ObjectId } from 'mongodb'
 import Account from './Account'
-import Position from './Position'
+
+interface Position {
+  title: string;
+  description: string;
+  cnt?: number;
+}
 
 export default interface Board {
   _id?: ObjectId;
@@ -22,3 +27,5 @@ export default interface Board {
   hit: number;
   updatedAt: Date;
 }
+
+export { Position }

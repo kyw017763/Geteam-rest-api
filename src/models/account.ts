@@ -1,18 +1,18 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
-import models from './models'
-import Account from '../ts/Account'
 import bcrypt from 'bcryptjs'
+import models from './models'
+import AccountModelFilter from '../ts/AccountModelFilter'
 
 const accountColl = connection.collection(models.ACCOUNT)
 
 export default {
-  DeleteBeforeSignUp: (params: any = {}) => {
+  DeleteBeforeSignUp: (params = {}) => {
     const { id } = params
 
     return accountColl.deleteMany({ id, isVerified: false, active: false })
   },
-  SignUp: (params: any = {}) => {
+  SignUp: (params = {}) => {
     const { id, name, sNum, interests, profile, verifyKey } = params
     let { pwd } = params
     pwd = bcrypt.hashSync(pwd)
@@ -39,17 +39,17 @@ export default {
     })
   },
 
-  SignIn: (params: any = {}) => {
+  SignIn: (params = {}) => {
     const { id } = params
 
     return accountColl.findOne({ id, isVerified: true, active: true })
   },
-  GetItem: (params: any = {}) => {
+  GetItem: (params = {}) => {
     const { _id } = params
 
     return accountColl.findOne({ _id: new ObjectId(_id) }, { projection: { pwd: false } })
   },
-  GetInterests: (params: any = {}) => {
+  GetInterests: (params = {}) => {
     const { id } = params
 
     return accountColl.findOne(
@@ -57,7 +57,7 @@ export default {
       { projection: { id: true, name: true, interests: true } }
     )
   },
-  GetPassword: (params: any = {}) => {
+  GetPassword: (params = {}) => {
     const { _id } = params
 
     return accountColl.findOne(
@@ -65,15 +65,15 @@ export default {
       { projection: { id: true, name: true, pwd: true, interests: true } }
     )
   },
-  GetCompareEmail: async (params: any = {}) => {
+  GetCompareEmail: async (params = {}) => {
     const { id } = params
 
     return (await accountColl.countDocuments({ id, isVerified: true })) > 0
   },
-  IsExist: async (param: any = {}) => {
+  IsExist: async (param = {}) => {
     const { _id, id, sNum } = param
 
-    const filter = {}
+    const filter: AccountModelFilter = {}
 
     if (_id) filter._id = new ObjectId(_id)
     if (id) filter.id = id
@@ -82,17 +82,17 @@ export default {
     return (await accountColl.countDocuments(filter)) > 0
   },
   
-  UpdateRefreshToken: (params: any = {}) => {
+  UpdateRefreshToken: (params = {}) => {
     const { id, refreshToken } = params
 
     return accountColl.updateOne({ id, isVerified: true, active: true }, { $set: { refreshToken } })
   },
-  ResetRefreshToken: (params: any = {}) => {
+  ResetRefreshToken: (params = {}) => {
     const { _id } = params
     
     return accountColl.updateOne({ _id: new ObjectId(_id), isVerified: true, active: true }, { $unset: { refreshToken: true } })
   },
-  UpdateIsVerified: (params: any = {}) => {
+  UpdateIsVerified: (params = {}) => {
     const { verifyKey } = params
 
     return accountColl.updateOne(
@@ -100,19 +100,19 @@ export default {
       { $set: { isVerified: true, active: true } }
     )
   },
-  UpdateVerifyKey: (params: any = {}) => {
+  UpdateVerifyKey: (params = {}) => {
     const { id, verifyKey } = params
 
     return accountColl.updateOne({ id, isVerified: false, active: false }, { $set: { verifyKey } })
   },
-  UpdatePassword: (params: any = {}) => {
+  UpdatePassword: (params = {}) => {
     const { _id } = params
     let { pwd } = params
     pwd = bcrypt.hashSync(pwd)
 
     return accountColl.updateOne({ _id: new ObjectId(_id) }, { $set: { pwd, updatedAt: new Date() } })
   },
-  UpdateInfo: (params: any = {}) => {
+  UpdateInfo: (params = {}) => {
     const { _id, name, sNum, interests, profile } = params
 
     return accountColl.updateOne(
@@ -120,17 +120,17 @@ export default {
       { $set: { name, sNum, interests, profile, updatedAt: new Date() } }
     )
   },
-  UpdateNotifications: (params: any = {}) => {
+  UpdateNotifications: (params = {}) => {
     const { _id, notifications: { applied, accepted, team } } = params
 
-    const updateQuery: any = { notifications: {} }
+    const updateQuery = { notifications: {} }
     if (applied) updateQuery.notifications.applied = applied
     if (accepted) updateQuery.notifications.accepted = accepted
     if (team) updateQuery.notifications.team = team
 
     return accountColl.updateOne({ _id: new ObjectId(_id) }, { $set: { ...updateQuery, updatedAt: new Date() } })
   },
-  Delete: (params: any = {}) => {
+  Delete: (params = {}) => {
     const { _id } = params
 
     return accountColl.updateOne({ _id: new ObjectId(_id), active: true, isVerified: true }, { $set: { active: false } })

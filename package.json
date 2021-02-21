@@ -29,6 +29,7 @@
     "@types/passport": "^1.0.6",
     "@types/passport-jwt": "^3.0.5",
     "@types/redis": "^2.8.16",
+    "@types/util.promisify": "^1.0.4",
     "aws-sdk": "^2.639.0",
     "bcryptjs": "^2.4.3",
     "connect-redis": "^5.0.0",

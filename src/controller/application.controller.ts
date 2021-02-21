@@ -7,6 +7,7 @@ import redisClient from '../lib/redisClient'
 import models from '../models'
 import PassportUser from '../ts/PassportUser'
 import QueryString from '../ts/QueryString'
+import { ContestApplication } from '../ts/Application'
 
 const ApplicationDB = models.application
 const BoardDB = models.board
@@ -16,7 +17,7 @@ export const GetList = async (req: Request<{}, {}, {}, QueryString>, res: Respon
     const { _id: me } = req.user as PassportUser
     let { kind, author, is_accepted: isAccepted, active, offset, limit, option } = req.query
 
-    kind = validateKind(kind)
+    kind = validateKind(kind) as string
     offset = isNaN(Number(offset)) ? 0 : offset as number
     limit = isNaN(Number(limit)) ? 12 : limit as number
 
@@ -75,8 +76,8 @@ export const Create = async (req: Request, res: Response) => {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
 
-    const contestObj: any = {}
-    kind = validateKind(kind)
+    const contestObj: ContestApplication = {}
+    kind = validateKind(kind) as string
     if (kind === KIND_TYPE.Contest) {
       contestObj.position = position
       contestObj.portfolio = portfolio

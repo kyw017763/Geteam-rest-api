@@ -12,11 +12,11 @@ export const Create = async (req: Request, res: Response) => {
     const { _id: me } = req.user as PassportUser
     const { recvAccountId, content, originalId } = req.body
 
-    if (!recvAccountId || recvAccountId.length !== 24 || !content || (originalId && originalId.length !== 24)) {
+    if ((originalId && originalId.length !== 24) || !recvAccountId || recvAccountId.length !== 24 || !content) {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.INVALID_PARAM))
     }
 
-    await MessageDB.Create({ recvAccountId, sendAccountId: me, content, originalId })
+    await MessageDB.Create({ originalId, recvAccountId, sendAccountId: me, content })
 
     res.send(SuccessResponse())
   }

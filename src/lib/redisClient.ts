@@ -4,10 +4,10 @@ import config from '../../config'
 
 class RedisClient {
   public client: redis.RedisClient
-  private existsAsync: any
-  private getAsync: any
-  private setAsync: any
-  private expireAsync: any
+  private existsAsync: (arg1: string) => Promise<number>
+  private getAsync: (arg1: string) => Promise<string>
+  private setAsync: (arg1: string, arg2: string) => Promise<unknown>
+  private expireAsync: (arg1: string, arg2: number) => Promise<number>
 
 	constructor () {
     this.client = redis.createClient(process.env.REDIS_URL || config.REDIS_URL)
