@@ -16,7 +16,7 @@ class RedisClient {
     //   if (err) console.error(err)
     // })
 
-    this.client.on('connect', () => console.log('connected'))
+    this.client.on('connect', () => console.log('Redis connected'))
     
     this.client.on('error', (err) => {
       if (err) console.error(err)

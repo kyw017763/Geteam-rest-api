@@ -7,9 +7,9 @@ export default connect(process.env.DB_URL || config.DB_URL, {
   autoReconnect: true,
   reconnectTries: Number.MAX_VALUE,
 }).then((connection) => {
-  console.log('Connected successfully to server')
+  console.log('Mongodb connected')
   return connection
 }).catch((err) => {
-  console.log('Connected failed')
+  console.log('Mongodb not connected')
   console.log(err)
 })

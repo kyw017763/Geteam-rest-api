@@ -44,4 +44,4 @@ app.use(morgan('dev'))
 
 app.use('/api', router)
 
-app.listen(process.env.PORT || config.PORT, () => { console.log('Server is running!') })
+app.listen(process.env.PORT || config.PORT, () => { console.log('Application server is running!') })
