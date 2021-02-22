@@ -2,15 +2,25 @@ import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import models from './models'
 import Option from '../ts/Option'
+import {
+  Create,
+  GetList,
+  IsApplied,
+  IsAccepted,
+  UpdateIsAccepted,
+  Delete
+} from '../ts/models/application'
+import { ContestApplication } from '../ts/models/ApplicationModel'
+import Filter from '../ts/models/application/Filter'
 
 const applicationColl = connection.collection(models.APPLICATION)
 const boardColl = connection.collection(models.BOARD)
 
 export default {
-  Create: (params = {}) => {
+  Create: (params: Create) => {
     const { applicant, author, boardId, wantedText, position, portfolio, portfolioText } = params
 
-    const contestObj = {}
+    const contestObj: ContestApplication = {}
     if (position) contestObj.position = position
     if (portfolio) contestObj.portfolio = portfolio
     if (portfolioText) contestObj.portfolioText = portfolioText
@@ -27,11 +37,11 @@ export default {
     })
   },
 
-  GetList: async (params = {}, options: Option = {}) => {
+  GetList: async (params: GetList, options: Option = {}) => {
     const { applicant, kind, author, isAccepted, active, boardId } = params
     const { skip, limit, option } = options
 
-    const filter = {}
+    const filter: Filter = {}
     if (isAccepted) filter.isAccepted = isAccepted
     if (active) filter.active = active
     if (boardId) filter.boardId = new ObjectId(boardId)
@@ -59,26 +69,23 @@ export default {
       }
     }
 
-    const op
-
-    
     const list = await applicationColl.find(filter, { skip, limit, sort: { createdAt: -1 } }).toArray()
     const count = await applicationColl.countDocuments(filter)
 
     return { list, count }
   },
-  IsApplied: async (params = {}) => {
+  IsApplied: async (params: IsApplied) => {
     const { applicant, boardId } = params
 
     return (await applicationColl.countDocuments({ applicant: new ObjectId(applicant), boardId: new ObjectId(boardId), active: true })) > 0
   },
-  IsAccepted: async (params = {}) => {
-    const { _id, boardId } = params
+  IsAccepted: async (params: IsAccepted) => {
+    const { applicant, boardId } = params
 
-    return (await applicationColl.countDocuments({ _id: new ObjectId(_id), boardId: new ObjectId(boardId), isAccepted: true })) > 0
+    return (await applicationColl.countDocuments({ applicant: new ObjectId(applicant), boardId: new ObjectId(boardId), isAccepted: true })) > 0
   },
 
-  UpdateIsAccepted: (params = {}) => {
+  UpdateIsAccepted: (params: UpdateIsAccepted) => {
     const { _id, boardId, author } = params
     
     return applicationColl.updateOne(
@@ -87,7 +94,7 @@ export default {
     })
   },
 
-  Delete: async (params = {}) => {
+  Delete: async (params: Delete) => {
     const { _id, boardId, author } = params
 
     const boardCount = (await boardColl.countDocuments({ _id: new ObjectId(boardId), author: new ObjectId(author), $or: [{ endDate: { $lte: new Date() } }, { active: true }]})) > 0

@@ -1,19 +1,15 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import models from './models'
-import Message from '../ts/Message'
-import MessageModelCreate from '../ts/MessageModelCreate'
-import MessageModelGetList from '../ts/MessageModelGetList'
-import MessageModelFilter from '../ts/MessageModelFilter'
-import MessageModelUpdateIsReaded from '../ts/MessageModelUpdateIsReaded'
-import MessageModelDeleteList from '../ts/MessageModelDeleteList'
-import MessageModelDeleteItem from '../ts/MessageModelDeleteItem'
-import PaginationOption from '../ts/PaginationOption'
+import Message from '../ts/models/MessageModel'
+import { Create, GetList, UpdateIsReaded, DeleteList, DeleteItem } from '../ts/models/message'
+import Filter from '../ts/models/message/Filter'
+import PaginationOption from '../ts/models/PaginationOption'
 
 const Message = connection.collection(models.MESSAGE)
 
 export default {
-  Create: (params: MessageModelCreate) => {
+  Create: (params: Create) => {
     const { originalId, recvAccountId, sendAccountId, content } = params
 
     return Message.insertOne({
@@ -24,17 +20,17 @@ export default {
       createdAt: new Date()
     })
   },
-  GetList: (params: MessageModelGetList, options: PaginationOption) => {
+  GetList: (params: GetList, options: PaginationOption) => {
     const { recvAccountId, sendAccountId } = params
     const { skip, limit } = options
 
-    const filter: MessageModelFilter = {}
+    const filter: Filter = {}
     if (recvAccountId) filter.recvAccountId = new ObjectId(recvAccountId)
     if (sendAccountId) filter.sendAccountId = new ObjectId(sendAccountId)
 
     return Message.find(filter, { skip, limit }).toArray()
   },
-  UpdateIsReaded: (params: MessageModelUpdateIsReaded) => {
+  UpdateIsReaded: (params: UpdateIsReaded) => {
     const { _id, recvAccountId } = params
 
     return Message.updateOne(
@@ -42,7 +38,7 @@ export default {
       { $set: { isRead: true, readAt: new Date() } },
     )
   },
-  DeleteList: (params: MessageModelDeleteList) => {
+  DeleteList: (params: DeleteList) => {
     const { ids, accountId } = params
 
     return Message.deleteMany(
@@ -55,7 +51,7 @@ export default {
       }
     )
   },
-  DeleteItem: (params: MessageModelDeleteItem) => {
+  DeleteItem: (params: DeleteItem) => {
     const { _id, accountId } = params
     
     return Message.deleteOne(
