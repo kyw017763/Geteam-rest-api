@@ -1,8 +1,8 @@
 import { ObjectId } from 'mongodb'
-import Account from './Account'
+import Account from './AccountModel'
 import Board from './Board'
 
-interface ContestApplication {
+export interface ContestApplication {
   position?: string; // only contest
   portfolio?: string; // link. only contest
   portfolioText?: string; // only contest
@@ -25,5 +25,3 @@ export default interface Application {
   createdAt: Date;
   updatedAt: Date;
 }
-
-export { ContestApplication }

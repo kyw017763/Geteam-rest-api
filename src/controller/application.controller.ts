@@ -7,7 +7,7 @@ import redisClient from '../lib/redisClient'
 import models from '../models'
 import PassportUser from '../ts/PassportUser'
 import QueryString from '../ts/QueryString'
-import { ContestApplication } from '../ts/Application'
+import { ContestApplication } from '../ts/models/ApplicationModel'
 
 const ApplicationDB = models.application
 const BoardDB = models.board

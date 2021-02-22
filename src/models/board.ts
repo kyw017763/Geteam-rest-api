@@ -2,8 +2,8 @@ import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import KIND_TYPE from '../lib/kindType'
 import models from './models'
-import Board, { Position } from '../ts/Board'
-import Option from '../ts/Option'
+import Board, { Position } from '../ts/models/BoardModel'
+import Filter from '../ts/models/board/Filter'
 import {
   Create,
   GetList,
@@ -17,6 +17,7 @@ import {
   UpdateHit,
   Delete
 } from '../ts/models/board'
+import Option from '../ts/Option'
 
 const boardColl = connection.collection(models.BOARD)
 
@@ -29,7 +30,6 @@ export default {
       topic,
       title,
       content,
-      positions,
       wantCnt,
       endDate
     } = params
@@ -51,6 +51,7 @@ export default {
     }
 
     if (kind === KIND_TYPE.Contest) {
+      const positions = params.positions as Position[]
       positions.forEach((position: Position) => {
         if (position.title && position.description) item.positions.push(position)
       })
@@ -62,7 +63,7 @@ export default {
     const { kind, category, author } = params
     const { skip, limit, order, searchText } = options
 
-    const filter = { active: true, isCompleted: false }
+    const filter: Filter = { active: true, isCompleted: false }
 
     if (author) { // 종료일을 지나지 않았거나, 종료일을 지났지만 내가 쓴 글
       filter.$or = [
@@ -105,12 +106,11 @@ export default {
       topic,
       title,
       content,
-      positions,
       wantCnt,
       endDate,
     } = params
 
-    const updateQuery = {
+    const updateQuery: { $set: UpdateItem } = {
       $set: {
         kind,
         category,
@@ -124,8 +124,10 @@ export default {
     }
 
     if (kind === KIND_TYPE.Contest) {
+      const positions = params.positions as Position[]
+      updateQuery.$set.positions = []
       positions.forEach((position: Position) => {
-        if (position.title && position.description) updateQuery.$set.positions.push(position)
+        if (position.title && position.description) updateQuery.$set.positions!.push(position)
       })
     }
 

@@ -1,4 +1,4 @@
-export default interface IMember {
+export default interface Member {
     accountId: string
     position?: {
       title: string

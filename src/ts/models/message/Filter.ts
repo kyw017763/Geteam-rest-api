@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 
-export default interface MessageModelGetList {
+export default interface Filter {
     recvAccountId?: ObjectId;
     sendAccountId?: ObjectId;
 }

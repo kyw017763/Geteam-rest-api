@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
-import Account from './Account'
+import Account from './AccountModel'
 
-interface Position {
+export interface Position {
   title: string;
   description: string;
   cnt?: number;
@@ -27,5 +27,3 @@ export default interface Board {
   hit: number;
   updatedAt: Date;
 }
-
-export { Position }

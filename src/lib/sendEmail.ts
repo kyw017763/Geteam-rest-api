@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import AWS from 'aws-sdk'
 import config from '../../config'
-import Board from '../ts/Board'
+import Board from '../ts/models/BoardModel'
 import getEmailForm from './emailForm'
 
 // AWS.config.loadFromPath('./../aws.json')

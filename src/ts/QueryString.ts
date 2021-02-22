@@ -1,13 +1,13 @@
 import OrderOption from '../ts/OrderOption'
 
 export default interface QueryString {
-    offset: string | number | undefined;
-    limit: string | number | undefined;
-    option: string | undefined;
-    order: string | OrderOption | undefined;
-    kind: string | undefined;
-    author: string | undefined;
-    is_accepted: string | undefined;
-    active: string | undefined;
-    searchText: string | undefined;
+    offset?: string | number;
+    limit?: string | number;
+    option?: string;
+    order?: string | OrderOption;
+    kind?: string;
+    author?: string;
+    is_accepted?: string;
+    active?: string;
+    searchText?: string;
 }

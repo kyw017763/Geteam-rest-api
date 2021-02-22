@@ -28,7 +28,7 @@ export const GetList = async (req: Request<any, {}, {}, QueryString>, res: Respo
     limit = isNaN(Number(limit)) ? 12 : limit as number
     order = validateModifyOrder(order as string | undefined) as OrderOption
 
-    let me, payload: AccessTokenPayload | null = null
+    let me = null, payload: AccessTokenPayload | null = null
     try {
         const accessToken = (req.header('Authorization') || '').replace('Bearer ', '')
         payload = jwt.verify(accessToken, config.JWT_SECRET, { issuer: config.JWT_ISSUER }) as AccessTokenPayload

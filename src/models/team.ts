@@ -1,14 +1,14 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import models from './models'
-import Team from '../ts/Team'
-import Member from '../ts/Member'
-import TeamModelCreate from '../ts/TeamModelCreate'
+import Team from '../ts/models/TeamModel'
+import Member from '../ts/models/team/Member'
+import { Create } from '../ts/models/team'
 
 const Team = connection.collection(models.TEAM)
 
 export default {
-  Create: (params: TeamModelCreate) => {
+  Create: (params: Create) => {
     const { name, master, members, content } = params
     
     return Team.insertOne({

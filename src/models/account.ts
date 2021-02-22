@@ -2,7 +2,7 @@ import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
 import bcrypt from 'bcryptjs'
 import models from './models'
-import AccountModelFilter from '../ts/AccountModelFilter'
+import AccountModelFilter from '../ts/models/account/AccountModelFilter'
 
 const accountColl = connection.collection(models.ACCOUNT)
 

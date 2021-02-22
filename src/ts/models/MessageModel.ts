@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import Account from './Account'
+import Account from './AccountModel'
 
 export default interface Message {
   _id: ObjectId;

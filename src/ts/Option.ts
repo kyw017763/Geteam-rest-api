@@ -1,9 +1,9 @@
 import OrderOption from './OrderOption'
 
 export default interface Option {
-    skip?: string | number;
-    limit?: string | number;
+    skip?: number;
+    limit?: number;
     option?: string;
-    order?: string | OrderOption;
+    order?: OrderOption;
     searchText?: string;
 }

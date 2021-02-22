@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { SuccessResponse, InternalErrorResponse } from '../lib/responseForm'
 import redisClient from '../lib/redisClient'
-import Counting from '../ts/Counting'
+import Counting from '../ts/models/CountingModel'
 
 export const GetCount = async (req: Request, res: Response) => {
   try {

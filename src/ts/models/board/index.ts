@@ -1,15 +1,15 @@
 import { ObjectId } from 'mongodb'
-import { Position } from '../../Board'
-import Account from '../../Account'
+import { Position } from '../BoardModel'
+import Account from '../AccountModel'
 
 export interface Create {
-    author: Account['_id'];
+    author: string;
     kind: string;
     category: string;
     topic: string;
     title: string;
     content: string;
-    positions: Position[];
+    positions?: Position[];
     wantCnt: number;
     endDate: Date;
 }
@@ -17,55 +17,56 @@ export interface Create {
 export interface GetList {
     kind: string;
     category: string;
-    author: Account['_id'];
+    author: string | null;
 }
 
 export interface GetItem {
-    _id: ObjectId;
+    _id: string;
 }
 
 export interface GetBoardCount {
-    author: Account['_id'];
+    author: string;
 }
 
 export interface GetTeamCount {
-    author: Account['_id'];
+    author: string;
 }
 
 export interface UpdateItem {
-    _id: ObjectId;
-    author: Account['_id'];
+    _id?: string;
+    author?: string;
     kind: string;
     category: string;
     topic: string;
     title: string;
     content: string;
-    positions: Position[];
+    positions?: Position[];
     wantCnt: number;
     endDate: Date;
+    updatedAt?: Date;
 }
 
 export interface UpdateIsCompleted {
-    _id: ObjectId;
-    author: Account['_id'];
+    _id: string;
+    author?: Account['_id'];
 }
 
 export interface UpdateApplicationCnt {
-    _id: ObjectId;
+    _id: string;
     diff: number;
 }
 
 export interface UpdateAcceptCnt {
-    _id: ObjectId;
+    _id: string;
     diff: number;
 }
 
 export interface UpdateHit {
-    _id: ObjectId;
+    _id: string;
     diff: number;
 }
 
 export interface Delete {
-    _id: ObjectId;
-    author: Account['_id'];
+    _id: string;
+    author: string;
 }
