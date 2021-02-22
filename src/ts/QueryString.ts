@@ -1,4 +1,4 @@
-import OrderOption from '../ts/OrderOption'
+import { OrderOption } from '../ts/Option'
 
 export default interface QueryString {
     offset?: string | number;

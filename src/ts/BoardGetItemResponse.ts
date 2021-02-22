@@ -1,4 +1,4 @@
-import Board from './models/Board'
+import BoardModel from './models/BoardModel'
 
 export default interface BoardGetItemResponse {
     board: Board;

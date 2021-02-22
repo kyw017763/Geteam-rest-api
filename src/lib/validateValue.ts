@@ -1,6 +1,6 @@
 import KIND_TYPE from './kindType'
 import CATEGORY_TYPE from './categoryType'
-import OrderOption from '../ts/OrderOption'
+import { OrderOption } from '../ts/Option'
 
 const validateKind = (kind?: string) => {
   switch (kind) {
