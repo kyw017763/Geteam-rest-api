@@ -213,7 +213,7 @@ export const SignOut = async (req: Request, res: Response) => {
       return res.status(400).send(FailureResponse(FAILURE_RESPONSE.BAD_REQUEST))
     }
   
-    const result = await AccountDB.ResetRefreshToken({ _id: me })
+    await AccountDB.ResetRefreshToken({ _id: me })
     
     // Blacklisting Token
     await redisClient.blacklistToken(accessToken, decodedAccessToken.exp)
