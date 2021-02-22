@@ -48,6 +48,7 @@ export interface ResetRefreshToken {
 }
 
 export interface UpdateIsVerified {
+    id: string;
     verifyKey: string;
 }
 

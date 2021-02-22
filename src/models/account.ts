@@ -111,10 +111,10 @@ export default {
     return accountColl.updateOne({ _id: new ObjectId(_id), isVerified: true, active: true }, { $unset: { refreshToken: true } })
   },
   UpdateIsVerified: (params: UpdateIsVerified) => {
-    const { verifyKey } = params
+    const { id, verifyKey } = params
 
     return accountColl.updateOne(
-      { verifyKey, verifyExpireAt: { $gte: new Date() }, isVerified: false, active: false },
+      { id, verifyKey, verifyExpireAt: { $gte: new Date() }, isVerified: false, active: false },
       { $set: { isVerified: true, active: true } }
     )
   },
