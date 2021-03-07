@@ -4,7 +4,10 @@
   "description": "",
   "main": "app.ts",
   "scripts": {
-    "start": "nodemon --exec ts-node app.ts",
+    "build": "tsc",
+    "prestart": "npm run build",
+    "start": "node ./dist/app",
+    "dev": "nodemon --exec ts-node app.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
