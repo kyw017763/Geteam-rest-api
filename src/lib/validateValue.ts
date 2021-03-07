@@ -1,27 +1,27 @@
-import KIND_TYPE from './kindType'
-import CATEGORY_TYPE from './categoryType'
+import KIND_TYPE from '../ts/kind'
+import CATEGORY_TYPE from '../ts/category'
 import { OrderOption } from '../ts/Option'
 
 const validateKind = (kind?: string) => {
   switch (kind) {
-    case KIND_TYPE.All: case KIND_TYPE.Study: case KIND_TYPE.Contest:
+    case KIND_TYPE.ALL: case KIND_TYPE.STUDY: case KIND_TYPE.CONTEST:
       return kind
     default:
-      return KIND_TYPE.Study
+      return KIND_TYPE.STUDY
   }
 }
 
 const validateCategory = (kind?: string, category?: string) => {
-  let result = CATEGORY_TYPE.Development
+  let result = CATEGORY_TYPE.DEVELOPMENT
 
-  if (kind === KIND_TYPE.Study) {
+  if (kind === KIND_TYPE.STUDY) {
     switch (category) {
-      case CATEGORY_TYPE.Development: case CATEGORY_TYPE.Design: case CATEGORY_TYPE.Etc:
+      case CATEGORY_TYPE.DEVELOPMENT: case CATEGORY_TYPE.DESIGN: case CATEGORY_TYPE.ETC:
         result = category 
     }
-  } else if (kind === KIND_TYPE.Contest) {
+  } else if (kind === KIND_TYPE.CONTEST) {
     switch (category) {
-      case CATEGORY_TYPE.Development: case CATEGORY_TYPE.Design: case CATEGORY_TYPE.Idea: case CATEGORY_TYPE.Etc:
+      case CATEGORY_TYPE.DEVELOPMENT: case CATEGORY_TYPE.DESIGN: case CATEGORY_TYPE.IDEA: case CATEGORY_TYPE.ETC:
         return category
     }
   }

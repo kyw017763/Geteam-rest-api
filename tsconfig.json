@@ -3,23 +3,23 @@
 		"module": "commonjs",
 		"target": "es6",
 		"outDir": "dist",
-		"lib": [
-      "dom",
-      "es5",
-      "scripthost",
-      "es2015.promise"
-		],
-    "baseUrl": ".",
-		"sourceMap": true,
 		"rootDir": ".",
-    "strict": true,
-	"esModuleInterop": true,
-	"typeRoots": [
-		"@types",
-		"./node_modules/@types"
-	]
-  },
+		"lib": [
+			"dom",
+			"es5",
+			"scripthost",
+			"es2015.promise"
+		],
+		"sourceMap": true,
+		"strict": true,
+		"esModuleInterop": true,
+		"typeRoots": [
+			"./@types",
+			"./node_modules/@types"
+		]
+	},
 	"exclude": [
 		"node_modules",
+		"dist"
 	]
 }

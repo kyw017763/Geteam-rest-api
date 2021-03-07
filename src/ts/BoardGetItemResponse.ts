@@ -1,7 +1,7 @@
 import BoardModel from './models/BoardModel'
 
 export default interface BoardGetItemResponse {
-    board: Board;
+    board: BoardModel;
     isApplied?: boolean;
     isAccepted?: boolean;
 }

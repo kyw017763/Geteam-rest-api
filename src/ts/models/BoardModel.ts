@@ -1,5 +1,7 @@
 import { ObjectId } from 'mongodb'
 import Account from './AccountModel'
+import Category from '../Category'
+import Kind from '../Kind'
 
 export interface Position {
   title: string;
@@ -11,8 +13,8 @@ export default interface Board {
   _id?: ObjectId;
 
   author: Account['_id'];
-  kind: string;
-  category: string;
+  kind: Kind;
+  category: Category;
   topic: string;
   title: string;
   content: string;

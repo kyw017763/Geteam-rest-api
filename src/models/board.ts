@@ -1,6 +1,6 @@
 import { connection } from 'mongoose'
 import { ObjectId } from 'mongodb'
-import KIND_TYPE from '../lib/kindType'
+import KIND_TYPE from '../ts/Kind'
 import models from './models'
 import Board, { Position } from '../ts/models/BoardModel'
 import Filter from '../ts/models/board/Filter'
@@ -50,7 +50,7 @@ export default {
       updatedAt: new Date()
     }
 
-    if (kind === KIND_TYPE.Contest) {
+    if (kind === KIND_TYPE.CONTEST) {
       const positions = params.positions as Position[]
       positions.forEach((position: Position) => {
         if (position.title && position.description) item.positions.push(position)
@@ -123,7 +123,7 @@ export default {
       }
     }
 
-    if (kind === KIND_TYPE.Contest) {
+    if (kind === KIND_TYPE.CONTEST) {
       const positions = params.positions as Position[]
       updateQuery.$set.positions = []
       positions.forEach((position: Position) => {

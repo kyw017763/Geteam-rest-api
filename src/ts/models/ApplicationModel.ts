@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import Account from './AccountModel'
-import Board from './Board'
+import Board from './BoardModel'
 
 export interface ContestApplication {
   position?: string; // only contest

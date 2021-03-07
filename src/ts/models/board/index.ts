@@ -1,11 +1,12 @@
-import { ObjectId } from 'mongodb'
 import { Position } from '../BoardModel'
 import Account from '../AccountModel'
+import Category from '../../Category'
+import Kind from '../../Kind'
 
 export interface Create {
     author: string;
-    kind: string;
-    category: string;
+    kind: Kind;
+    category: Category;
     topic: string;
     title: string;
     content: string;
@@ -15,8 +16,8 @@ export interface Create {
 }
 
 export interface GetList {
-    kind: string;
-    category: string;
+    kind: Kind;
+    category: Category;
     author: string | null;
 }
 
@@ -35,8 +36,8 @@ export interface GetTeamCount {
 export interface UpdateItem {
     _id?: string;
     author?: string;
-    kind: string;
-    category: string;
+    kind: Kind;
+    category: Category;
     topic: string;
     title: string;
     content: string;
